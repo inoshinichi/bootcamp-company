@@ -1,0 +1,22 @@
+{
+  "mcpServers": {
+    "playwright": {
+      "command": "npx",
+      "args": ["-y", "@playwright/mcp@latest"]
+    },
+    "gmail": {
+      "command": "npx",
+      "args": ["-y", "@gongrzhe/server-gmail-autoauth-mcp"],
+      "env": {
+        "_NOTE": "初回起動時にブラウザでGoogle OAuth認証が走ります。Google Cloud ConsoleでOAuthクライアント（デスクトップアプリ）を作成し、credentials.json を ~/.gmail-mcp/gcp-oauth.keys.json に配置してください。詳細はREADMEのOAuth設定ガイド参照。"
+      }
+    },
+    "outlook": {
+      "command": "npx",
+      "args": ["-y", "@softeria/ms-365-mcp-server"],
+      "env": {
+        "_NOTE": "Microsoft 365 (Outlook含む) と連携するMCP。初回起動時にブラウザでMicrosoftログイン認証が走ります。Azure ADでアプリ登録（Public client）が必要です。詳細はREADMEのOAuth設定ガイド参照。"
+      }
+    }
+  }
+}

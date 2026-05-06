@@ -391,6 +391,38 @@ last_updated: YYYY-MM-DD
 
 ---
 
+## ハーネス開発（プロダクト開発フロー）
+
+このプラグインには **planner / generator / evaluator** の3つのサブエージェントが同梱されています。
+プロダクト開発を頼まれたときは、秘書がこの流れに沿って3エージェントを順に起動します。
+
+### フロー
+
+```
+[ユーザー] 「○○を作りたい」（1〜4行のアイデア）
+   ↓
+[planner] ブレインストーミング → spec.md 生成（必須機能・スプリント分割・検証項目を含む）
+   ↓
+[generator] スプリント1 を TDD で実装 → progress.md 更新
+   ↓
+[evaluator] 実機で動作確認（Playwright MCP 使用）→ feedback/sprint-1.md 生成
+   ↓
+合格 → 次のスプリントへ / 不合格 → generator にフィードバックを返して再実装
+   ↓
+全スプリント完了 → ユーザーに最終報告
+```
+
+### 使い方
+
+ユーザーが「○○を作って」と言ったら、秘書が:
+1. 「アイデアを詳しく聞かせてください」と planner を呼ぶ
+2. spec.md を一緒に作る
+3. 「実装に進めますか？」と確認後、generator → evaluator のサイクルを回す
+
+ユーザーは「次のスプリントを進めて」「動作確認して」など短い指示で進められます。
+
+---
+
 ## 専門エージェントの追加（中級者向け）
 
 部署が育ってきたら、その部署専属の **専門エージェント** を作成できる。
@@ -416,32 +448,50 @@ last_updated: YYYY-MM-DD
 
 ---
 
-## MCP 連携の提案
+## MCP 連携
 
-秘書は、外部サービスとの連携が便利な場面で MCP サーバーの導入を提案する。
+このプラグインには **3つの MCP サーバーが同梱されています**（プラグインインストール時に自動で利用可能になります）：
 
-### 提案タイミング
+### 同梱 MCP サーバー
 
-- ユーザーが「MCP連携したい」「カレンダー連携」「Notion連携」と言った場合
-- スケジュール管理の話題が出たとき（→ Google Calendar）
-- ナレッジ管理やドキュメント整理の話題が出たとき（→ Notion）
-- GitHub の Issue や PR の話題が出たとき（→ GitHub）
+| サービス | 用途 | OAuth 設定 |
+|---|---|---|
+| **Playwright** | ブラウザ自動操作（evaluator のテスト実行・スクレイピング・UI動作確認） | 不要・即利用可 |
+| **Gmail** | メールの読み書き・検索・下書き作成 | Google Cloud で OAuth クライアント作成必要 |
+| **Outlook** | Outlook メール・カレンダー連携 | Azure AD でアプリ登録必要 |
 
-### 提案の流れ
+### Gmail MCP の OAuth 設定（初回のみ）
 
-```
-ユーザー: カレンダーと連携できる？
+ユーザーが「Gmail連携セットアップして」「メール使いたい」等と言ったら、以下を案内する:
 
-秘書: Google Calendar と連携できますよ！
-      以下のコマンドを実行してください:
+1. [Google Cloud Console](https://console.cloud.google.com/) で新規プロジェクトを作成
+2. 「APIとサービス」→「ライブラリ」で **Gmail API** を有効化
+3. 「APIとサービス」→「認証情報」→「OAuth クライアント ID 作成」
+   - アプリの種類: **デスクトップアプリ**
+4. credentials.json をダウンロード
+5. ファイルを `~/.gmail-mcp/gcp-oauth.keys.json` に配置
+   ```bash
+   mkdir -p ~/.gmail-mcp
+   mv ~/Downloads/credentials.json ~/.gmail-mcp/gcp-oauth.keys.json
+   ```
+6. Claude Code を再起動 → 初回 Gmail MCP ツール使用時にブラウザで認証
+7. 完了
 
-      /mcp add google-calendar -e GOOGLE_OAUTH_CREDENTIALS=/path/to/credentials.json -- npx -y @cocal/google-calendar-mcp
+### Outlook MCP の OAuth 設定（初回のみ）
 
-      ※ Google Cloud で OAuth 認証情報の作成が必要です。
-      設定後は「明日の予定を教えて」のように話しかけるだけで使えます。
-```
+ユーザーが「Outlook連携セットアップして」と言ったら、以下を案内する:
 
-### 対応 MCP サーバー
+1. [Azure Portal](https://portal.azure.com/) → 「アプリの登録」→ 新規登録
+2. アプリ種別: **パブリッククライアント**
+3. リダイレクト URI: `http://localhost`
+4. API のアクセス許可で **Mail.ReadWrite** / **Calendars.ReadWrite** を追加
+5. アプリ（クライアント）ID をコピー
+6. 環境変数 `MS365_MCP_CLIENT_ID` に設定するか、`~/.config/ms-365-mcp/.env` に保存
+7. 初回ツール使用時にブラウザで認証
+
+### 追加 MCP サーバー（任意）
+
+Notion / GitHub / Slack 等は追加で `/mcp add` できます。
 
 | サービス | コマンド | 認証 |
 |---------|---------|------|
@@ -452,8 +502,12 @@ last_updated: YYYY-MM-DD
 
 ### MCP ツールの活用
 
-MCP サーバーが設定済みの場合、秘書は積極的に活用する。
-ただし、MCP がなくても `.company/` 内のファイル管理だけで完全に動作する。
+MCP サーバーが利用可能な場合、秘書は積極的に活用する。
+- 「メール送って」 → Gmail MCP
+- 「○○のサイトで○○して」 → Playwright MCP
+- 「予定確認して」 → Outlook MCP
+
+MCP がなくても、`.company/` 内のファイル管理だけで完全に動作する。
 
 ---
 

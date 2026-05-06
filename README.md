@@ -87,18 +87,55 @@
 | クリエイティブ | デザイン、ロゴ、ブランド |
 | 人事 | 採用、チーム、オンボーディング |
 
-## 外部サービス連携（任意）
+## ハーネス開発（プロダクト開発機能）
 
-「カレンダー連携したい」「Notion使いたい」と話しかけると、秘書が MCP の設定方法を案内します。
+「LP作って」「アプリ作って」「○○のシステム作って」と頼まれたら、3つのサブエージェントが順に動きます：
 
-| サービス | 用途 |
+| エージェント | 役割 |
 |---|---|
-| Google Calendar | スケジュール管理 |
-| Notion | ナレッジ・ドキュメント |
-| GitHub | Issue / PR 管理 |
-| Slack | チームコミュニケーション |
+| **planner** | アイデア（1〜4行）から詳細仕様書（spec.md）を生成。質問攻めで要件を詰めます。 |
+| **generator** | spec.md のスプリント順に実装。TDD（テスト駆動開発）で進めます。 |
+| **evaluator** | 実機で動作確認。Playwright で UI 操作・API 呼び出し・データ確認まで行い、不合格時はフィードバックを返します。 |
 
-MCP がなくても、ローカルファイルだけで完全に動作します。
+ユーザーは「○○を作って」と言うだけ。秘書が3エージェントを順に呼び出して進めます。
+
+## 同梱 MCP サーバー（自動セットアップ）
+
+プラグインインストール時に以下が自動で利用可能になります：
+
+| サービス | 用途 | OAuth 設定 |
+|---|---|---|
+| **Playwright** | ブラウザ自動操作（evaluator のテスト・スクレイピング・UI確認） | 不要・即利用可 |
+| **Gmail** | メールの読み書き・検索・下書き | Google Cloud で OAuth クライアント作成（5分） |
+| **Outlook** | Outlook メール・カレンダー | Azure AD でアプリ登録（5分） |
+
+### Gmail OAuth 設定（初回1回のみ）
+
+1. [Google Cloud Console](https://console.cloud.google.com/) で新規プロジェクト
+2. 「APIとサービス」→「ライブラリ」で **Gmail API** を有効化
+3. 「認証情報」→「OAuth クライアント ID 作成」（種類: **デスクトップアプリ**）
+4. credentials.json をダウンロード
+5. 配置:
+   ```bash
+   mkdir -p ~/.gmail-mcp
+   mv ~/Downloads/credentials.json ~/.gmail-mcp/gcp-oauth.keys.json
+   ```
+6. Claude Code 再起動 → 初回 Gmail MCP 使用時にブラウザ認証
+
+### Outlook OAuth 設定（初回1回のみ）
+
+1. [Azure Portal](https://portal.azure.com/) →「アプリの登録」→ 新規登録（パブリッククライアント）
+2. リダイレクト URI: `http://localhost`
+3. API アクセス許可: **Mail.ReadWrite** / **Calendars.ReadWrite**
+4. アプリ（クライアント）ID を `~/.config/ms-365-mcp/.env` に保存
+5. 初回 Outlook MCP 使用時にブラウザ認証
+
+### 追加 MCP（任意）
+
+「Notion使いたい」「カレンダー連携したい」と話しかけると、秘書が手順を案内します。
+Google Calendar / Notion / GitHub / Slack などが追加可能です。
+
+MCP がなくても、`.company/` 内のファイル管理だけで完全に動作します。
 
 ## ブラウザでダッシュボード
 
