@@ -1,24 +1,25 @@
 {
-  "name": "cc-company",
+  "name": "bootcamp-company",
   "owner": {
-    "name": "Shin-sibainu"
+    "name": "Kansaipado"
   },
   "metadata": {
-    "description": "秘書から始める仮想組織プラグイン。3ステップで即運用開始。"
+    "description": "ブートキャンプ受講者向け 仮想組織プラグイン。秘書から始めて、必要な部署と専門エージェントを育てていく。"
   },
   "plugins": [
     {
       "name": "company",
       "source": "./plugins/company",
-      "description": "秘書から始める仮想組織スキル。3ステップで即運用開始、部署は必要に応じて自然に増える。",
-      "version": "2.1.0",
+      "description": "秘書から始める仮想組織スキル。経営者が AI に仕事を任せていく仕組みをつくる。",
+      "version": "1.0.0",
       "author": {
-        "name": "Shin-sibainu"
+        "name": "Kansaipado"
       },
-      "repository": "https://github.com/Shin-sibainu/cc-company",
+      "repository": "https://github.com/Kansaipado/bootcamp-company",
       "license": "MIT",
       "category": "productivity",
-      "tags": ["company", "organization", "secretary", "productivity", "management"]
+      "tags": ["company", "organization", "secretary", "bootcamp", "ai-orchestration", "small-business"],
+      "forkedFrom": "https://github.com/Shin-sibainu/cc-company"
     }
   ]
 }
