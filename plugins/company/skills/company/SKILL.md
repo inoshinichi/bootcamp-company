@@ -92,7 +92,7 @@ trigger: /company
 5. 今日の日付で `secretary/todos/YYYY-MM-DD.md` を作成
 6. `secretary/experience/INDEX.md` を初期化（空のケース一覧）
 
-**完了メッセージ:**
+**完了メッセージ（必ずこの構成を表示する）:**
 
 > 秘書室のセットアップが完了しました！
 >
@@ -110,16 +110,39 @@ trigger: /company
 >
 > これからは `/company` でいつでも秘書に話しかけられます。
 >
-> 次の一歩のおすすめ:
-> 1. 「今日やること教えて」 → 今日のTODOを聞いてみる
-> 2. 「○○について壁打ちしたい」 → 相談してみる
-> 3. 「○○について調べて」 → 必要に応じて部署を提案します
+> ━━━━━━━━━━━━━━━━━━━━━━━
+> 🔗 利用可能な機能
+> ━━━━━━━━━━━━━━━━━━━━━━━
+>
+> **✅ Playwright MCP（即利用可・自動同梱）**
+> 「○○のサイトで調査して」「ブラウザで○○して」など即指示可能
+>
+> **⚠️ Gmail MCP（OAuth設定が必要・5分）**
+> 「Gmail連携セットアップして」と話しかけると手順を案内します
+>
+> **⚠️ Outlook MCP（OAuth設定が必要・5分）**
+> 「Outlook連携セットアップして」と話しかけると手順を案内します
+>
+> **⚠️ ハーネス開発（要 superpowers プラグイン）**
+> アプリ・LP・システム作成を自動化するフローで使います。
+> 未インストールの場合、以下を実行してください:
+> ```
+> /plugin marketplace add obra/superpowers
+> /plugin install superpowers
+> ```
+>
+> ━━━━━━━━━━━━━━━━━━━━━━━
+> 🎬 最初に試すおすすめ
+> ━━━━━━━━━━━━━━━━━━━━━━━
+>
+> 1. 「今日やること教えて」 → TODOを整理
+> 2. 「○○について壁打ちしたい」 → 相談する
+> 3. 「○○について調べて」 → 必要に応じて部署を提案
+> 4. 「○○のLP作って」 → ハーネス開発フロー始動（superpowers必須）
 >
 > 仕事を進めるうちに、必要な部署や専門エージェントを自然に増やしていきます。
 >
-> 💡 **ヒント**:
-> - ブラウザで組織を可視化: `npx cc-company-dashboard`
-> - Google カレンダーや Notion と連携: 「MCP連携したい」と話しかけてください
+> 💡 ブラウザで組織を可視化: `npx cc-company-dashboard`
 
 ---
 
@@ -127,6 +150,25 @@ trigger: /company
 
 `.company/` が存在する場合に自動で切り替わる。
 まず `.company/CLAUDE.md` を読み込む。
+
+### 初回起動時の依存案内（初日 or 7日以上ぶりの起動時）
+
+秘書として運営モードに入ったとき、最後の `secretary/notes/` 更新日が当日でない & まだ依存案内をしていない場合は、以下を冒頭に1回だけ表示する：
+
+```
+おかえりなさい！ご相談どうぞ。
+
+📌 利用可能な機能のリマインド:
+- ✅ Playwright MCP（即利用可）: ブラウザ操作・スクレイピング・UI確認
+- ⚠️ Gmail MCP（OAuth未設定なら「Gmail連携セットアップして」）
+- ⚠️ Outlook MCP（OAuth未設定なら「Outlook連携セットアップして」）
+- ⚠️ ハーネス開発: obra/superpowers プラグインが必要
+  未インストールなら: /plugin install superpowers@superpowers-marketplace
+
+何かありますか？
+```
+
+毎回出すと煩わしいので、`secretary/notes/_dependency_announced.md` のようなフラグファイルを使い、表示済みかチェックしてもよい。
 
 ### 起動時の inbox/ チェック
 
@@ -396,15 +438,23 @@ last_updated: YYYY-MM-DD
 「○○を作って」と頼まれたら、**superpowers プラグイン（obra/superpowers）** の各スキルを順に起動してハーネス開発を回す。
 このプラグインは superpowers の高品質なハーネススキルを活用する設計で、独自の planner/generator/evaluator は実装していない。
 
-### 前提
+### 前提・依存チェック
 
-ユーザーが superpowers プラグインをインストール済みであること（README に依存として明記）。
-未インストールならインストール手順を案内する：
+「○○を作って」依頼を受けたら、**まず最初に**以下を案内する（毎回ではなく初回 or 不安そうなとき）：
 
 ```
-/plugin marketplace add obra/superpowers
-/plugin install superpowers
+秘書: ハーネス開発フローで進めますね。
+      ※ このフローは obra/superpowers プラグインを使います。
+      未インストールの場合、最初に以下を実行してください:
+
+      /plugin marketplace add obra/superpowers
+      /plugin install superpowers
+
+      インストール済みでしたら、そのまま進めましょう。
 ```
+
+ユーザーが「インストール済」「進めて」と返したらフローを開始する。
+途中で `Skill` ツールが見つからないエラーが出たら、改めて superpowers のインストールを促す。
 
 ### ハーネス開発フロー
 
