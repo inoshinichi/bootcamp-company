@@ -12,15 +12,15 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Kansaipado/bootcamp-company.git"
+    "url": "git+https://github.com/inoshinichi/bootcamp-company.git"
   },
   "keywords": ["company", "claude-code", "bootcamp", "ai-orchestration"],
-  "author": "Kansaipado",
+  "author": "inoshinichi",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/Kansaipado/bootcamp-company/issues"
+    "url": "https://github.com/inoshinichi/bootcamp-company/issues"
   },
-  "homepage": "https://github.com/Kansaipado/bootcamp-company#readme",
+  "homepage": "https://github.com/inoshinichi/bootcamp-company#readme",
   "forkedFrom": "https://github.com/Shin-sibainu/cc-company",
   "devDependencies": {
     "vitepress": "^1.6.4",
