@@ -117,41 +117,90 @@
 
 **注意**: superpowers プラグインを先にインストールしてください（上記のインストール手順 Step 1 参照）。
 
-## 同梱 MCP サーバー（自動セットアップ）
+## 5問オンボーディング（あなたの環境に合わせて連携を提案）
 
-プラグインインストール時に以下が自動で利用可能になります：
+`/company` を初回起動すると、秘書が5つの質問でお話を聞きます：
 
-| サービス | 用途 | OAuth 設定 |
+1. **事業・活動**（製造業？ コンサル？ EC？）
+2. **目標・困りごと**（売上？ 業務効率？ 人手不足？）
+3. **メール・カレンダー・ストレージの基盤** ← Google / Microsoft / 両方 / 使わない
+4. **社内チャット** ← Teams / Google Chat / Slack / Chatwork / 使わない
+5. ダッシュボード（任意）
+
+3問目と4問目の回答に応じて、**あなたの環境に合った連携プランを秘書が動的に提案**します。
+
+## 同梱 MCP サーバー（環境に応じて使い分け）
+
+プラグインインストール時にすべての MCP が利用可能な状態になり、OAuth 設定が完了したものから順に動き始めます。
+
+### 即利用可（OAuth不要）
+
+| MCP | 用途 |
+|---|---|
+| **Playwright** | ブラウザ自動操作・スクレイピング・UIテスト |
+
+### Google ベース利用者向け
+
+| MCP | 用途 | OAuth設定 |
 |---|---|---|
-| **Playwright** | ブラウザ自動操作（evaluator のテスト・スクレイピング・UI確認） | 不要・即利用可 |
-| **Gmail** | メールの読み書き・検索・下書き | Google Cloud で OAuth クライアント作成（5分） |
-| **Outlook** | Outlook メール・カレンダー | Azure AD でアプリ登録（5分） |
+| **Gmail** | メール送受信・検索・下書き | Google Cloud Console |
+| **Google Calendar** | 予定確認・追加・調整 | 同じ Google Cloud プロジェクト |
+| **Google Drive** | ファイル検索・読込・保存 | 同じ Google Cloud プロジェクト |
 
-### Gmail OAuth 設定（初回1回のみ）
+→ **3つ合わせて 1つの OAuth クライアント** で済みます（10分）
 
-1. [Google Cloud Console](https://console.cloud.google.com/) で新規プロジェクト
-2. 「APIとサービス」→「ライブラリ」で **Gmail API** を有効化
-3. 「認証情報」→「OAuth クライアント ID 作成」（種類: **デスクトップアプリ**）
-4. credentials.json をダウンロード
-5. 配置:
-   ```bash
-   mkdir -p ~/.gmail-mcp
-   mv ~/Downloads/credentials.json ~/.gmail-mcp/gcp-oauth.keys.json
-   ```
-6. Claude Code 再起動 → 初回 Gmail MCP 使用時にブラウザ認証
+### Microsoft ベース利用者向け
 
-### Outlook OAuth 設定（初回1回のみ）
+| MCP | 用途 | OAuth設定 |
+|---|---|---|
+| **ms-365**（統合） | Outlook メール / Outlook Calendar / OneDrive / Teams | Azure AD で1回アプリ登録 |
 
-1. [Azure Portal](https://portal.azure.com/) →「アプリの登録」→ 新規登録（パブリッククライアント）
-2. リダイレクト URI: `http://localhost`
-3. API アクセス許可: **Mail.ReadWrite** / **Calendars.ReadWrite**
-4. アプリ（クライアント）ID を `~/.config/ms-365-mcp/.env` に保存
-5. 初回 Outlook MCP 使用時にブラウザ認証
+→ **メール+カレンダー+ストレージ+チャット 全部** を1つの MCP でカバー（10分）
+
+### 社内チャット連携
+
+| MCP | 用途 | OAuth設定 |
+|---|---|---|
+| **Slack** | Slack ワークスペースへの投稿・読込 | Slack Bot Token（5分） |
+
+Teams 利用者は ms-365 MCP に含まれます。
+Google Chat / Chatwork は専用 MCP が限定的なため、必要に応じて API キー経由で個別案内します。
+
+## OAuth セットアップ手順（ステップバイステップ・秘書が伴走）
+
+`/company` 起動後に「Google 連携セットアップして」「Microsoft 連携セットアップして」「Slack 連携セットアップして」と話しかけると、秘書がステップバイステップで案内します。**人間操作が必要な部分は明示し、Claude が自動でできる部分（コマンド実行・ファイル配置）は秘書が代行します。**
+
+### Google 連携（Gmail + Calendar + Drive）の流れ
+
+1. Google Cloud Console でプロジェクト作成（人間操作）
+2. Gmail API / Calendar API / Drive API を有効化（人間操作）
+3. OAuth 同意画面 + クライアントID（デスクトップアプリ）作成（人間操作）
+4. credentials.json をダウンロード（人間操作）
+5. **配置 → 秘書が自動代行**（Bashでコピー）
+6. Claude Code 再起動（人間操作）
+7. 初回 MCP 利用時にブラウザで Google ログイン（人間操作）
+
+### Microsoft 連携（Outlook + Calendar + OneDrive + Teams）の流れ
+
+1. Azure Portal → アプリの登録（人間操作）
+2. Mail/Calendars/Files/Chat の API 権限を追加（人間操作）
+3. パブリッククライアントフローを許可（人間操作）
+4. クライアント ID をコピー（人間操作）
+5. **環境変数設定 → 秘書が自動代行**（Bashで .env 作成）
+6. Claude Code 再起動 → 初回 OAuth 認証（ブラウザでログイン）
+
+### Slack 連携の流れ
+
+1. Slack App を作成（人間操作）
+2. Bot Token Scopes 追加 → ワークスペースインストール（人間操作）
+3. Bot Token (`xoxb-...`) と Team ID をコピー（人間操作）
+4. **環境変数設定 → 秘書が自動代行**（Bashで .env 作成）
+5. Claude Code 再起動 → 利用開始
 
 ### 追加 MCP（任意）
 
-「Notion使いたい」「カレンダー連携したい」と話しかけると、秘書が手順を案内します。
-Google Calendar / Notion / GitHub / Slack などが追加可能です。
+「Notion使いたい」「Chatwork連携したい」と話しかけると、秘書が手順を案内します。
+Notion / GitHub などが追加可能です。
 
 MCP がなくても、`.company/` 内のファイル管理だけで完全に動作します。
 
