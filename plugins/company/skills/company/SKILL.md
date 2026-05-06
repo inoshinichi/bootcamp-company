@@ -28,10 +28,11 @@ trigger: /company
 - **`.company/` が存在する** → `.company/CLAUDE.md` を読み込み → **運営モード**へ
 - **`.company/` が存在しない** → **Step 2: オンボーディング**へ
 
-### Step 2: オンボーディング（3問）
+### Step 2: オンボーディング（5問）
 
 `AskUserQuestion` で対話的にヒアリングする。秘書の口調（丁寧だが親しみやすい）で話す。
 ユーザーの言語を自動検出し、同じ言語で応答する。
+**Q3 と Q4 の回答は `.company/CLAUDE.md` に記録し、完了メッセージや今後の連携提案で活用する。**
 
 #### Q1: 事業・活動
 
@@ -47,7 +48,31 @@ trigger: /company
 >
 > 例: 「売上を伸ばしたい」「人が足りない」「資料作成が大変」「経理が回らない」
 
-#### Q3: ダッシュボード（任意）
+#### Q3: メール・カレンダー・ストレージの基盤
+
+> 普段お使いのメール・カレンダー・ファイル保管場所を教えてください。
+> 連携できる機能が変わります。
+>
+> - 1) **Google ベース**（Gmail / Google Calendar / Google Drive）
+> - 2) **Microsoft ベース**（Outlook / Outlook Calendar / OneDrive）
+> - 3) **両方使っている（ハイブリッド）**
+> - 4) **特に使っていない / あとで決める**
+
+回答を `googleBased` / `microsoftBased` / `hybrid` / `none` として記録。
+
+#### Q4: 社内コミュニケーションツール
+
+> 社内のチャット・コミュニケーションは何を使っていますか？
+>
+> - 1) **Microsoft Teams**
+> - 2) **Google Chat**
+> - 3) **Slack**
+> - 4) **Chatwork**
+> - 5) **特に使っていない / メールベース**
+
+回答を `teams` / `googleChat` / `slack` / `chatwork` / `none` として記録。
+
+#### Q5: ダッシュボード（任意）
 
 > ブラウザで組織の状況を確認できるダッシュボードがあります。
 > セットアップしますか？
@@ -92,7 +117,9 @@ trigger: /company
 5. 今日の日付で `secretary/todos/YYYY-MM-DD.md` を作成
 6. `secretary/experience/INDEX.md` を初期化（空のケース一覧）
 
-**完了メッセージ（必ずこの構成を表示する）:**
+**完了メッセージ（Q3/Q4 の回答に応じて動的に構成）:**
+
+固定部分:
 
 > 秘書室のセットアップが完了しました！
 >
@@ -108,23 +135,71 @@ trigger: /company
 >     └── experience/
 > ```
 >
-> これからは `/company` でいつでも秘書に話しかけられます。
->
 > ━━━━━━━━━━━━━━━━━━━━━━━
-> 🔗 利用可能な機能
+> 🔗 あなたの環境向けの連携プラン
 > ━━━━━━━━━━━━━━━━━━━━━━━
 >
-> **✅ Playwright MCP（即利用可・自動同梱）**
+> ✅ **Playwright MCP（即利用可・自動同梱）**
 > 「○○のサイトで調査して」「ブラウザで○○して」など即指示可能
+
+#### Q3 が `googleBased` または `hybrid` の場合 → Google系3点を案内
+
+> 📧 **Gmail / Google Calendar / Google Drive 連携 ⚠️ OAuth設定が必要（10分）**
 >
-> **⚠️ Gmail MCP（OAuth設定が必要・5分）**
-> 「Gmail連携セットアップして」と話しかけると手順を案内します
+> Google Cloud Console で1つの OAuth クライアントを作れば、3つすべてが使えます。
+> 「Google 連携セットアップして」と話しかけると、手順をステップバイステップで案内します。
 >
-> **⚠️ Outlook MCP（OAuth設定が必要・5分）**
-> 「Outlook連携セットアップして」と話しかけると手順を案内します
+> セットアップ後にできること:
+> - 「メール送って」「未読メール教えて」 → Gmail
+> - 「来週の予定確認して」「○月○日に会議入れて」 → Google Calendar
+> - 「Drive のあの資料見せて」「議事録を Drive に保存して」 → Google Drive
+
+#### Q3 が `microsoftBased` または `hybrid` の場合 → Microsoft系を案内
+
+> 📧 **Outlook / Outlook Calendar / OneDrive 連携 ⚠️ OAuth設定が必要（10分）**
 >
-> **⚠️ ハーネス開発（要 superpowers プラグイン）**
-> アプリ・LP・システム作成を自動化するフローで使います。
+> Azure AD で1つのアプリ登録をすれば、Outlook（メール+カレンダー）と OneDrive がすべて使えます。
+> 「Microsoft 連携セットアップして」と話しかけると、手順をステップバイステップで案内します。
+>
+> セットアップ後にできること:
+> - 「Outlook でメール送って」「受信箱まとめて」 → Outlook メール
+> - 「予定表に追加して」「空き時間ある？」 → Outlook Calendar
+> - 「OneDrive にあるファイルで…」 → OneDrive
+>
+> ※ OneDrive がローカルに同期されている場合は、ローカルファイル操作 + MCP 操作の併用が可能です
+
+#### Q4 が `teams` の場合
+
+> 💬 **Microsoft Teams 連携**
+> Q3 で Microsoft 基盤を選ばれた場合、ms-365 MCP に Teams のチャット送信機能が含まれます。
+> 同じ Azure AD アプリ登録で Chat.ReadWrite 権限を追加すれば使えるようになります。
+> 「Teams 連携セットアップして」と話しかけてください。
+
+#### Q4 が `googleChat` の場合
+
+> 💬 **Google Chat 連携**
+> 現状、Google Chat 専用の MCP は限定的です。Google Workspace API 経由での連携を案内します。
+> 「Google Chat 連携セットアップして」と話しかけてください。
+
+#### Q4 が `slack` の場合
+
+> 💬 **Slack 連携 ⚠️ Bot Token 取得が必要（5分）**
+> Slack ワークスペースに Bot User をインストールして Bot Token を取得します。
+> 「Slack 連携セットアップして」と話しかけると、ステップバイステップで案内します。
+
+#### Q4 が `chatwork` の場合
+
+> 💬 **Chatwork 連携**
+> Chatwork は API トークン経由で連携可能です。完全な MCP は限定的なので、
+> 当初はメールや Slack 経由のフローを推奨します。「Chatwork 連携試したい」と話しかけてください。
+
+#### 共通部分
+
+> ━━━━━━━━━━━━━━━━━━━━━━━
+> 🛠️ ハーネス開発（プロダクト作成）
+> ━━━━━━━━━━━━━━━━━━━━━━━
+>
+> アプリ・LP・システムなどのプロダクト開発は **obra/superpowers プラグイン** を使います。
 > 未インストールの場合、以下を実行してください:
 > ```
 > /plugin marketplace add obra/superpowers
@@ -137,12 +212,12 @@ trigger: /company
 >
 > 1. 「今日やること教えて」 → TODOを整理
 > 2. 「○○について壁打ちしたい」 → 相談する
-> 3. 「○○について調べて」 → 必要に応じて部署を提案
+> 3. 「[Q3の基盤] 連携セットアップして」 → メール・カレンダー・ストレージを連携
 > 4. 「○○のLP作って」 → ハーネス開発フロー始動（superpowers必須）
 >
-> 仕事を進めるうちに、必要な部署や専門エージェントを自然に増やしていきます。
->
 > 💡 ブラウザで組織を可視化: `npx cc-company-dashboard`
+>
+> 何でもお気軽にお話しください！
 
 ---
 
@@ -549,34 +624,142 @@ last_updated: YYYY-MM-DD
 | **Gmail** | メールの読み書き・検索・下書き作成 | Google Cloud で OAuth クライアント作成必要 |
 | **Outlook** | Outlook メール・カレンダー連携 | Azure AD でアプリ登録必要 |
 
-### Gmail MCP の OAuth 設定（初回のみ）
+### Google 連携セットアップ（Gmail + Calendar + Drive 一括 / 初回のみ）
 
-ユーザーが「Gmail連携セットアップして」「メール使いたい」等と言ったら、以下を案内する:
+ユーザーが「Google 連携セットアップして」「Gmail 使いたい」「Drive 使いたい」「Calendar 連携」等と言ったら、**ステップバイステップで案内** する。
+1つの Google Cloud プロジェクトで Gmail/Calendar/Drive すべての OAuth クライアントを共用できる。
 
-1. [Google Cloud Console](https://console.cloud.google.com/) で新規プロジェクトを作成
-2. 「APIとサービス」→「ライブラリ」で **Gmail API** を有効化
-3. 「APIとサービス」→「認証情報」→「OAuth クライアント ID 作成」
-   - アプリの種類: **デスクトップアプリ**
-4. credentials.json をダウンロード
-5. ファイルを `~/.gmail-mcp/gcp-oauth.keys.json` に配置
-   ```bash
-   mkdir -p ~/.gmail-mcp
-   mv ~/Downloads/credentials.json ~/.gmail-mcp/gcp-oauth.keys.json
-   ```
-6. Claude Code を再起動 → 初回 Gmail MCP ツール使用時にブラウザで認証
-7. 完了
+**秘書はステップ毎に「次に進みますか？」と確認しながら進める。Claude が自動でできる部分（コマンド実行など）は秘書が代行する。**
 
-### Outlook MCP の OAuth 設定（初回のみ）
+#### Step 1: Google Cloud Console でプロジェクト作成（人間操作）
+1. [Google Cloud Console](https://console.cloud.google.com/) を開く
+2. プロジェクト名を任意で（例: `my-company-mcp`）作成
 
-ユーザーが「Outlook連携セットアップして」と言ったら、以下を案内する:
+#### Step 2: 必要な API を有効化（人間操作）
+「APIとサービス」→「ライブラリ」で以下を順に有効化:
+- Gmail API
+- Google Calendar API
+- Google Drive API
 
+#### Step 3: OAuth 同意画面の設定（人間操作）
+「OAuth 同意画面」→ User Type: **外部** または **内部** を選択 → 必須項目入力（アプリ名・サポートメール等）
+
+#### Step 4: OAuth クライアント ID 作成（人間操作）
+「認証情報」→「OAuth クライアント ID 作成」
+- アプリの種類: **デスクトップアプリ**
+- 名前: `bootcamp-company-mcp`（任意）
+- 作成後 credentials.json をダウンロード
+
+#### Step 5: credentials.json を配置（**ここから秘書が自動で代行可**）
+
+ユーザーがダウンロードした credentials.json のパスを伝えてくれたら、秘書が以下を Bash で実行:
+```bash
+mkdir -p ~/.gmail-mcp
+cp <credentials.jsonのパス> ~/.gmail-mcp/gcp-oauth.keys.json
+mkdir -p ~/.config/google-calendar-mcp
+cp <credentials.jsonのパス> ~/.config/google-calendar-mcp/credentials.json
+mkdir -p ~/.config/google-drive-mcp
+cp <credentials.jsonのパス> ~/.config/google-drive-mcp/credentials.json
+```
+
+#### Step 6: Claude Code を再起動（人間操作）
+
+ユーザーに「Claude Code を一度終了して再起動してください」と案内。
+
+#### Step 7: 初回 OAuth 認証（半自動）
+
+再起動後、最初に Gmail/Calendar/Drive の MCP ツールを使うと、ブラウザが自動で開いて Google ログイン → 許可 → 完了。
+
+完了後、「メール送って」「予定確認して」「Drive のあの資料」など試してみる。
+
+---
+
+### Microsoft 連携セットアップ（Outlook + Calendar + OneDrive + Teams 一括 / 初回のみ）
+
+ユーザーが「Microsoft 連携セットアップして」「Outlook 使いたい」等と言ったら、ステップバイステップで案内する。
+ms-365-mcp-server は Outlook（メール+カレンダー）+ OneDrive + Teams を1つでカバーする統合 MCP。
+
+#### Step 1: Azure Portal でアプリ登録（人間操作）
 1. [Azure Portal](https://portal.azure.com/) → 「アプリの登録」→ 新規登録
-2. アプリ種別: **パブリッククライアント**
-3. リダイレクト URI: `http://localhost`
-4. API のアクセス許可で **Mail.ReadWrite** / **Calendars.ReadWrite** を追加
-5. アプリ（クライアント）ID をコピー
-6. 環境変数 `MS365_MCP_CLIENT_ID` に設定するか、`~/.config/ms-365-mcp/.env` に保存
-7. 初回ツール使用時にブラウザで認証
+2. 名前: `bootcamp-company-mcp`（任意）
+3. サポートされるアカウントの種類: **このディレクトリのアカウントのみ**（個人MS365アカウントなら **個人 Microsoft アカウント**）
+4. リダイレクト URI: パブリッククライアント / `http://localhost`
+
+#### Step 2: API のアクセス許可を追加（人間操作）
+「APIのアクセス許可」→ Microsoft Graph → **委任されたアクセス許可** で以下を追加:
+- `Mail.ReadWrite` （Outlook メール）
+- `Calendars.ReadWrite` （Outlook カレンダー）
+- `Files.ReadWrite` または `Files.ReadWrite.All` （OneDrive）
+- `Chat.ReadWrite` （Teams、Q4 で teams 選択時のみ）
+- `User.Read` （基本）
+
+#### Step 3: 認証設定 → 公開クライアントフロー (人間操作)
+
+「認証」タブで「**パブリッククライアントフローを許可する**」を **はい** に切り替え。
+
+#### Step 4: アプリ（クライアント）ID をコピー（人間操作）
+
+「概要」タブからクライアントID（GUID）をコピー。
+
+#### Step 5: 環境変数を設定（**秘書が自動で代行可**）
+
+ユーザーがクライアントIDを伝えてくれたら、秘書が以下を Bash で実行:
+```bash
+mkdir -p ~/.config/ms-365-mcp
+cat > ~/.config/ms-365-mcp/.env <<'EOL'
+MS365_MCP_CLIENT_ID=<コピーしたクライアントID>
+EOL
+```
+
+#### Step 6: Claude Code 再起動 → 初回 OAuth 認証
+
+再起動後、最初に Outlook/OneDrive ツールを使うとブラウザで Microsoft ログインが開く。許可後、利用可能。
+
+---
+
+### Slack 連携セットアップ（Bot Token 方式 / 初回のみ）
+
+ユーザーが「Slack 連携セットアップして」と言ったら、以下を案内する。
+
+#### Step 1: Slack App を作成（人間操作）
+1. [Slack API: Your Apps](https://api.slack.com/apps) → Create New App → From scratch
+2. App 名: `bootcamp-company-bot`（任意）
+
+#### Step 2: Bot Token Scopes を設定（人間操作）
+「OAuth & Permissions」→ Bot Token Scopes で以下を追加:
+- `chat:write`
+- `channels:read`
+- `channels:history`
+- `users:read`
+
+#### Step 3: ワークスペースにインストール（人間操作）
+「Install to Workspace」をクリック → Bot User OAuth Token (`xoxb-...`) をコピー
+
+#### Step 4: Team ID を取得（人間操作）
+ワークスペースの URL から Team ID を確認、または「Settings & administration → Workspace settings → About Settings」で確認
+
+#### Step 5: 環境変数を設定（**秘書が自動で代行可**）
+
+ユーザーが Bot Token と Team ID を伝えてくれたら、秘書が以下を Bash で実行:
+```bash
+mkdir -p ~/.config/slack-mcp
+cat > ~/.config/slack-mcp/.env <<'EOL'
+SLACK_BOT_TOKEN=<xoxb-で始まるToken>
+SLACK_TEAM_ID=<Team ID>
+EOL
+```
+
+#### Step 6: Claude Code 再起動 → 利用開始
+
+「#general に投稿して」「DM 送って」など試す。
+
+---
+
+### Google Chat / Chatwork / Teams（Microsoft 連携経由）の補足
+
+- **Teams**: 上記「Microsoft 連携セットアップ」で `Chat.ReadWrite` を追加すれば一緒に使える
+- **Google Chat**: 専用 MCP は限定的。Google Workspace API + curl 経由の対応を `secretary/notes/` に書き留めて、必要に応じて手動連携を案内する
+- **Chatwork**: API トークンを発行 → ChatWork API を curl/HTTP 経由で呼ぶ簡易連携を案内（フル MCP なし）
 
 ### 追加 MCP サーバー（任意）
 
