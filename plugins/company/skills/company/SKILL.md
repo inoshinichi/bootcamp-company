@@ -393,33 +393,72 @@ last_updated: YYYY-MM-DD
 
 ## ハーネス開発（プロダクト開発フロー）
 
-このプラグインには **planner / generator / evaluator** の3つのサブエージェントが同梱されています。
-プロダクト開発を頼まれたときは、秘書がこの流れに沿って3エージェントを順に起動します。
+「○○を作って」と頼まれたら、**superpowers プラグイン（obra/superpowers）** の各スキルを順に起動してハーネス開発を回す。
+このプラグインは superpowers の高品質なハーネススキルを活用する設計で、独自の planner/generator/evaluator は実装していない。
 
-### フロー
+### 前提
+
+ユーザーが superpowers プラグインをインストール済みであること（README に依存として明記）。
+未インストールならインストール手順を案内する：
+
+```
+/plugin marketplace add obra/superpowers
+/plugin install superpowers
+```
+
+### ハーネス開発フロー
+
+ユーザーが「○○を作って」「○○のシステム作りたい」「○○のアプリ作って」と言ったら、秘書が以下を順に起動する：
 
 ```
 [ユーザー] 「○○を作りたい」（1〜4行のアイデア）
    ↓
-[planner] ブレインストーミング → spec.md 生成（必須機能・スプリント分割・検証項目を含む）
+[Step 1: ブレインストーミング]
+  Skill: superpowers:brainstorming
+  → 要件を質問攻めで詰める
    ↓
-[generator] スプリント1 を TDD で実装 → progress.md 更新
+[Step 2: 仕様書作成]
+  Skill: superpowers:writing-plans
+  → 詳細な実装計画（plan.md）を生成
    ↓
-[evaluator] 実機で動作確認（Playwright MCP 使用）→ feedback/sprint-1.md 生成
+[Step 3: 実装]
+  Skill: superpowers:executing-plans + superpowers:test-driven-development
+  → 計画通りに TDD で実装
    ↓
-合格 → 次のスプリントへ / 不合格 → generator にフィードバックを返して再実装
+[Step 4: 完了前検証]
+  Skill: superpowers:verification-before-completion
+  → 主張の前に必ず検証コマンドを実行
    ↓
-全スプリント完了 → ユーザーに最終報告
+[Step 5: コードレビュー（任意）]
+  Skill: superpowers:requesting-code-review
+  → 第三者視点でレビュー依頼
+   ↓
+[Step 6: 統合確認]
+  Playwright MCP（このプラグインで自動同梱）
+  → 実機UIテストで最終確認
 ```
 
-### 使い方
+### 並列実行が有効なケース
 
-ユーザーが「○○を作って」と言ったら、秘書が:
-1. 「アイデアを詳しく聞かせてください」と planner を呼ぶ
-2. spec.md を一緒に作る
-3. 「実装に進めますか？」と確認後、generator → evaluator のサイクルを回す
+複数の独立タスクがあるときは `superpowers:dispatching-parallel-agents` を使う。
+例：「3画面同時に作りたい」「複数の調査を並行で」
 
-ユーザーは「次のスプリントを進めて」「動作確認して」など短い指示で進められます。
+### バグ・トラブルシューティング
+
+「動かない」「バグった」と言われたら `superpowers:systematic-debugging` を起動する。
+推測で fix しない、再現 → 原因特定 → 修正 → 検証 の流れを徹底する。
+
+### 秘書からのアナウンス例
+
+```
+ユーザー: アンケートアプリ作りたい
+
+秘書: 承知しました！ハーネス開発フローで進めますね。
+      まずは superpowers:brainstorming で要件を詰めます。
+
+      [superpowers:brainstorming 起動]
+      ...
+```
 
 ---
 

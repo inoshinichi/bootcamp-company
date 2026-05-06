@@ -26,6 +26,17 @@
 
 このリポジトリは Private です。Kansaipado org の Outside Collaborator として招待された方のみアクセス可能です。
 
+### Step 1: superpowers プラグインをインストール（必須・先に）
+
+ハーネス開発（アプリ・システム作成フロー）に **obra/superpowers** プラグインを使います。先にこれを入れてください。
+
+```
+/plugin marketplace add obra/superpowers
+/plugin install superpowers
+```
+
+### Step 2: bootcamp-company をインストール
+
 ```
 /plugin marketplace add Kansaipado/bootcamp-company
 /plugin install company@bootcamp-company
@@ -89,15 +100,22 @@
 
 ## ハーネス開発（プロダクト開発機能）
 
-「LP作って」「アプリ作って」「○○のシステム作って」と頼まれたら、3つのサブエージェントが順に動きます：
+「LP作って」「アプリ作って」「○○のシステム作って」と頼まれたら、秘書が **obra/superpowers** プラグインの各スキルを順に起動してハーネス開発を回します：
 
-| エージェント | 役割 |
-|---|---|
-| **planner** | アイデア（1〜4行）から詳細仕様書（spec.md）を生成。質問攻めで要件を詰めます。 |
-| **generator** | spec.md のスプリント順に実装。TDD（テスト駆動開発）で進めます。 |
-| **evaluator** | 実機で動作確認。Playwright で UI 操作・API 呼び出し・データ確認まで行い、不合格時はフィードバックを返します。 |
+| Step | 使用スキル | 役割 |
+|---|---|---|
+| 1 | `superpowers:brainstorming` | アイデア（1〜4行）から要件をブレインストーミングで詰める |
+| 2 | `superpowers:writing-plans` | 詳細な実装計画（plan.md）を生成 |
+| 3 | `superpowers:executing-plans` + `superpowers:test-driven-development` | 計画通りに TDD で実装 |
+| 4 | `superpowers:verification-before-completion` | 完了前に必ず検証コマンドを実行 |
+| 5 | Playwright MCP（同梱） | 実機 UI テストで最終確認 |
+| 任意 | `superpowers:requesting-code-review` | 第三者視点でコードレビュー |
+| 任意 | `superpowers:dispatching-parallel-agents` | 独立タスクを並列実行 |
+| バグ時 | `superpowers:systematic-debugging` | 体系的デバッグ |
 
-ユーザーは「○○を作って」と言うだけ。秘書が3エージェントを順に呼び出して進めます。
+ユーザーは「○○を作って」と言うだけ。秘書が上記のスキルを順に呼び出して進めます。
+
+**注意**: superpowers プラグインを先にインストールしてください（上記のインストール手順 Step 1 参照）。
 
 ## 同梱 MCP サーバー（自動セットアップ）
 
