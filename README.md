@@ -1,17 +1,25 @@
-# cc-company
+# kansaipado-company
 
-Claude Code で仮想組織を構築・運営するプラグイン。
+関西ぱど社内向けにカスタマイズされた仮想組織プラグイン（Claude Code）。
+[Shin-sibainu/cc-company](https://github.com/Shin-sibainu/cc-company)（MIT License）を fork し、関西ぱどの組織構造・業務フローに合わせて拡張する。
 
-**[ドキュメント](https://shin-sibainu.github.io/cc-company/)** | **[English](https://shin-sibainu.github.io/cc-company/en/)**
+`/company` を実行すると、秘書がオーナー専用の窓口になり、関西ぱどの部署構造（管理本部 / 事業推進部 / 営業部 / マーケ企画室 / 中広グループ対応）に沿った組織運営が始まる。
 
-`/company` を実行すると、秘書があなた専用の窓口になります。3ステップで即運用開始。部署は使い方に合わせて自然に増えていきます。
-
-## インストール
+## インストール（社内メンバー向け）
 
 ```
-/plugin marketplace add Shin-sibainu/cc-company
-/plugin install company@cc-company
+/plugin marketplace add Kansaipado/kansaipado-company
+/plugin install company@kansaipado-company
 ```
+
+> Private リポジトリのため、Kansaipado org のメンバー以外はインストール不可。
+
+## fork 元との差分
+
+- 部署テンプレートを関西ぱどの組織構造（管理本部 / 事業推進部 / 営業部 / マーケ企画室 / 中広グループ）に置換
+- 業務固有の定型ワークフロー（経費処理 / 発注書ダウンロード / 月末支払い 等）を組み込み
+- 秘書の判断ロジック（7ステップフロー）+ 経験ファイル蓄積を関西ぱど運用に最適化
+- 中広グループ向け役員会報告フォーマットを内蔵
 
 ## コンセプト
 
