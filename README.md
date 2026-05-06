@@ -24,23 +24,31 @@
 
 ## インストール（招待された方限定）
 
-このリポジトリは Private です。Kansaipado org の Outside Collaborator として招待された方のみアクセス可能です。
+このリポジトリは Private です。GitHub アカウントを Outside Collaborator として招待された方のみアクセス可能です。
 
-### Step 1: superpowers プラグインをインストール（必須・先に）
+### 受講者がやること: 3コマンドだけ
 
-ハーネス開発（アプリ・システム作成フロー）に **obra/superpowers** プラグインを使います。先にこれを入れてください。
-
-```
-/plugin marketplace add obra/superpowers
-/plugin install superpowers
-```
-
-### Step 2: bootcamp-company をインストール
+Claude Code を開いて、以下の3行を順に実行してください。**それ以降は秘書が全部案内します。**
 
 ```
-/plugin marketplace add Kansaipado/bootcamp-company
+/plugin marketplace add inoshinichi/bootcamp-company
 /plugin install company@bootcamp-company
+/company
 ```
+
+> 💡 **「company プラグイン」と表示されますが正常です**
+> マーケットプレイス名が `bootcamp-company`、その中の本体プラグイン名が `company` という構造です。
+
+### 秘書が後で案内すること（受講者は事前に何も入れなくて OK）
+
+| 案内タイミング | 内容 |
+|---|---|
+| `/company` 起動直後 | 5問オンボーディング（事業・目標・基盤・チャット・ダッシュボード） |
+| オンボーディング完了時 | 環境に応じた連携プラン（Google / Microsoft / Slack） |
+| 「アプリ作って」と言ったとき | obra/superpowers プラグインが必要なら、その場でインストールコマンドを案内 |
+| 「Gmail 連携セットアップして」等で | OAuth 設定をステップバイステップで伴走 |
+
+URL や手順を覚える必要はありません。秘書に話しかけて進めてください。
 
 ## 5分で立ち上がる初回セットアップ
 
@@ -56,16 +64,26 @@
 
 あなた: 売上を伸ばしたいけど、営業が手薄。あと請求書まわりが煩雑
 
+秘書: メール・カレンダー・ストレージは Google ベースですか？
+      Microsoft ベースですか？
+
+あなた: Microsoft です
+
+秘書: 社内チャットは何を使っていますか？
+
+あなた: Teams です
+
 秘書: ブラウザで状況を確認できるダッシュボードがあります。
       セットアップしますか？
 
 あなた: あとで
 
 秘書: 秘書室のセットアップが完了しました！
-      これからは /company でいつでも話しかけられます。
+      Microsoft 連携（Outlook + OneDrive + Teams）の手順を
+      ステップバイステップで案内しますね...
 ```
 
-これで `.company/` フォルダが作られ、**あなただけの秘書** が立ち上がりました。
+これで `.company/` フォルダが作られ、**あなただけの秘書** が立ち上がります。
 
 ## 中核機能
 

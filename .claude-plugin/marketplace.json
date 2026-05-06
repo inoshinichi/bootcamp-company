@@ -1,7 +1,7 @@
 {
   "name": "bootcamp-company",
   "owner": {
-    "name": "Kansaipado"
+    "name": "inoshinichi"
   },
   "metadata": {
     "description": "ブートキャンプ受講者向け 仮想組織プラグイン。秘書から始めて、必要な部署と専門エージェントを育てていく。"
@@ -13,9 +13,9 @@
       "description": "秘書から始める仮想組織スキル。経営者が AI に仕事を任せていく仕組みをつくる。",
       "version": "1.0.0",
       "author": {
-        "name": "Kansaipado"
+        "name": "inoshinichi"
       },
-      "repository": "https://github.com/Kansaipado/bootcamp-company",
+      "repository": "https://github.com/inoshinichi/bootcamp-company",
       "license": "MIT",
       "category": "productivity",
       "tags": ["company", "organization", "secretary", "bootcamp", "ai-orchestration", "small-business"],
