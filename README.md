@@ -1,124 +1,174 @@
-# cc-company
+# bootcamp-company
 
-Claude Code で仮想組織を構築・運営するプラグイン。
+ブートキャンプ受講者向け 仮想組織プラグイン（Claude Code）。
+[Shin-sibainu/cc-company](https://github.com/Shin-sibainu/cc-company)（MIT License）を fork し、AI初学者の中小企業経営者でも 5分で「自分専用のAI組織」が立ち上がるよう調整。
 
-**[ドキュメント](https://shin-sibainu.github.io/cc-company/)** | **[English](https://shin-sibainu.github.io/cc-company/en/)**
+## このプラグインで何ができる？
 
-`/company` を実行すると、秘書があなた専用の窓口になります。3ステップで即運用開始。部署は使い方に合わせて自然に増えていきます。
+`/company` を実行すると、**あなた専用の秘書** が窓口になります。
 
-## インストール
+- 「今日やることは？」 → 秘書が TODO を整理
+- 「○○について調べて」 → 必要に応じてリサーチ部門を提案・作成
+- 「LP作って」 → マーケティング部門に振り分け
+- 「決算書類どうしたら？」 → 経理部門で対応
+
+**最初は秘書だけ。仕事を進める中で部署が自然に増えていきます。**
+さらに、同じ依頼が繰り返されると「専門エージェント」を提案して、その分野のプロが自動で立ち上がるようになります。
+
+## こんな人におすすめ
+
+- 中小企業の経営者で、自分の手と時間が足りないと感じている方
+- AI を使い始めたばかりで、「結局何ができるの？」がつかめていない方
+- ChatGPT に毎回 1から指示するのに疲れている方
+- 業種は問いません（製造業、飲食、コンサル、士業、IT、EC、不動産、教育 など）
+
+## インストール（招待された方限定）
+
+このリポジトリは Private です。Kansaipado org の Outside Collaborator として招待された方のみアクセス可能です。
+
+### Step 1: superpowers プラグインをインストール（必須・先に）
+
+ハーネス開発（アプリ・システム作成フロー）に **obra/superpowers** プラグインを使います。先にこれを入れてください。
 
 ```
-/plugin marketplace add Shin-sibainu/cc-company
-/plugin install company@cc-company
+/plugin marketplace add obra/superpowers
+/plugin install superpowers
 ```
 
-## コンセプト
+### Step 2: bootcamp-company をインストール
 
 ```
-あなた → 秘書（窓口） → 各部署（必要に応じて追加）
+/plugin marketplace add Kansaipado/bootcamp-company
+/plugin install company@bootcamp-company
 ```
 
-- **秘書**: 常に窓口。TODO管理、壁打ち、メモ、何でも相談OK
-- **部署**: 仕事が増えたら秘書が提案。リサーチ、PM、開発など
-
-最初は秘書だけ。シンプルに始めて、必要になったら部署を追加。
-
-## 使い方
-
-### 初回セットアップ（3ステップ）
+## 5分で立ち上がる初回セットアップ
 
 ```
 > /company
 
 秘書: はじめまして！あなたの秘書になります。
-      まず、事業や活動を教えてください。
-あなた: フリーランスのWeb開発やってます
+      まず、あなたの事業や活動を教えてください。
 
-秘書: 今の目標や困りごとは？
-あなた: SaaSを作って月10万目指してる。タスクが散らかるのが悩み
+あなた: 製造業で、地元のホテル向けのアメニティを作っています
 
-→ .company/secretary/ が自動生成される（完了！）
+秘書: 今の目標や、日々困っていることがあれば教えてください。
+
+あなた: 売上を伸ばしたいけど、営業が手薄。あと請求書まわりが煩雑
+
+秘書: ブラウザで状況を確認できるダッシュボードがあります。
+      セットアップしますか？
+
+あなた: あとで
+
+秘書: 秘書室のセットアップが完了しました！
+      これからは /company でいつでも話しかけられます。
 ```
 
-### 日常の運営
+これで `.company/` フォルダが作られ、**あなただけの秘書** が立ち上がりました。
 
+## 中核機能
+
+### 7ステップ判断フロー
+秘書は依頼を受けたとき、過去経験の検索 → 意図理解 → インプット洗い出し → 自律 / 協議判断 → 実行 → ケース記録 の流れで処理します。
+都度の判断が積み上がり、組織が成長します。
+
+### inbox/ システム
+部署同士の通知や横断案件のステータス共有を `inbox/` で集約。秘書が定期的にサマリーします。
+
+### 経験ファイル蓄積（自律成長の核）
+ケース完了時に `secretary/experience/case-NNN-...md` を残します。同種ケースが3件以上溜まると、`patterns/<種別>.md` に統合知見が生成され、次回からの判断基準になります。
+
+### 部署とエージェントの自然な追加
+- 同領域のタスクが2回以上 → 部署作成を提案
+- 同部署の同種専門作業が3回以上 → 専門エージェント作成を提案
+
+最初は秘書ひとりからスタートし、使い込むほど組織が成長します。
+
+## 部署テンプレート（必要に応じて秘書が提案）
+
+| 部署 | キーワード |
+|---|---|
+| PM | プロジェクト、進捗、スケジュール |
+| リサーチ | 調査、競合、市場、トレンド |
+| マーケティング | コンテンツ、SNS、広告、LP |
+| 開発 | 実装、設計、デバッグ |
+| 経理 | 請求、経費、売上、確定申告 |
+| 営業 | クライアント、提案、見積 |
+| クリエイティブ | デザイン、ロゴ、ブランド |
+| 人事 | 採用、チーム、オンボーディング |
+
+## ハーネス開発（プロダクト開発機能）
+
+「LP作って」「アプリ作って」「○○のシステム作って」と頼まれたら、秘書が **obra/superpowers** プラグインの各スキルを順に起動してハーネス開発を回します：
+
+| Step | 使用スキル | 役割 |
+|---|---|---|
+| 1 | `superpowers:brainstorming` | アイデア（1〜4行）から要件をブレインストーミングで詰める |
+| 2 | `superpowers:writing-plans` | 詳細な実装計画（plan.md）を生成 |
+| 3 | `superpowers:executing-plans` + `superpowers:test-driven-development` | 計画通りに TDD で実装 |
+| 4 | `superpowers:verification-before-completion` | 完了前に必ず検証コマンドを実行 |
+| 5 | Playwright MCP（同梱） | 実機 UI テストで最終確認 |
+| 任意 | `superpowers:requesting-code-review` | 第三者視点でコードレビュー |
+| 任意 | `superpowers:dispatching-parallel-agents` | 独立タスクを並列実行 |
+| バグ時 | `superpowers:systematic-debugging` | 体系的デバッグ |
+
+ユーザーは「○○を作って」と言うだけ。秘書が上記のスキルを順に呼び出して進めます。
+
+**注意**: superpowers プラグインを先にインストールしてください（上記のインストール手順 Step 1 参照）。
+
+## 同梱 MCP サーバー（自動セットアップ）
+
+プラグインインストール時に以下が自動で利用可能になります：
+
+| サービス | 用途 | OAuth 設定 |
+|---|---|---|
+| **Playwright** | ブラウザ自動操作（evaluator のテスト・スクレイピング・UI確認） | 不要・即利用可 |
+| **Gmail** | メールの読み書き・検索・下書き | Google Cloud で OAuth クライアント作成（5分） |
+| **Outlook** | Outlook メール・カレンダー | Azure AD でアプリ登録（5分） |
+
+### Gmail OAuth 設定（初回1回のみ）
+
+1. [Google Cloud Console](https://console.cloud.google.com/) で新規プロジェクト
+2. 「APIとサービス」→「ライブラリ」で **Gmail API** を有効化
+3. 「認証情報」→「OAuth クライアント ID 作成」（種類: **デスクトップアプリ**）
+4. credentials.json をダウンロード
+5. 配置:
+   ```bash
+   mkdir -p ~/.gmail-mcp
+   mv ~/Downloads/credentials.json ~/.gmail-mcp/gcp-oauth.keys.json
+   ```
+6. Claude Code 再起動 → 初回 Gmail MCP 使用時にブラウザ認証
+
+### Outlook OAuth 設定（初回1回のみ）
+
+1. [Azure Portal](https://portal.azure.com/) →「アプリの登録」→ 新規登録（パブリッククライアント）
+2. リダイレクト URI: `http://localhost`
+3. API アクセス許可: **Mail.ReadWrite** / **Calendars.ReadWrite**
+4. アプリ（クライアント）ID を `~/.config/ms-365-mcp/.env` に保存
+5. 初回 Outlook MCP 使用時にブラウザ認証
+
+### 追加 MCP（任意）
+
+「Notion使いたい」「カレンダー連携したい」と話しかけると、秘書が手順を案内します。
+Google Calendar / Notion / GitHub / Slack などが追加可能です。
+
+MCP がなくても、`.company/` 内のファイル管理だけで完全に動作します。
+
+## ブラウザでダッシュボード
+
+```bash
+npx cc-company-dashboard
 ```
-> /company
-秘書: おはようございます！何かありますか？
 
-> 今日やること教えて
-秘書: 今日のTODOです:
-  - [ ] クライアントAへ見積もり送付
-  - [ ] LP設計書のレビュー
+部署別の TODO・Inbox・Activity・Graph をブラウザで一覧できます。
 
-> 競合サービスについて調べて
-秘書: 承知しました。調べますね。
-  → secretary/notes/2026-03-16-competitor-research.md に保存
+## ライセンス・クレジット
 
-> 海外のトレンドも知りたい
-秘書: リサーチの依頼が増えていますね。
-      リサーチ部門を作りましょうか？
-あなた: 作って
-  → research/ が自動生成される
-```
+- License: MIT
+- Forked from: [Shin-sibainu/cc-company](https://github.com/Shin-sibainu/cc-company)
+- 元プラグインの開発者 Shin-sibainu 氏に深く感謝します
 
-## 部署（必要に応じて追加）
+## サポート
 
-| 部署 | 担当領域 |
-|------|---------|
-| 秘書室 | TODO管理、壁打ち、メモ、相談（常設） |
-| PM | プロジェクト進捗、チケット管理 |
-| リサーチ | 市場調査、競合分析、技術調査 |
-| マーケティング | コンテンツ企画、SNS、キャンペーン |
-| 開発 | 技術ドキュメント、設計、デバッグ |
-| 経理 | 請求書、経費、売上管理 |
-| 営業 | クライアント管理、提案書 |
-| クリエイティブ | デザインブリーフ、ブランド管理 |
-| 人事 | 採用管理、チーム管理 |
-
-## 初期構成
-
-```
-.company/
-├── CLAUDE.md              ← 組織ルール
-└── secretary/
-    ├── CLAUDE.md           ← 秘書の振る舞い
-    ├── inbox/
-    ├── todos/
-    │   └── YYYY-MM-DD.md   ← 今日のTODO
-    └── notes/
-```
-
-## v1 からのアップグレード
-
-既存の v1 組織（CEO部門あり）がある場合、`/company` 実行時に自動でアップグレードを提案します。
-
-- CEO部門 → 廃止（秘書が直接振り分け）
-- レビュー部門 → 廃止（秘書が管理）
-- 使用中の部署 → そのまま引き継ぎ
-- 空の部署 → 削除
-
-## ファイル構成
-
-```
-cc-company/
-├── .claude-plugin/
-│   └── marketplace.json
-├── plugins/
-│   └── company/
-│       ├── .claude-plugin/
-│       │   └── plugin.json
-│       └── skills/
-│           └── company/
-│               ├── SKILL.md
-│               └── references/
-│                   ├── departments.md
-│                   └── claude-md-template.md
-├── README.md
-└── LICENSE
-```
-
-## ライセンス
-
-MIT
+ブートキャンプ参加者向けのサポートチャンネルから質問してください。
