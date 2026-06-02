@@ -148,7 +148,7 @@ description: ケース記録の一覧
 ```markdown
 ---
 case_number: NNN
-date: YYYY-MM-DD
+date: "{{YYYY-MM-DD}}"
 request_summary: ""
 classification: research / planning / execution / etc.
 agents_used: []

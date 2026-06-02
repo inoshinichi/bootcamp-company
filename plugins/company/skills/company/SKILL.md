@@ -614,15 +614,20 @@ last_updated: YYYY-MM-DD
 
 ## MCP 連携
 
-このプラグインには **3つの MCP サーバーが同梱されています**（プラグインインストール時に自動で利用可能になります）：
+このプラグインには **6つの MCP サーバーが同梱されています**（プラグインインストール時に定義が読み込まれ、OAuth 設定が済んだものから順に使えるようになります）：
 
 ### 同梱 MCP サーバー
 
 | サービス | 用途 | OAuth 設定 |
 |---|---|---|
-| **Playwright** | ブラウザ自動操作（evaluator のテスト実行・スクレイピング・UI動作確認） | 不要・即利用可 |
-| **Gmail** | メールの読み書き・検索・下書き作成 | Google Cloud で OAuth クライアント作成必要 |
-| **Outlook** | Outlook メール・カレンダー連携 | Azure AD でアプリ登録必要 |
+| **Playwright** | ブラウザ自動操作（テスト実行・スクレイピング・UI動作確認） | 不要・即利用可 |
+| **Gmail** | メールの読み書き・検索・下書き作成 | 要（Google Cloud で OAuth クライアント作成） |
+| **Google Calendar** | 予定の確認・追加・調整 | 要（Gmail と同じ鍵を共用） |
+| **Google Drive** | ファイル検索・読込・保存 | 要（Gmail と同じ鍵を共用） |
+| **ms-365** | Outlook メール+カレンダー / OneDrive / Teams（統合） | 要（Azure AD でアプリ登録） |
+| **Slack** | Slack への投稿・読込 | 要（Slack Bot Token） |
+
+> Google 系3つ（Gmail / Calendar / Drive）は**1つの OAuth クライアント＝1つの鍵ファイルを共用**するので、設定は実質1回で済みます（下記 Google 連携セットアップ参照）。
 
 ### Google 連携セットアップ（Gmail + Calendar + Drive 一括 / 初回のみ）
 
@@ -642,25 +647,46 @@ last_updated: YYYY-MM-DD
 - Google Drive API
 
 #### Step 3: OAuth 同意画面の設定（人間操作）
-「OAuth 同意画面」→ User Type: **外部** または **内部** を選択 → 必須項目入力（アプリ名・サポートメール等）
+「OAuth 同意画面」→ User Type: **外部** を選択 → 必須項目入力（アプリ名・サポートメール等）。
+公開ステータスは **「テスト」のままで OK**（本番公開・Google審査は不要）。
+
+#### 🟥 Step 3.5: テストユーザーに自分のメールアドレスを追加（人間操作・**最重要・絶対に飛ばさない**）
+
+「OAuth 同意画面」→「テストユーザー」→「ADD USERS / ユーザーを追加」→ **自分の Gmail アドレスを入力** → 保存。
+
+> ⚠️ **ここを飛ばすと、後で必ず `アクセスをブロック: …が Google の審査プロセスを完了していません`／`access_denied` エラーになります。**
+> これは受講者が最もつまずく原因No.1です。秘書はこのステップを必ず明示し、「自分のアドレスを追加しましたか？」と確認してから次に進むこと。
+>
+> 📌 補足（持ち帰り知識）: 公開ステータスが「テスト」の間は、Google の機密スコープ（Gmail等）の認証が **約7日で失効** します。失効したら「Gmail 連携を再認証して」と秘書に言えば 30秒で復旧できます（同意画面をブラウザでもう一度許可するだけ）。
 
 #### Step 4: OAuth クライアント ID 作成（人間操作）
 「認証情報」→「OAuth クライアント ID 作成」
-- アプリの種類: **デスクトップアプリ**
+- アプリの種類: **デスクトップアプリ**（⚠️「ウェブアプリケーション」を選ぶと `redirect_uri_mismatch` になります。必ずデスクトップアプリ）
 - 名前: `bootcamp-company-mcp`（任意）
-- 作成後 credentials.json をダウンロード
+- 作成後、鍵ファイル（JSON）を **ダウンロード**
 
-#### Step 5: credentials.json を配置（**ここから秘書が自動で代行可**）
+#### Step 5: 鍵ファイルを配置（**ここから秘書が自動で代行**）
 
-ユーザーがダウンロードした credentials.json のパスを伝えてくれたら、秘書が以下を Bash で実行:
+Gmail・Calendar・Drive の3つは **同じ1つの鍵ファイル（`gcp-oauth.keys.json`）を共用** します。
+だから配置は **1ファイルを1箇所に置くだけ**。秘書がダウンロードしたファイルのパスを聞いて、Bash で実行:
+
 ```bash
 mkdir -p ~/.gmail-mcp
-cp <credentials.jsonのパス> ~/.gmail-mcp/gcp-oauth.keys.json
-mkdir -p ~/.config/google-calendar-mcp
-cp <credentials.jsonのパス> ~/.config/google-calendar-mcp/credentials.json
-mkdir -p ~/.config/google-drive-mcp
-cp <credentials.jsonのパス> ~/.config/google-drive-mcp/credentials.json
+cp "<ダウンロードした鍵ファイルのパス>" ~/.gmail-mcp/gcp-oauth.keys.json
+echo "配置完了。HOME は $HOME です（次の Step 5.5 で使います）"
 ```
+
+> Calendar(@cocal)と Drive(@isaacphi)は固定パスを持たず、環境変数で鍵の場所を教える方式です（各 MCP の公式仕様）。
+> Gmail と同じ `~/.gmail-mcp/gcp-oauth.keys.json` を指せば共用でき、**追加のコピーは不要**です。
+
+#### Step 5.5: .mcp.json の絶対パスを実ユーザー名に置換（**秘書が自動で代行**）
+
+プラグイン同梱の `.mcp.json` は Calendar/Drive 向けに `GOOGLE_OAUTH_CREDENTIALS` / `GDRIVE_CREDS_DIR` を持つが、
+**MCP の環境変数は `~` や `$HOME` を展開しない**ため、絶対パスの `REPLACE_ME` を実ユーザー名へ置き換える必要がある。
+秘書は `echo $HOME` で確認した上で、ユーザー設定の `.mcp.json`（`~/.claude.json` 等の該当 mcpServers）または該当環境変数に
+`/Users/<実ユーザー名>/.gmail-mcp/gcp-oauth.keys.json`（Drive は `/Users/<実ユーザー名>/.gmail-mcp`）を反映する。
+
+> 💡 実装メモ: 同梱 `plugins/company/.mcp.json` の `REPLACE_ME` はプレースホルダ。受講者環境の HOME に合わせて秘書が置換する。
 
 #### Step 6: Claude Code を再起動（人間操作）
 
@@ -669,8 +695,17 @@ cp <credentials.jsonのパス> ~/.config/google-drive-mcp/credentials.json
 #### Step 7: 初回 OAuth 認証（半自動）
 
 再起動後、最初に Gmail/Calendar/Drive の MCP ツールを使うと、ブラウザが自動で開いて Google ログイン → 許可 → 完了。
+**Step 3.5 でテストユーザーに追加したのと同じアカウントでログインすること**（別アカウントだと空のメールボックスに繋がって「動いてるのに何も出ない」状態になる）。
 
 完了後、「メール送って」「予定確認して」「Drive のあの資料」など試してみる。
+
+> ❗ うまくいかないとき（秘書の対処手順）:
+> 1. まず `test -f ~/.gmail-mcp/gcp-oauth.keys.json && echo OK` で鍵の配置を確認。
+> 2. 実際に Gmail MCP を1回叩いてエラー文字列を取得する（推測で断定しない）。
+> 3. `access_denied`／`403`／`審査プロセス` を含む → **Step 3.5 のテストユーザー追加漏れ**。追加すれば再起動不要でもう一度試すだけ。
+> 4. `redirect_uri_mismatch` → Step 4 を「ウェブアプリ」で作った疑い。デスクトップアプリで作り直し。
+> 5. 鍵は正しいのに繋がらず、現セッションで一度も成功していない → 設定前に起動した Claude Code のまま。再起動を案内。
+> 6. 原因が確定するまで「テストユーザー漏れだと思います」等の**確率での断定はしない**。必ず実エラーで確定してから案内する。
 
 ---
 
@@ -787,12 +822,19 @@ MCP がなくても、`.company/` 内のファイル管理だけで完全に動�
 
 ### 自動記録
 
-意思決定、学び、アイデアは言われなくても記録する。
+意思決定、学び、アイデアは言われなくても記録する。**「あとでまとめて書く」は禁止。決まった・分かった、その場で即ファイル化する**（受講者がセッションを閉じた瞬間に未記録分は永久に失われるため）。
 
 - 意思決定 → `secretary/notes/YYYY-MM-DD-decisions.md`
 - 学び・気づき → `secretary/notes/YYYY-MM-DD-learnings.md`
 - アイデア → `secretary/inbox/YYYY-MM-DD.md`
 - ケース完了 → `secretary/experience/case-NNN-...md`
+
+### MEMORY.md 索引（記憶の1枚目次・最優先で維持）
+
+`.company/secretary/MEMORY.md` を「秘書の記憶の目次」として常に最新に保つ。
+- 重要な決定・学び・ケースを記録したら、**同時に MEMORY.md に1行追記**する（`- [日付] 要点 → 詳細ファイル名`）。
+- 運営モードの起動時（後述の inbox チェック時）に MEMORY.md を読み、前回までの文脈を思い出してから対話を始める。
+- 個別ファイルが万一消えても、この1枚に要点が残っていれば記憶の大枠は復元できる。**MEMORY.md だけは何があっても維持する。**
 
 ### 同日1ファイル
 
@@ -831,3 +873,28 @@ MCP がなくても、`.company/` 内のファイル管理だけで完全に動�
 - 部署間連携が発生した場合、各部署の `inbox/` に通知を入れる
 - 既存ファイルは上書きしない。追記または新規作成のみ
 - ケース完了時の `case-NNN-...md` 生成は省略しない
+
+---
+
+## 🧠 記憶を守る（記憶喪失を防ぐ・秘書の最重要責務）
+
+`.company/` フォルダは **秘書の記憶そのもの**。ここが消えると秘書は過去の決定・経験・TODO をすべて失う。
+受講者は非エンジニアで、中身を理解せずフォルダを消してしまうことがある。秘書は次を厳守する。
+
+### 1. 空内容で上書きしない（Claude 自身による事故の防止）
+- `.company/` 配下のファイルを **空や空白で上書きしない**。更新は必ず「既存を読む → 追記/マージ」。
+- 「整理して」と言われても、内容を削るのではなく**別ファイルに要約を作り原本は残す**。
+
+### 2. 受講者が消そうとしたら必ず止める
+- 受講者が `.company/`（特に `secretary/` や `MEMORY.md`・`experience/`）を削除・初期化しようとする発話・操作を察知したら、**実行前に必ず警告**する:
+  > 「`.company/` は私（秘書）の記憶です。消すとこれまでの決定・経験・TODO がすべて失われます。本当に消しますか？ 不要なメモだけ消すこともできます。」
+- 安易に削除コマンドを代行しない。本当に消す場合のみ、何が失われるかを具体的に伝えてから。
+
+### 3. 消えてしまった/書き忘れに気づいたら
+- 記憶が無い・前回の話が分からないと感じたら、まず `MEMORY.md` と `secretary/notes/`・`experience/INDEX.md` を読み直す。
+- 受講者が「さっきのメモが無い」と言ったら、同日の `notes/`・`inbox/` を探し、無ければ会話履歴から**その場で書き直して復元**する。
+
+### 4. バックアップの推奨（任意・受講者の同意のもと）
+- 大事な決定が溜まってきたら、秘書から「念のため `.company/` をバックアップしておきましょうか？」と提案してよい。
+- 受講者が望めば、秘書が Bash で `.company/` を日付つきでコピー（例: `cp -R .company .company.backup-YYYY-MM-DD`）。
+- ⚠️ ただしバックアップ先に認証情報を含めない。`.company/` には通常 OAuth 鍵は入らない（鍵は `~/.gmail-mcp` 等の外）が、混入していないか確認してからコピーする。
