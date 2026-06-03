@@ -8,35 +8,37 @@
       "command": "npx",
       "args": ["-y", "@gongrzhe/server-gmail-autoauth-mcp"],
       "env": {
-        "_NOTE": "Google基盤ユーザー向け。Google Cloud ConsoleでOAuthクライアント（デスクトップアプリ）作成→credentials.jsonを ~/.gmail-mcp/gcp-oauth.keys.json に配置。"
+        "_NOTE": "Google基盤ユーザー向け。OAuthクライアント(デスクトップアプリ)を作り gcp-oauth.keys.json を ~/.gmail-mcp/ に置くだけ。トークンは初回ブラウザ認証で ~/.gmail-mcp/credentials.json に自動保存。Drive/Calendar もこの同じ gcp-oauth.keys.json を共用する(下記の各 _NOTE 参照)。"
       }
     },
     "google-calendar": {
       "command": "npx",
       "args": ["-y", "@cocal/google-calendar-mcp"],
       "env": {
-        "_NOTE": "Google基盤ユーザー向け。GOOGLE_OAUTH_CREDENTIALS 環境変数 or 認証情報ファイル指定が必要。"
+        "GOOGLE_OAUTH_CREDENTIALS": "/Users/REPLACE_ME/.gmail-mcp/gcp-oauth.keys.json",
+        "_NOTE": "Google基盤ユーザー向け。@cocal/google-calendar-mcp は npx利用時 GOOGLE_OAUTH_CREDENTIALS 環境変数で OAuthキーの絶対パスを指す方式(README明記)。Gmail と同じ gcp-oauth.keys.json を共用できるので追加のファイル配置は不要。⚠️ MCP env は ~ や $HOME を展開しないため絶対パス必須。秘書が `echo $HOME` で確認し REPLACE_ME を実ユーザー名に書き換える。"
       }
     },
     "google-drive": {
       "command": "npx",
       "args": ["-y", "@isaacphi/mcp-gdrive"],
       "env": {
-        "_NOTE": "Google基盤ユーザー向け。Google Drive のファイル検索・読込・書き込み。OAuth設定は Gmail / Calendar と共通の Google Cloud プロジェクトで可能。"
+        "GDRIVE_CREDS_DIR": "/Users/REPLACE_ME/.gmail-mcp",
+        "_NOTE": "Google基盤ユーザー向け。@isaacphi/mcp-gdrive は GDRIVE_CREDS_DIR で指定したディレクトリの gcp-oauth.keys.json を読む(README明記)。Gmail の ~/.gmail-mcp をそのまま指せば共用でき、コピー不要。⚠️ MCP env は ~ を展開しないため絶対パス必須。秘書が `echo $HOME` で確認し REPLACE_ME を実ユーザー名に書き換える。"
       }
     },
     "ms-365": {
       "command": "npx",
       "args": ["-y", "@softeria/ms-365-mcp-server"],
       "env": {
-        "_NOTE": "Microsoft基盤ユーザー向け。Outlook（メール+カレンダー）+ OneDrive + Teams が一括で使える統合MCP。Azure ADでパブリッククライアントとしてアプリ登録、Mail.ReadWrite/Calendars.ReadWrite/Files.ReadWrite/Chat.ReadWrite 権限を付与。MS365_MCP_CLIENT_ID 環境変数 or ~/.config/ms-365-mcp/.env で設定。"
+        "_NOTE": "Microsoft基盤ユーザー向け。Outlook(メール+カレンダー)+OneDrive+Teams 統合MCP。Azure ADでパブリッククライアントとしてアプリ登録し MS365_MCP_CLIENT_ID を設定。認証は起動後に `login` ツールを呼ぶ(デバイスコード/ブラウザ)→`verify-login` で確認。MS365_MCP_CLIENT_ID は環境変数 or ~/.config/ms-365-mcp/.env で設定。"
       }
     },
     "slack": {
       "command": "npx",
       "args": ["-y", "@modelcontextprotocol/server-slack"],
       "env": {
-        "_NOTE": "Slackチャットを使う場合。SLACK_BOT_TOKEN（xoxb-...）と SLACK_TEAM_ID を環境変数 or ~/.config/slack-mcp/.env で設定。Bot ユーザーをワークスペースにインストール必要。"
+        "_NOTE": "Slackチャットを使う場合。SLACK_BOT_TOKEN(xoxb-...)と SLACK_TEAM_ID を環境変数 or ~/.config/slack-mcp/.env で設定。Bot ユーザーをワークスペースにインストール必要。"
       }
     }
   }

@@ -19,16 +19,22 @@
 ## 組織構成
 
 ```
-.company/
+.company/                 ← ⚠️ このフォルダは秘書の「記憶」です。消すと過去の決定・経験・TODOが全て失われます
 ├── CLAUDE.md
 └── secretary/
     ├── CLAUDE.md
+    ├── MEMORY.md          ← 記憶の目次（最重要・常に最新を維持）
     ├── inbox/
     ├── todos/
     ├── notes/
     └── experience/
         └── INDEX.md
 ```
+
+> 🧠 **この組織の記憶について（大切なこと）**
+> `.company/` フォルダは秘書の脳みそです。中の `.md` ファイルに、あなたとの決定・学び・TODO が蓄積されます。
+> **このフォルダを消すと秘書は記憶喪失になります。** 不要なメモを片付けたいときは、フォルダごと消さず「○○のメモを整理して」と秘書に頼んでください。
+> 消えてしまった・前回の話が分からない場合は「記憶を思い出して」と言えば、秘書が `MEMORY.md` と記録から復元を試みます。
 
 {{ADDITIONAL_DEPARTMENTS}}
 
@@ -63,6 +69,8 @@
 - 学び → `secretary/notes/YYYY-MM-DD-learnings.md`
 - アイデア → `secretary/inbox/YYYY-MM-DD.md`
 - ケース完了 → `secretary/experience/case-NNN-<種別>-YYYY-MM-DD.md`
+- 重要な記録は同時に `secretary/MEMORY.md`（記憶の目次）に1行追記し、常に最新に保つ
+- ⚠️ `.company/` は秘書の記憶。空内容で上書きしない／受講者が消そうとしたら必ず警告し、何が失われるか伝えてから
 
 ### 自律成長
 - 短期: ケース毎に `experience/case-NNN-...md` 生成

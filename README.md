@@ -192,11 +192,14 @@ Google Chat / Chatwork は専用 MCP が限定的なため、必要に応じて 
 
 1. Google Cloud Console でプロジェクト作成（人間操作）
 2. Gmail API / Calendar API / Drive API を有効化（人間操作）
-3. OAuth 同意画面 + クライアントID（デスクトップアプリ）作成（人間操作）
-4. credentials.json をダウンロード（人間操作）
-5. **配置 → 秘書が自動代行**（Bashでコピー）
-6. Claude Code 再起動（人間操作）
-7. 初回 MCP 利用時にブラウザで Google ログイン（人間操作）
+3. OAuth 同意画面を設定（公開ステータスは「テスト」のままで OK）（人間操作）
+4. 🟥 **OAuth 同意画面の「テストユーザー」に自分の Gmail アドレスを追加**（人間操作・**ここを飛ばすと必ず `access_denied` で失敗。最頻出のつまずき**）
+5. クライアントID（**デスクトップアプリ**）を作成して鍵ファイルをダウンロード（人間操作）
+6. **配置 → 秘書が自動代行**（鍵ファイルを `~/.gmail-mcp/gcp-oauth.keys.json` に1つ置くだけ。Calendar/Drive も同じ鍵を共用するのでコピー不要）
+7. Claude Code 再起動（人間操作）
+8. 初回 MCP 利用時にブラウザで Google ログイン（**テストユーザーに追加したのと同じアカウントで**）（人間操作）
+
+> 💡 困ったら「Google 連携できたか確認して」「動かない」と秘書に話しかけてください。秘書が鍵の配置を確認し、実際に1回試してエラーから原因（テストユーザー漏れ等）を特定して直し方を案内します。
 
 ### Microsoft 連携（Outlook + Calendar + OneDrive + Teams）の流れ
 
