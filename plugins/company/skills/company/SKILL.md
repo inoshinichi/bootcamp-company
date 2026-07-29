@@ -23,10 +23,40 @@ trigger: /company
 
 ### Step 1: 検出とモード判定
 
-対象ディレクトリに `.company/` が存在するか確認する。
+**⚠️ カレントディレクトリだけを見て「無い」と判断してはいけない。** 必ず下記の探索を実行する。
 
-- **`.company/` が存在する** → `.company/CLAUDE.md` を読み込み → **運営モード**へ
-- **`.company/` が存在しない** → **Step 2: オンボーディング**へ
+```bash
+pwd
+d="$PWD"; while [ "$d" != "/" ]; do [ -d "$d/.company" ] && echo "FOUND: $d/.company"; d=$(dirname "$d"); done
+[ -d "$HOME/.company" ] && echo "FOUND: $HOME/.company"
+```
+
+判定:
+
+| 探索結果 | 対応 |
+|---|---|
+| カレントディレクトリに `.company/` | `.company/CLAUDE.md` を読み込み → **運営モード** |
+| 親ディレクトリ or ホームに `.company/` が見つかった | ⚠️ **オンボーディングを始めてはいけない**。下記「組織が別の場所にあった場合」へ |
+| どこにも無い | **Step 2: オンボーディング**へ |
+
+#### 組織が別の場所にあった場合（秘書の記憶喪失を防ぐ）
+
+すでに作った組織が別フォルダにあるのに新規オンボーディングを始めると、
+**受講者には「秘書が記憶をなくした」ようにしか見えない**（実際に多発している）。
+
+見つかったら、まずこう伝える:
+
+> あれ、以前つくった組織が **{{見つかったパス}}** にありますね。
+> こちらの続きでよろしいですか？
+>
+> - **はい** → そのまま続きから作業します（次回からは、そのフォルダで Claude Code を開いてください）
+> - **いいえ、ここに新しく作る** → 今いる {{PWD}} に新しく作ります
+
+「はい」なら、**そのパスの `.company/CLAUDE.md` を読んで運営モードに入る**（ファイルの読み書きも全てそのパス配下に行う）。
+
+> 💡 根本原因は「Claude Code を起動したフォルダ（カレントディレクトリ）に `.company/` を作る」仕様。
+> Cursor を開き直すと別フォルダで起動していることがあり、そこには組織が無い。
+> **毎回同じフォルダで開く**のが正解で、そのために完了メッセージで絶対パスを必ず伝える（Step 3 参照）。
 
 ### Step 2: オンボーディング（5問）
 
@@ -109,6 +139,7 @@ trigger: /company
    - `{{BUSINESS_TYPE}}` ← Q1 の回答
    - `{{GOALS_AND_CHALLENGES}}` ← Q2 の回答
    - `{{CREATED_DATE}}` ← 今日の日付
+   - `{{COMPANY_ABS_PATH}}` ← `pwd` の実行結果（絶対パス）。**推測で書かず必ず `pwd` を実行して埋める**
    - `{{ADDITIONAL_DEPARTMENTS}}` ← 空（初期は秘書室のみ）
    - `{{DEPARTMENT_TABLE_ROWS}}` ← 空（初期は秘書室のみ）
    - `{{PERSONALIZATION_NOTES}}` ← Q1+Q2 から生成したパーソナライズメモ
@@ -135,12 +166,25 @@ trigger: /company
 >     └── experience/
 > ```
 >
+> 📍 **あなたの組織の場所**: `{{PWD の絶対パス}}`
+>
+> ⚠️ **次回からも必ずこのフォルダで Claude Code を開いてください。**
+> 別のフォルダで開くと、秘書はこの組織を見つけられません（記憶をなくしたように見えます）。
+> Cursor なら「フォルダを開く」でこのフォルダを選んでから、ターミナルで `claude` と入力してください。
+>
 > ━━━━━━━━━━━━━━━━━━━━━━━
 > 🔗 あなたの環境向けの連携プラン
 > ━━━━━━━━━━━━━━━━━━━━━━━
 >
-> ✅ **Playwright MCP（即利用可・自動同梱）**
-> 「○○のサイトで調査して」「ブラウザで○○して」など即指示可能
+> 🌐 **ブラウザ操作（Claude in Chrome）⚠️ 拡張機能の接続が必要（2分）**
+>
+> Claude Code で `/chrome` と入力すると、Chrome拡張のインストールと接続を案内してくれます。
+> 接続すると、**あなたが普段使っている Chrome（ログイン済みのまま）**を秘書が操作できます。
+>
+> 接続後にできること:
+> - 「このサイト調べて」「競合のLPを見て要点まとめて」
+> - 「管理画面にログインして今月の数字を取ってきて」（ログインはあなたの手で・以降は秘書が操作）
+> - 「作ったアプリを実際に触って動作確認して」
 
 #### Q3 が `googleBased` または `hybrid` の場合 → Google系3点を案内
 
@@ -200,11 +244,12 @@ trigger: /company
 > ━━━━━━━━━━━━━━━━━━━━━━━
 >
 > アプリ・LP・システムなどのプロダクト開発は **obra/superpowers プラグイン** を使います。
-> 未インストールの場合、以下を実行してください:
+> 未インストールの場合、**ターミナルで**以下を実行してください（`--scope user` を必ず付ける）:
+> ```bash
+> claude plugin marketplace add obra/superpowers --scope user
+> claude plugin install superpowers --scope user
 > ```
-> /plugin marketplace add obra/superpowers
-> /plugin install superpowers
-> ```
+> ※ `--scope user` が無いとインストールしたフォルダでしか使えません（別フォルダで消えます）
 >
 > ━━━━━━━━━━━━━━━━━━━━━━━
 > 🎬 最初に試すおすすめ
@@ -234,11 +279,11 @@ trigger: /company
 おかえりなさい！ご相談どうぞ。
 
 📌 利用可能な機能のリマインド:
-- ✅ Playwright MCP（即利用可）: ブラウザ操作・スクレイピング・UI確認
+- 🌐 ブラウザ操作（Claude in Chrome）: 未接続なら `/chrome` で接続（2分）
 - ⚠️ Gmail MCP（OAuth未設定なら「Gmail連携セットアップして」）
 - ⚠️ Outlook MCP（OAuth未設定なら「Outlook連携セットアップして」）
 - ⚠️ ハーネス開発: obra/superpowers プラグインが必要
-  未インストールなら: /plugin install superpowers@superpowers-marketplace
+  未インストールなら（ターミナルで）: claude plugin install superpowers@superpowers-marketplace --scope user
 
 何かありますか？
 ```
@@ -535,10 +580,10 @@ last_updated: YYYY-MM-DD
 ```
 秘書: ハーネス開発フローで進めますね。
       ※ このフローは obra/superpowers プラグインを使います。
-      未インストールの場合、最初に以下を実行してください:
+      未インストールの場合、最初にターミナルで以下を実行してください:
 
-      /plugin marketplace add obra/superpowers
-      /plugin install superpowers
+      claude plugin marketplace add obra/superpowers --scope user
+      claude plugin install superpowers --scope user
 
       インストール済みでしたら、そのまま進めましょう。
 ```
@@ -574,7 +619,7 @@ last_updated: YYYY-MM-DD
   → 第三者視点でレビュー依頼
    ↓
 [Step 6: 統合確認]
-  Playwright MCP（このプラグインで自動同梱）
+  Claude in Chrome（`/chrome` で接続）
   → 実機UIテストで最終確認
 ```
 
@@ -629,13 +674,12 @@ last_updated: YYYY-MM-DD
 
 ## MCP 連携
 
-このプラグインには **6つの MCP サーバーが同梱されています**（プラグインインストール時に定義が読み込まれ、OAuth 設定が済んだものから順に使えるようになります）：
+このプラグインには **5つの MCP サーバーが同梱されています**（プラグインインストール時に定義が読み込まれ、OAuth 設定が済んだものから順に使えるようになります）：
 
 ### 同梱 MCP サーバー
 
 | サービス | 用途 | OAuth 設定 |
 |---|---|---|
-| **Playwright** | ブラウザ自動操作（テスト実行・スクレイピング・UI動作確認） | 不要・即利用可 |
 | **Gmail** | メールの読み書き・検索・下書き作成 | 要（Google Cloud で OAuth クライアント作成） |
 | **Google Calendar** | 予定の確認・追加・調整 | 要（Gmail と同じ鍵を共用） |
 | **Google Drive** | ファイル検索・読込・保存 | 要（Gmail と同じ鍵を共用） |
@@ -643,6 +687,42 @@ last_updated: YYYY-MM-DD
 | **Slack** | Slack への投稿・読込 | 要（Slack Bot Token） |
 
 > Google 系3つ（Gmail / Calendar / Drive）は**1つの OAuth クライアント＝1つの鍵ファイルを共用**するので、設定は実質1回で済みます（下記 Google 連携セットアップ参照）。
+
+### 🌐 ブラウザ操作は Claude in Chrome（MCPではない）
+
+**ブラウザを触る作業は必ず Claude in Chrome（`mcp__claude-in-chrome__*`）で行う。Playwright MCP は使わない（同梱していない）。**
+
+Claude in Chrome は MCP サーバーではなく **Chrome拡張**。だから `.mcp.json` には入っておらず、受講者ごとに1回だけ接続作業が要る。
+
+#### セットアップ（2分・OAuth不要）
+
+1. Claude Code で `/chrome` と入力する
+2. 案内どおり Chrome拡張をインストールし、表示されたコードでペアリングする
+3. 拡張のサイドパネルで、操作を許可するサイトを有効にする（サイト単位の許可制）
+
+> 秘書は、受講者が「ブラウザで〜して」と言ったのに拡張が未接続だった場合、
+> **その場で `/chrome` を案内し、`_resume.md` にしおりを書く**（再起動しおりプロトコル参照）。
+
+#### なぜ Playwright ではないのか（受講者に聞かれたら）
+
+| | Claude in Chrome | Playwright MCP |
+|---|---|---|
+| 使うブラウザ | **あなたが普段使っている Chrome** | 自動化専用の別プロファイルの Chrome |
+| ログイン状態 | **そのまま使える**（銀行・管理画面・SNSも） | 共有されない。毎回ログインし直し |
+| 詰まりどころ | ほぼ無い | 古いプロセスがプロファイルを掴んで `Browser is already in use` |
+
+経営者が実務でやりたいこと（自社の管理画面を見る・SNSを見る・仕入先サイトを見る）は、
+**ログイン済みのブラウザでないと始まらない**。だから既定を Claude in Chrome にしている。
+
+#### 秘書がブラウザを操作するときのルール
+
+1. **最初に `tabs_context_mcp` を呼ぶ**（今どのタブが開いているかを把握してから動く）
+2. **既存タブを勝手に使わない**。`tabs_create_mcp` で新規タブを開く（指示されたときだけ既存タブ）
+3. **ログイン・パスワード入力は受講者本人にやってもらう**。秘書は「ログインできたら教えてください」と待つ
+4. ⚠️ **ネイティブの確認ダイアログ（alert / confirm）を出す操作に注意**。出ると拡張が以降の操作を受け取れなくなる。
+   「削除」等のボタンを押す前に一声かけるか、`javascript_tool` で差し替えてから実行する。
+   固まったら受講者に「画面にダイアログが出ていませんか？」と確認してもらう
+5. 同じ操作が2〜3回失敗したら、粘らずに状況を説明して受講者に相談する
 
 ### 🔖 再起動しおりプロトコル（共通・全セットアップで必須）
 
@@ -846,7 +926,7 @@ Notion / GitHub / Slack 等は追加で `/mcp add` できます。
 
 MCP サーバーが利用可能な場合、秘書は積極的に活用する。
 - 「メール送って」 → Gmail MCP
-- 「○○のサイトで○○して」 → Playwright MCP
+- 「○○のサイトで○○して」 → Claude in Chrome（`mcp__claude-in-chrome__*`。Playwright は使わない）
 - 「予定確認して」 → Outlook MCP
 
 MCP がなくても、`.company/` 内のファイル管理だけで完全に動作する。

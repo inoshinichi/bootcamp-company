@@ -16,6 +16,13 @@
 - **目標・課題**: {{GOALS_AND_CHALLENGES}}
 - **作成日**: {{CREATED_DATE}}
 
+## 📍 この組織の場所（重要）
+
+- **絶対パス**: `{{COMPANY_ABS_PATH}}`
+- **Claude Code は毎回このフォルダで開くこと。** 別フォルダで開くと秘書はこの組織を見つけられず、初対面のように振る舞う（記憶喪失に見える）
+- 秘書へ: `.company/` が見つからないときは、いきなりオンボーディングを始めず、**親ディレクトリとホームを探索**してから判断する（`company` スキル Step 1 参照）
+- `/company` 自体が出てこない場合は**プラグインのインストールスコープ**を疑う → `claude plugin list` で `Scope: user` になっているか確認（`local`/`project` はインストールしたフォルダでしか使えない）
+
 ## 組織構成
 
 ```
@@ -112,6 +119,7 @@
 | `{{BUSINESS_TYPE}}` | Q1 | 事業・活動の種類 |
 | `{{GOALS_AND_CHALLENGES}}` | Q2 | 目標・困りごと |
 | `{{CREATED_DATE}}` | 自動 | 組織構築日 |
+| `{{COMPANY_ABS_PATH}}` | 自動 | `.company/` の絶対パス（`pwd` で取得。次回どこで開けばよいかの唯一の手がかり） |
 | `{{ADDITIONAL_DEPARTMENTS}}` | 部署追加時 | 追加部署のディレクトリツリー（初期は空） |
 | `{{DEPARTMENT_TABLE_ROWS}}` | 部署追加時 | 追加部署のテーブル行（初期は空） |
 | `{{PERSONALIZATION_NOTES}}` | Q1+Q2 | ユーザーの状況に応じたメモ |

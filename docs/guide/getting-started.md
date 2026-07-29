@@ -2,12 +2,21 @@
 
 ## インストール
 
-Claude Code で以下を実行します。
+まず「自分の会社フォルダ」を1つ決めて、そこで作業します（秘書の記憶 `.company/` はこのフォルダの中に作られます）。
 
+```bash
+mkdir -p ~/my-company
+cd ~/my-company
 ```
-/plugin marketplace add Shin-sibainu/cc-company
-/plugin install company@cc-company
+
+次に、ターミナルで以下を実行します。**`--scope user` を必ず付けてください**（付けないとインストールしたフォルダでしか `/company` が使えず、別フォルダで開くと消えます）。
+
+```bash
+claude plugin marketplace add inoshinichi/bootcamp-company --scope user
+claude plugin install company@bootcamp-company --scope user
 ```
+
+確認: `claude plugin list` で `Scope: user` になっていれば OK。
 
 ## セットアップ（3ステップ）
 

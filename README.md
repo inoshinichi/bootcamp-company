@@ -26,18 +26,54 @@
 
 このリポジトリは Private です。GitHub アカウントを Outside Collaborator として招待された方のみアクセス可能です。
 
+### 事前に決めること: 「自分の会社フォルダ」を1つ作る
+
+秘書の記憶（`.company/`）は **Claude Code を起動したフォルダの中**に作られます。
+毎回バラバラのフォルダで開くと秘書が組織を見つけられないので、**最初に置き場所を1つ決めてください**。
+
+```bash
+mkdir -p ~/my-company
+cd ~/my-company
+```
+
+> 📁 Cursor を使う場合も、**「フォルダを開く」でこの `my-company` を開いてから**ターミナルで `claude` と入力します。
+> （プラグインのリポジトリを開いて作業しないでください。フォルダが変わると秘書が見つかりません）
+
 ### 受講者がやること: 3コマンドだけ
 
-Claude Code を開いて、以下の3行を順に実行してください。**それ以降は秘書が全部案内します。**
+**ターミナル**（Cursor の内蔵ターミナルで OK）で、以下の2行を実行します。
+
+```bash
+claude plugin marketplace add inoshinichi/bootcamp-company --scope user
+claude plugin install company@bootcamp-company --scope user
+```
+
+そのあと `claude` を起動して、
 
 ```
-/plugin marketplace add inoshinichi/bootcamp-company
-/plugin install company@bootcamp-company
 /company
 ```
 
+**それ以降は秘書が全部案内します。**
+
+> 🔴 **`--scope user` は必ず付けてください（超重要）**
+> プラグインには `user` / `project` / `local` の3つのスコープがあり、
+> `project` や `local` で入れると **インストールしたフォルダでしか使えません**。
+> 別のフォルダで Claude Code を開いた瞬間に `/company` が消えます。
+> `--scope user` なら、どのフォルダで開いても秘書が使えます。
+>
+> 確認コマンド: `claude plugin list` → `company@bootcamp-company` が **`Scope: user`** になっていれば OK。
+
 > 💡 **「company プラグイン」と表示されますが正常です**
 > マーケットプレイス名が `bootcamp-company`、その中の本体プラグイン名が `company` という構造です。
+
+### ❓ うまくいかないとき
+
+| 症状 | 原因 | 直し方 |
+|---|---|---|
+| **`/company` が出てこない・消えた** | プラグインが `local` / `project` スコープで入っている（フォルダに紐づいている） | `claude plugin list` でスコープを確認 → `claude plugin install company@bootcamp-company --scope user` で入れ直す |
+| **秘書が初対面のように振る舞う／今までの記録が無い** | 前回と**違うフォルダ**で Claude Code を開いている（`.company/` は起動フォルダの中にある） | 前回のフォルダで開き直す。分からなければ `/company` と言えば、秘書が親フォルダとホームを探して見つけてくれます |
+| **Cursor を再起動したら上の2つが起きた** | Cursor が別のフォルダで開き直した | Cursor で「フォルダを開く」→ 自分の会社フォルダ（例 `~/my-company`）を選び直す |
 
 ### 秘書が後で案内すること（受講者は事前に何も入れなくて OK）
 
@@ -126,7 +162,7 @@ URL や手順を覚える必要はありません。秘書に話しかけて進�
 | 2 | `superpowers:writing-plans` | 詳細な実装計画（plan.md）を生成 |
 | 3 | `superpowers:executing-plans` + `superpowers:test-driven-development` | 計画通りに TDD で実装 |
 | 4 | `superpowers:verification-before-completion` | 完了前に必ず検証コマンドを実行 |
-| 5 | Playwright MCP（同梱） | 実機 UI テストで最終確認 |
+| 5 | Claude in Chrome（`/chrome` で接続） | 実機 UI テストで最終確認 |
 | 任意 | `superpowers:requesting-code-review` | 第三者視点でコードレビュー |
 | 任意 | `superpowers:dispatching-parallel-agents` | 独立タスクを並列実行 |
 | バグ時 | `superpowers:systematic-debugging` | 体系的デバッグ |
@@ -151,11 +187,15 @@ URL や手順を覚える必要はありません。秘書に話しかけて進�
 
 プラグインインストール時にすべての MCP が利用可能な状態になり、OAuth 設定が完了したものから順に動き始めます。
 
-### 即利用可（OAuth不要）
+### ブラウザ操作は MCP ではなく Claude in Chrome
 
-| MCP | 用途 |
-|---|---|
-| **Playwright** | ブラウザ自動操作・スクレイピング・UIテスト |
+ブラウザを触る作業は **Claude in Chrome（Chrome拡張）** で行います。Playwright MCP は同梱していません。
+
+Claude Code で **`/chrome`** と入力し、案内どおり拡張をインストール＋ペアリングするだけ（2分・OAuth不要）。
+
+**あなたが普段使っている Chrome を、ログイン済みのまま**秘書が操作できます。
+自社の管理画面・SNS・仕入先サイトなど「ログインしていないと始まらない」作業がそのまま頼めます。
+（Playwright は自動化専用の別ブラウザを立ち上げるためログインが共有されず、経営者の実務では使いものにならない場面が多いので外しました）
 
 ### Google ベース利用者向け
 
