@@ -337,3 +337,37 @@ describe('connections guide', () => {
     expect(guide()).toContain('パスワードを会話に貼らせない');
   });
 });
+
+// ---------------------------------------------------------------------------
+// 7. Organization rules (2026-10: 手順書を部署に置く絶対ルール)
+// ---------------------------------------------------------------------------
+
+describe('organization rules', () => {
+  const skill = () => readText(resolve(SKILL_DIR, 'SKILL.md'));
+  const org = () => readText(resolve(SKILL_DIR, 'references/organization.md'));
+
+  it('organization.md exists and has the three absolute rules', () => {
+    const o = org();
+    expect(o).toContain('### ルール1: 同じ作業が2回目に来たら、必ず手順書にしようと提案する');
+    expect(o).toContain('### ルール2: 手順書は必ずどこかの部署に置く');
+    expect(o).toContain('### ルール3: 手順書には必ず連携先を書き、連携表に1行足す');
+    expect(o).toContain('## §6. 組織の健康診断');
+  });
+
+  it('SKILL.md states the absolute rules in operating mode and routes by manuals first', () => {
+    const s = skill();
+    expect(s).toContain('### 🔴 組織の絶対ルール（手順書・部署・連携表）');
+    expect(s).toContain('references/organization.md');
+    expect(s).toContain('manuals/INDEX.md');
+    expect(s).toContain('.company/flow-map.md');
+    expect(s).toContain('secretary/work-log.md');
+  });
+
+  it('departments.md requires manuals/ in every department', () => {
+    expect(readText(resolve(SKILL_DIR, 'references/departments.md'))).toContain('`manuals/` サブフォルダ（手順書）');
+  });
+
+  it('claude-md-template carries the absolute rules', () => {
+    expect(readText(resolve(SKILL_DIR, 'references/claude-md-template.md'))).toContain('組織の絶対ルール');
+  });
+});
