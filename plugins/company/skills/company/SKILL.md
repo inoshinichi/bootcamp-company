@@ -161,7 +161,7 @@ Q1〜Q3 は自由に答えてもらう質問なので**通常の会話で**聞�
    - `{{ADDITIONAL_DEPARTMENTS}}` ← 空（初期は秘書室のみ）
    - `{{DEPARTMENT_TABLE_ROWS}}` ← 空（初期は秘書室のみ）
    - `{{PERSONALIZATION_NOTES}}` ← Q1+Q2 から生成したパーソナライズメモ
-3. `secretary/` とサブフォルダ（`inbox/`, `todos/`, `notes/`, `experience/`）を作成
+3. `secretary/` とサブフォルダ（`inbox/`, `todos/`, `notes/`, `experience/`, `manuals/`）を作成
 4. `references/departments.md` の「secretary/CLAUDE.md」テンプレートから `secretary/CLAUDE.md` を生成
 5. 今日の日付で `secretary/todos/YYYY-MM-DD.md` を作成
 6. `secretary/experience/INDEX.md` を初期化（空のケース一覧）
@@ -346,7 +346,13 @@ Q1〜Q3 は自由に答えてもらう質問なので**通常の会話で**聞�
 4. 報告は**実際に動いた部署の名前で**（「営業部が見積書を作り、経理部が請求書の下書きを用意しました」）
 5. 「組織の健康診断」と言われたら、動いていない部署・空っぽの部署・手順書になっていない繰り返し・途切れた連携を見つけて直し方を提案する（organization.md §6）
 
-以前の版で作った組織（`secretary/work-log.md`・`.company/flow-map.md`・各部署の `manuals/` が無い）では、運営モードに入ったときに黙って作り足す（中身は空の見出しだけ。既存ファイルは上書きしない）。そのうえで一度だけ「今日から、繰り返しの仕事を手順書にして部署に置いていきます」と伝える。
+以前の版で作った組織（`secretary/work-log.md`・`.company/flow-map.md`・各部署の `manuals/` が無い）では、運営モードに入ったときに次を行う（既存ファイルは上書きしない）:
+
+1. `secretary/work-log.md`・`.company/flow-map.md`・各部署の `manuals/INDEX.md` を見出しだけで作る
+2. `.company/CLAUDE.md` と `secretary/CLAUDE.md`（と各部署の `CLAUDE.md`）の**末尾に「組織の絶対ルール」の節を追記**する（`references/claude-md-template.md` の同じ節を写す）。古い「同じ領域のタスクが2回以上で部署作成」「即座に作成」「未作成なら notes/ に保存」の行は消さずに、行末に「（→ 組織の絶対ルールが優先）」と書き足す
+3. 一度だけ「今日から、繰り返しの仕事を手順書にして部署に置いていきます」と伝える
+
+🔴 **古い CLAUDE.md の文と、この絶対ルールがぶつかったら、絶対ルールが優先。**
 
 ### 7ステップ判断フロー（運営モードの中核）
 
@@ -464,7 +470,7 @@ Step 7. 統合報告 + ケース記録（experience/case-NNN-...md）
 
 何かありますか？
 
-💡 ブラウザで詳しく見るには: npx cc-company-dashboard
+💡 ブラウザで詳しく見るには: npx cc-company-dashboard（部署どうしの連携と今月の件数は、この文字版に出ます）
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ```
 

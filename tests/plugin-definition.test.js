@@ -371,3 +371,55 @@ describe('organization rules', () => {
     expect(readText(resolve(SKILL_DIR, 'references/claude-md-template.md'))).toContain('組織の絶対ルール');
   });
 });
+
+describe('organization rules: no stale instructions', () => {
+  const dep = () => readText(resolve(SKILL_DIR, 'references/departments.md'));
+
+  it('stale "department at 2 similar tasks / create immediately / save to notes" rules are gone', () => {
+    const files = [
+      resolve(SKILL_DIR, 'references/departments.md'),
+      resolve(SKILL_DIR, 'references/claude-md-template.md'),
+      resolve(ROOT, 'README.md'),
+    ];
+    for (const f of files) {
+      const c = readText(f);
+      expect(c).not.toContain('同じ領域のタスクが2回以上繰り返されたら、部署作成を提案する');
+      expect(c).not.toContain('ユーザーが明示的に依頼した場合は即座に作成する');
+      expect(c).not.toContain('該当部署が未作成の場合は secretary/notes/ に保存する');
+      expect(c).not.toContain('同領域のタスクが2回以上 → 部署作成を提案');
+    }
+  });
+
+  it('every subfolder list in department templates includes manuals/', () => {
+    const blocks = dep().split('## サブフォルダ\n').slice(1);
+    expect(blocks.length).toBeGreaterThan(5);
+    for (const b of blocks) {
+      expect(b.split('```')[0]).toContain('`manuals/`');
+    }
+  });
+
+  it('every department CLAUDE.md template tells to read manuals/INDEX.md first', () => {
+    const d = dep();
+    const deptSections = d.split(/\n## (?=\w+\/CLAUDE\.md)/).slice(1).filter((x) => !x.startsWith('secretary/'));
+    expect(deptSections.length).toBeGreaterThan(5);
+    for (const sec of deptSections) {
+      expect(sec).toContain('manuals/INDEX.md');
+    }
+  });
+
+  it('auto-chaining has safety stops', () => {
+    const o = readText(resolve(SKILL_DIR, 'references/organization.md'));
+    expect(o).toContain('自動でつなぐのは、1回の依頼につき1段まで');
+    expect(o).toContain('外に出る操作は、連携表や手順書の書き方にかかわらず、毎回受講者の「送って」「やって」をもらう');
+    expect(o).toContain('同じ部署の同じ手順書に2回来たら止める');
+  });
+
+  it('every references/ file mentioned in SKILL.md exists', () => {
+    const s = readText(resolve(SKILL_DIR, 'SKILL.md'));
+    const refs = [...new Set(s.match(/references\/[\w-]+\.md/g))];
+    expect(refs.length).toBeGreaterThan(3);
+    for (const r of refs) {
+      expect(existsSync(resolve(SKILL_DIR, r))).toBe(true);
+    }
+  });
+});
