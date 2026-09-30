@@ -109,7 +109,7 @@ ms-365-mcp-server は Outlook（メール+カレンダー）+ OneDrive + Teams �
 - `Mail.ReadWrite` （Outlook メール）
 - `Calendars.ReadWrite` （Outlook カレンダー）
 - `Files.ReadWrite` または `Files.ReadWrite.All` （OneDrive）
-- `Chat.ReadWrite` （Teams、Q4 で teams 選択時のみ）
+- `Chat.ReadWrite` （Teams、Q5 で teams 選択時のみ）
 - `User.Read` （基本）
 
 ### Step 3: 認証設定 → 公開クライアントフロー (人間操作)

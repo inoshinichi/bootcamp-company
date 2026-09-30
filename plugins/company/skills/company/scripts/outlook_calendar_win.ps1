@@ -1,4 +1,4 @@
-# bootcamp-company: Windows の「パソコンの Outlook（従来版）」の予定表を「読むだけ」の道具。
+﻿# bootcamp-company: Windows の「パソコンの Outlook（従来版）」の予定表を「読むだけ」の道具。
 # 予定の作成・変更・削除はしない（Items を読むだけ）。
 #
 # 使い方（秘書が実行する）:
@@ -32,8 +32,8 @@ try {
   $ns = $outlook.GetNamespace("MAPI")
   $calendar = $ns.GetDefaultFolder(9)   # 9 = olFolderCalendar
   $items = $calendar.Items
-  $items.IncludeRecurrences = $true     # 繰り返しの予定も1件ずつ展開する
-  $items.Sort("[Start]")
+  $items.Sort("[Start]")                # Microsoft の手順: 並べ替えを先に
+  $items.IncludeRecurrences = $true     # その後で、繰り返しの予定も1件ずつ展開する
 
   $start = (Get-Date).Date
   $end = $start.AddDays($Days)

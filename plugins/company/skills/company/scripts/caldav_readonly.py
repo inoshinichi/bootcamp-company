@@ -1,27 +1,29 @@
 #!/usr/bin/env python3
 """
 bootcamp-company: iPhone のカレンダー（iCloud）などを CalDAV で「読むだけ」の道具。
-Python 標準ライブラリだけで動く。予定の作成・変更・削除は一切しない（GET 系の PROPFIND / REPORT だけ）。
+Python 標準ライブラリだけで動く。予定の作成・変更・削除は一切しない（PROPFIND / REPORT だけ）。
 
 使い方:
   python3 caldav_readonly.py setup               # 受講者が自分で実行（Apple ID と「App 用パスワード」を入れる）
   python3 caldav_readonly.py check               # 連携チェック（今日と明日の件数）
   python3 caldav_readonly.py events --days 7     # 今日から7日分の予定
-出力はすべて JSON（UTF-8）。
+Windows は python3 の代わりに `py -3`。出力はすべて JSON（UTF-8）。
 """
 import argparse
 import base64
 import getpass
 import json
 import os
-import platform
-import subprocess
+import re
 import sys
 import urllib.error
 import urllib.request
-from datetime import date, datetime, timedelta, timezone
-from urllib.parse import urljoin
+from datetime import date, datetime, time, timedelta, timezone
+from urllib.parse import urljoin, urlparse
 from xml.etree import ElementTree as ET
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import _secret  # noqa: E402
 
 try:
     sys.stdout.reconfigure(encoding="utf-8")
@@ -34,6 +36,9 @@ KEYCHAIN_SERVICE = "bootcamp-company-calendar"
 DEFAULT_SERVER = "https://caldav.icloud.com/"
 JST = timezone(timedelta(hours=9))
 NS = {"d": "DAV:", "c": "urn:ietf:params:xml:ns:caldav"}
+WINDOWS_TZ = {"Tokyo Standard Time": "Asia/Tokyo", "Korea Standard Time": "Asia/Seoul",
+              "China Standard Time": "Asia/Shanghai", "UTC": "UTC", "GMT Standard Time": "Europe/London",
+              "Eastern Standard Time": "America/New_York", "Pacific Standard Time": "America/Los_Angeles"}
 
 
 def out(obj, code=0):
@@ -57,13 +62,10 @@ def get_password(cfg):
     env = os.environ.get("BOOTCAMP_CAL_PASSWORD")
     if env:
         return env
-    if cfg.get("password_store") == "keychain":
-        r = subprocess.run(["security", "find-generic-password", "-s", KEYCHAIN_SERVICE, "-a", cfg["user"], "-w"],
-                           capture_output=True, text=True)
-        if r.returncode == 0:
-            return r.stdout.rstrip("\n")
-        out({"ok": False, "error": "password_not_found", "hint": "キーチェーンにパスワードがありません。setup をやり直してください。"}, 2)
-    return cfg.get("password", "")
+    pw = _secret.load(KEYCHAIN_SERVICE, cfg["user"], cfg)
+    if pw is None:
+        out({"ok": False, "error": "password_not_found", "hint": "保存したパスワードが見つかりません。setup をやり直してください。"}, 2)
+    return pw
 
 
 # ---------------------------------------------------------------------------
@@ -75,21 +77,41 @@ class ReadOnlyCalDAV:
 
     def __init__(self, server, user, password):
         self.server = server
-        token = base64.b64encode(f"{user}:{password}".encode()).decode()
+        self.host = urlparse(server).hostname or ""
+        token = base64.b64encode(f"{user}:{password}".encode("utf-8")).decode()
         self.auth = f"Basic {token}"
+
+    def _may_follow(self, url):
+        """パスワードを付けて付いていってよい転送先か（https で、同じサーバーか iCloud の中だけ）。"""
+        u = urlparse(url)
+        if u.scheme != "https":
+            return False
+        h = u.hostname or ""
+        return h == self.host or (self.host.endswith("icloud.com") and h.endswith(".icloud.com"))
 
     def request(self, method, url, body, depth="0"):
         if method not in self.ALLOWED:
             raise RuntimeError(f"読み取り専用のため {method} は実行しません")
-        req = urllib.request.Request(url, data=body.encode("utf-8"), method=method)
-        req.add_header("Authorization", self.auth)
-        req.add_header("Content-Type", "application/xml; charset=utf-8")
-        req.add_header("Depth", depth)
-        with urllib.request.urlopen(req, timeout=30) as res:
-            return res.geturl(), ET.fromstring(res.read())
+        for _ in range(5):  # urllib は PROPFIND / REPORT の転送を追わないので、自分で追う
+            req = urllib.request.Request(url, data=body.encode("utf-8"), method=method)
+            req.add_header("Authorization", self.auth)
+            req.add_header("Content-Type", "application/xml; charset=utf-8")
+            req.add_header("Depth", depth)
+            try:
+                with urllib.request.urlopen(req, timeout=30) as res:
+                    return res.geturl(), ET.fromstring(res.read())
+            except urllib.error.HTTPError as e:
+                loc = e.headers.get("Location") if e.code in (301, 302, 303, 307, 308) else None
+                if not loc:
+                    raise
+                nxt = urljoin(url, loc)
+                if not self._may_follow(nxt):
+                    raise RuntimeError(f"知らない転送先には付いていきません: {nxt}")
+                url = nxt
+        raise RuntimeError("転送が多すぎます")
 
     def principal(self):
-        body = ('<d:propfind xmlns:d="DAV:"><d:prop><d:current-user-principal/></d:prop></d:propfind>')
+        body = '<d:propfind xmlns:d="DAV:"><d:prop><d:current-user-principal/></d:prop></d:propfind>'
         base, tree = self.request("PROPFIND", self.server, body)
         href = tree.find(".//d:current-user-principal/d:href", NS)
         return urljoin(base, href.text.strip())
@@ -132,7 +154,7 @@ class ReadOnlyCalDAV:
 
 
 # ---------------------------------------------------------------------------
-# iCalendar の最小限の読み取り
+# iCalendar の読み取り（標準ライブラリだけ）
 # ---------------------------------------------------------------------------
 
 def unfold(text):
@@ -145,160 +167,246 @@ def unfold(text):
     return lines
 
 
-def parse_dt(prop, value):
+def split_prop(line):
+    """'DTSTART;TZID=Asia/Tokyo:20261001T100000' → ('DTSTART', {'TZID': 'Asia/Tokyo'}, '20261001T100000')"""
+    head, value = line.split(":", 1)
+    parts = head.split(";")
+    params = {}
+    for p in parts[1:]:
+        if "=" in p:
+            k, v = p.split("=", 1)
+            params[k.upper()] = v.strip('"')
+    return parts[0].upper(), params, value
+
+
+def tz_for(tzid):
+    if not tzid:
+        return JST
+    name = WINDOWS_TZ.get(tzid, tzid)
+    if name in ("Asia/Tokyo", "Japan"):
+        return JST
+    try:
+        from zoneinfo import ZoneInfo
+        return ZoneInfo(name)
+    except Exception:
+        return JST  # Windows で時差の表が無いとき等。受講者は日本在住が前提なので日本時間として扱う
+
+
+def parse_dt(params, value):
     """戻り値: (datetime[JST], 終日かどうか)"""
-    if "VALUE=DATE" in prop or (len(value) == 8 and value.isdigit()):
-        d = datetime.strptime(value[:8], "%Y%m%d")
-        return d.replace(tzinfo=JST), True
+    value = value.strip()
+    if params.get("VALUE") == "DATE" or (len(value) == 8 and value.isdigit()):
+        return datetime.strptime(value[:8], "%Y%m%d").replace(tzinfo=JST), True
     if value.endswith("Z"):
         return datetime.strptime(value, "%Y%m%dT%H%M%SZ").replace(tzinfo=timezone.utc).astimezone(JST), False
-    # TZID 付きやタイムゾーン無しは、受講者は日本在住が前提なので日本時間として扱う
-    return datetime.strptime(value[:15], "%Y%m%dT%H%M%S").replace(tzinfo=JST), False
+    local = datetime.strptime(value[:15], "%Y%m%dT%H%M%S").replace(tzinfo=tz_for(params.get("TZID")))
+    return local.astimezone(JST), False
 
+
+def parse_duration(value):
+    m = re.fullmatch(r"([+-])?P(?:(\d+)W)?(?:(\d+)D)?(?:T(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?)?", value.strip())
+    if not m:
+        return None
+    sign, w, d, h, mi, s = m.groups()
+    td = timedelta(weeks=int(w or 0), days=int(d or 0), hours=int(h or 0), minutes=int(mi or 0), seconds=int(s or 0))
+    return -td if sign == "-" else td
+
+
+def read_vevents(text):
+    """VEVENT の直下の項目だけを読む（中の VALARM などの UID・SUMMARY に上書きされないように）。"""
+    events, stack, cur = [], [], None
+    for line in unfold(text):
+        if line.startswith("BEGIN:"):
+            stack.append(line[6:].strip().upper())
+            if stack[-1] == "VEVENT":
+                cur = {"exdates": []}
+            continue
+        if line.startswith("END:"):
+            name = stack.pop() if stack else ""
+            if name == "VEVENT" and cur is not None:
+                if "start" in cur:
+                    events.append(cur)
+                cur = None
+            continue
+        if cur is None or not stack or stack[-1] != "VEVENT" or ":" not in line:
+            continue
+        name, params, value = split_prop(line)
+        value = value.replace("\\n", " ").replace("\\N", " ").replace("\\,", ",").replace("\\;", ";")
+        if name == "SUMMARY":
+            cur["title"] = value
+        elif name == "LOCATION":
+            cur["location"] = value
+        elif name == "UID":
+            cur["uid"] = value
+        elif name == "STATUS":
+            cur["status"] = value.upper()
+        elif name == "RRULE":
+            cur["rrule"] = value
+        elif name == "RECURRENCE-ID":
+            cur["recurrence_id"] = parse_dt(params, value)[0]
+        elif name == "EXDATE":
+            cur["exdates"].extend(parse_dt(params, v)[0] for v in value.split(",") if v)
+        elif name == "DURATION":
+            cur["duration"] = parse_duration(value)
+        elif name in ("DTSTART", "DTEND"):
+            dt, all_day = parse_dt(params, value)
+            cur["start" if name == "DTSTART" else "end"] = dt
+            if name == "DTSTART":
+                cur["all_day"] = all_day
+    for ev in events:
+        if "end" not in ev:
+            if ev.get("duration") is not None:
+                ev["end"] = ev["start"] + ev["duration"]
+            else:
+                ev["end"] = ev["start"] + (timedelta(days=1) if ev.get("all_day") else timedelta(0))
+    return events
+
+
+# ---------------------------------------------------------------------------
+# 繰り返しの予定の展開（iCloud はサーバー側で展開してくれないため、手元で計算する）
+# ---------------------------------------------------------------------------
 
 WEEKDAYS = ["MO", "TU", "WE", "TH", "FR", "SA", "SU"]
 SUPPORTED_RRULE_KEYS = {"FREQ", "INTERVAL", "COUNT", "UNTIL", "BYDAY", "BYMONTHDAY", "BYMONTH", "WKST"}
 
 
 def parse_rrule(value):
-    return dict(part.split("=", 1) for part in value.split(";") if "=" in part)
+    return {k.upper(): v for k, v in (part.split("=", 1) for part in value.split(";") if "=" in part)}
 
 
-def month_diff(a, b):
-    return (b.year - a.year) * 12 + (b.month - a.month)
+def last_day_of_month(d):
+    nxt = (d.replace(day=28) + timedelta(days=4)).replace(day=1)
+    return (nxt - timedelta(days=1)).day
+
+
+def byday_in_month(byday, day):
+    """BYDAY（例: MO, 2TU, -1FR）に day が当てはまるか（「第n◯曜」は月の中で数える）。"""
+    for d in byday:
+        wd, n = d[-2:], d[:-2]
+        if WEEKDAYS[day.weekday()] != wd:
+            continue
+        if not n or n == "+":
+            return True
+        n = int(n)
+        if n > 0 and (day.day - 1) // 7 + 1 == n:
+            return True
+        if n < 0 and (last_day_of_month(day) - day.day) // 7 + 1 == -n:
+            return True
+    return False
+
+
+def bymonthday_ok(rule, day):
+    last = last_day_of_month(day)
+    wanted = [int(x) if int(x) > 0 else last + 1 + int(x) for x in rule["BYMONTHDAY"].split(",")]
+    return day.day in wanted
 
 
 def matches_rule(rule, first, day):
     """day（date）が繰り返しの規則に当てはまるか。first は初回の date。"""
     freq = rule.get("FREQ")
     interval = int(rule.get("INTERVAL", "1"))
+    byday = [x for x in rule.get("BYDAY", "").split(",") if x]
     bymonth = [int(m) for m in rule["BYMONTH"].split(",")] if "BYMONTH" in rule else None
     if bymonth and day.month not in bymonth:
         return False
-    byday = rule.get("BYDAY", "").split(",") if rule.get("BYDAY") else []
     if freq == "DAILY":
-        return (day - first).days % interval == 0 and (not byday or WEEKDAYS[day.weekday()] in byday)
+        if (day - first).days % interval:
+            return False
+        if byday and WEEKDAYS[day.weekday()] not in [d[-2:] for d in byday]:
+            return False
+        return "BYMONTHDAY" not in rule or bymonthday_ok(rule, day)
     if freq == "WEEKLY":
-        week0 = first - timedelta(days=first.weekday())
-        week = day - timedelta(days=day.weekday())
+        wkst = WEEKDAYS.index(rule.get("WKST", "MO"))
+        week0 = first - timedelta(days=(first.weekday() - wkst) % 7)
+        week = day - timedelta(days=(day.weekday() - wkst) % 7)
         if ((week - week0).days // 7) % interval:
             return False
         days = [d[-2:] for d in byday] or [WEEKDAYS[first.weekday()]]
         return WEEKDAYS[day.weekday()] in days
     if freq == "MONTHLY":
-        if month_diff(first, day) % interval:
+        if ((day.year - first.year) * 12 + day.month - first.month) % interval:
             return False
-        if "BYMONTHDAY" in rule:
-            nxt = (day.replace(day=28) + timedelta(days=4)).replace(day=1)
-            last = (nxt - timedelta(days=1)).day
-            wanted = [int(x) if int(x) > 0 else last + 1 + int(x) for x in rule["BYMONTHDAY"].split(",")]
-            return day.day in wanted
-        if byday:
-            for d in byday:
-                wd, n = d[-2:], d[:-2]
-                if WEEKDAYS[day.weekday()] != wd:
-                    continue
-                if not n:
-                    return True
-                n = int(n)
-                if n > 0 and (day.day - 1) // 7 + 1 == n:
-                    return True
-                nxt = (day.replace(day=28) + timedelta(days=4)).replace(day=1)
-                last = (nxt - timedelta(days=1)).day
-                if n < 0 and (last - day.day) // 7 + 1 == -n:
-                    return True
-            return False
+        if "BYMONTHDAY" in rule or byday:
+            return ("BYMONTHDAY" not in rule or bymonthday_ok(rule, day)) and (not byday or byday_in_month(byday, day))
         return day.day == first.day
     if freq == "YEARLY":
         if (day.year - first.year) % interval:
             return False
         if not bymonth and day.month != first.month:
             return False
+        if "BYMONTHDAY" in rule or byday:
+            return ("BYMONTHDAY" not in rule or bymonthday_ok(rule, day)) and (not byday or byday_in_month(byday, day))
         return day.day == first.day
     return False
 
 
 def expand(ev, start, end):
-    """繰り返しの予定を、start〜end の範囲の1回ずつに展開する（手元で計算）。"""
+    """繰り返しの予定を、start〜end の範囲の1回ずつに展開する。"""
     rule = parse_rrule(ev["rrule"])
-    if set(rule) - SUPPORTED_RRULE_KEYS or rule.get("FREQ") not in ("DAILY", "WEEKLY", "MONTHLY", "YEARLY"):
-        one = dict(ev)
-        one["note"] = "繰り返しの予定（細かい規則のため、1回目の日付だけ表示）"
-        return [one]
     first = ev["start"]
-    dur = ev.get("end", first) - first
+    unsupported = set(rule) - SUPPORTED_RRULE_KEYS or rule.get("FREQ") not in ("DAILY", "WEEKLY", "MONTHLY", "YEARLY")
+    if not unsupported and rule.get("FREQ") == "YEARLY" and rule.get("BYDAY") and "BYMONTH" not in rule \
+            and any(re.match(r"^[+-]?\d", d) for d in rule["BYDAY"].split(",")):
+        unsupported = True  # 「毎年 第20月曜」のような年単位の数え方は対応しない
+    if unsupported:
+        one = dict(ev)
+        one["note"] = "繰り返しの予定（細かい規則のため、この期間の日付は計算できません。初回の日付を表示）"
+        one["force_show"] = True
+        return [one]
+    dur = ev["end"] - first
     count = int(rule["COUNT"]) if "COUNT" in rule else None
-    until = parse_dt("", rule["UNTIL"])[0] if "UNTIL" in rule else None
-    exdates = {x.date() if ev.get("all_day") else x for x in ev.get("exdates", [])}
+    until = None
+    if "UNTIL" in rule:
+        u, u_all_day = parse_dt({}, rule["UNTIL"])
+        until = datetime.combine(u.date(), time(23, 59, 59), tzinfo=JST) if u_all_day else u
+    exdates = {x.date() if ev.get("all_day") else x.timestamp() for x in ev.get("exdates", [])}
     s_jst, e_jst = start.astimezone(JST), end.astimezone(JST)
-    out_list, n, day = [], 0, first.date()
+    result = []
+
+    def consider(occ):
+        key = occ.date() if ev.get("all_day") else occ.timestamp()
+        if key not in exdates and occ < e_jst and occ + dur > s_jst:
+            one = dict(ev)
+            one["start"], one["end"] = occ, occ + dur
+            result.append(one)
+
+    consider(first)  # 初回（DTSTART）は規則に合わなくても必ず1回目に数える（RFC 5545）
+    n = 1
+    day = first.date() + timedelta(days=1)
     last_day = e_jst.date()
-    while day <= last_day:
+    while day <= last_day and (count is None or n < count):
         if matches_rule(rule, first.date(), day):
             occ = datetime.combine(day, first.timetz())
             if until and occ > until:
                 break
             n += 1
-            if count and n > count:
-                break
-            key = occ.date() if ev.get("all_day") else occ
-            if key not in exdates and occ < e_jst and occ + dur > s_jst:
-                one = dict(ev)
-                one["start"], one["end"] = occ, occ + dur
-                out_list.append(one)
+            consider(occ)
         day += timedelta(days=1)
-    return out_list
+    return result
 
 
 def parse_ics(text, start, end):
-    events, cur = [], None
-    for line in unfold(text):
-        if line == "BEGIN:VEVENT":
-            cur = {"exdates": []}
-        elif line == "END:VEVENT" and cur is not None:
-            if "start" in cur:
-                events.append(cur)
-            cur = None
-        elif cur is not None and ":" in line:
-            prop, value = line.split(":", 1)
-            name = prop.split(";")[0].upper()
-            value = value.replace("\\n", " ").replace("\\,", ",").replace("\\;", ";")
-            if name == "SUMMARY":
-                cur["title"] = value
-            elif name == "LOCATION":
-                cur["location"] = value
-            elif name == "UID":
-                cur["uid"] = value
-            elif name == "RRULE":
-                cur["rrule"] = value
-            elif name == "RECURRENCE-ID":
-                cur["recurrence_id"] = parse_dt(prop, value)[0]
-            elif name == "EXDATE":
-                cur["exdates"].extend(parse_dt(prop, v)[0] for v in value.split(","))
-            elif name in ("DTSTART", "DTEND"):
-                dt, all_day = parse_dt(prop, value)
-                cur["start" if name == "DTSTART" else "end"] = dt
-                if name == "DTSTART":
-                    cur["all_day"] = all_day
+    events = [e for e in read_vevents(text) if e.get("status") != "CANCELLED"]
     # 個別に変更された回（RECURRENCE-ID）は、元の繰り返しのその回と差し替える
-    overridden = {(e.get("uid"), e["recurrence_id"]) for e in events if "recurrence_id" in e}
+    overridden = {(e.get("uid"), e["recurrence_id"].timestamp()) for e in events if "recurrence_id" in e}
     flat = []
     for ev in events:
         if "rrule" in ev and "recurrence_id" not in ev:
             for occ in expand(ev, start, end):
-                if (ev.get("uid"), occ["start"]) not in overridden:
+                if (ev.get("uid"), occ["start"].timestamp()) not in overridden:
                     flat.append(occ)
         else:
             flat.append(ev)
+    s_jst, e_jst = start.astimezone(JST), end.astimezone(JST)
     res = []
     for ev in flat:
-        s = ev["start"]
-        if s >= end.astimezone(JST) or ev.get("end", s) <= start.astimezone(JST):
+        s, e = ev["start"], ev["end"]
+        if not ev.get("force_show") and (s >= e_jst or (e <= s_jst if e > s else s < s_jst)):
             continue
         item = {"title": ev.get("title", "(件名なし)"), "location": ev.get("location", ""),
                 "all_day": ev.get("all_day", False),
                 "start": s.strftime("%Y-%m-%d") if ev.get("all_day") else s.strftime("%Y-%m-%d %H:%M"),
-                "end": ev["end"].strftime("%Y-%m-%d %H:%M") if "end" in ev and not ev.get("all_day") else ""}
+                "end": "" if ev.get("all_day") else e.strftime("%Y-%m-%d %H:%M")}
         if ev.get("note"):
             item["note"] = ev["note"]
         res.append(item)
@@ -331,28 +439,24 @@ def cmd_setup(args):
     print("iPhone のカレンダー（iCloud）の連携設定をします。")
     print("※ パスワードは Apple ID のパスワードではなく、account.apple.com で作る『App 用パスワード』です。")
     user = input("Apple ID（メールアドレス）: ").strip()
-    password = getpass.getpass("App 用パスワード（表示されません）: ").strip()
-    server = input(f"サーバー [{DEFAULT_SERVER}]: ").strip() or DEFAULT_SERVER
+    password = getpass.getpass("App 用パスワード（入力しても画面には出ません。貼り付けたら Enter）: ").strip()
+    server = input(f"サーバー（そのまま Enter でよい） [{DEFAULT_SERVER}]: ").strip() or DEFAULT_SERVER
     cfg = {"user": user, "server": server}
     try:
         dav = ReadOnlyCalDAV(server, user, password)
         home = dav.calendar_home(dav.principal())
         cals = dav.calendars(home)
     except urllib.error.HTTPError as e:
-        print(f"\n× つながりませんでした（{e.code}）。Apple ID と App 用パスワードを確かめてください。何も保存していません。")
+        if e.code == 401:
+            print("\n× Apple ID か App 用パスワードが違うようです。もう一度確かめてください。何も保存していません。")
+        else:
+            print(f"\n× サーバーから思わぬ返事がありました（{e.code}）。秘書にこの番号を伝えてください。何も保存していません。")
         sys.exit(1)
     except Exception as e:
-        print(f"\n× つながりませんでした: {e}")
+        print(f"\n× つながりませんでした: {e}\n  秘書にこの文を伝えてください。何も保存していません。")
         sys.exit(1)
     cfg["home_url"] = home
-    if platform.system() == "Darwin":
-        subprocess.run(["security", "delete-generic-password", "-s", KEYCHAIN_SERVICE, "-a", user], capture_output=True)
-        subprocess.run(["security", "add-generic-password", "-s", KEYCHAIN_SERVICE, "-a", user, "-w", password],
-                       check=True, capture_output=True)
-        cfg["password_store"] = "keychain"
-    else:
-        cfg["password_store"] = "file"
-        cfg["password"] = password
+    _secret.save(KEYCHAIN_SERVICE, user, password, cfg)
     os.makedirs(CONFIG_DIR, exist_ok=True)
     with open(CONFIG_PATH, "w", encoding="utf-8") as f:
         json.dump(cfg, f, ensure_ascii=False, indent=2)

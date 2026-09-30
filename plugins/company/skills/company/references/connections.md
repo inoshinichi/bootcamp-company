@@ -10,10 +10,12 @@
 4. **パスワードを会話に貼らせない。** 入力は受講者本人が別のターミナルで行う（§3-1）
 5. **つながらない人を置いていかない。** 当日つながらない項目は後回しにして `secretary/_resume.md` に書き、次の起動時に声をかける
 6. **連携の結果は `.company/CLAUDE.md` の「連携の状態」に記録する**（§8）
+7. **秘書は `~/.config/bootcamp-company/` の中のファイルを cat・Read で開かない。** Windows ではパスワードやトークンがそのまま入っている。つながらないときの調査は、道具の `check` の結果（JSON）だけを見る
+8. **Claude Code を起動し直してもらったら、最初に `/company` と入力してもらう。** 起動し直すと秘書は会話を忘れるので、`/company` で秘書を呼び直し、しおり（`_resume.md`）から続ける
 
 ---
 
-## §0. 最初に確かめる2つ
+## §0. 最初に確かめる3つ
 
 ### 0-1. Windows か Mac か
 
@@ -24,12 +26,32 @@ uname -s 2>/dev/null || echo Windows
 ```
 
 `Darwin` = Mac。`MINGW`/`MSYS`/`CYGWIN`/`Windows` = Windows。
+（Claude Code は Windows でも Git Bash で命令を実行するので、この書き方で動く。**受講者が自分で開くターミナル（PowerShell）には別の書き方を渡す**＝§0-3）
 
 ### 0-2. ログインの種類（公式の連携が使えるかどうか）
 
-公式の連携は **Claude のアカウント（Pro / Max / Team / Enterprise / 無料）でログインしているとき**だけ秘書から使える。**APIキーでログインしていると出てこない。**
+公式の連携は **Claude のアカウント（Pro / Max / Team / Enterprise）でログインしているとき**だけ秘書から使える。**APIキーでログインしていると出てこない。**
 
-確かめ方: 受講者に `/status` と入力してもらい、ログイン方法の欄を見る。「API キー」系なら、`/logout` → `/login` で Claude のアカウントを選び直してもらう。
+確かめ方（秘書が自分でできる順）:
+1. 秘書の使える道具に `mcp__claude_ai_` で始まるものが1つでもあれば → Claude のアカウントでログインしている（○）
+2. 1つも無いとき → 受講者に `/status` と入力してもらい、ログイン方法の欄を読んでもらう。「API キー」系なら `/logout` → `/login` で Claude のアカウントを選び直してもらう。Claude のアカウントなのに1つも無いなら、まだどの連携も押していないだけ（§2 へ）
+
+⚠️ **Team / Enterprise プランの会社**は、Claude の組織の管理者（オーナー）が管理画面で各連携（とくに Microsoft 365）を**有効にしないと、社員の画面にボタンが出ない**。ボタンが見当たらないときは、まずここを疑う。
+
+### 0-3. 道具の場所と、受講者に渡す1行の作り方
+
+道具（`scripts/`）はプラグインの中にあり、場所はプラグインの版ごとに変わる。**毎回探す**:
+
+```bash
+S=$(dirname "$(find ~/.claude/plugins -name mail_readonly.py -path '*company*' 2>/dev/null | sort | tail -1)"); echo "$S"
+```
+
+- **秘書が自分で実行するとき**（Git Bash / Mac）: Mac は `python3 "$S/mail_readonly.py" check`。Windows は `py -3 "$S/mail_readonly.py" check`
+- **受講者の別ターミナルに貼ってもらう1行**:
+  - Mac: `python3 "<$S の値>/mail_readonly.py" setup`
+  - Windows（PowerShell）: Windows 形式の場所に直してから渡す。`cygpath -w "$S"` で `C:\Users\…` の形になる → `py -3 "C:\Users\…\mail_readonly.py" setup`
+- 場所に空白が入ることがあるので、**必ず `"…"` で囲む**
+- ⚠️ Windows で `python3` と打つと、Microsoft Store が開いたり「Python was not found」と出たりする。Windows では必ず `py -3` を使う
 
 ---
 
@@ -37,19 +59,29 @@ uname -s 2>/dev/null || echo Windows
 
 受講者に聞くのは**メールアドレスだけ**。@ から後ろ（ドメイン）の「メールの届け先（MX）」を調べる。公開情報なので、パスワードは要らない。
 
+🔴 **判定は2段階。先にアドレスそのもので決め、当てはまらないときだけ届け先を調べる**（個人の Outlook.com も届け先は `protection.outlook.com` なので、届け先だけで判定すると Microsoft 365 と誤判定する）。
+
+**第1段階: アドレスの @ から後ろそのもの**
+
+| @ から後ろ | 種類 | 進む道 |
+|---|---|---|
+| `gmail.com` | **Gmail（個人）** | §2-B |
+| `yahoo.co.jp` / `ymail.ne.jp` | **Yahoo メール** | §3（§3-4） |
+| `outlook.com` / `outlook.jp` / `hotmail.com` / `hotmail.co.jp` / `live.com` / `live.jp` / `msn.com` | **個人の Outlook.com** | §3-5（⚠️ 公式の Microsoft 365 連携は**仕事用アカウントのみ**。サーバーに取りに行く道も Microsoft が止めている） |
+| それ以外（会社のドメインなど） | → 第2段階へ | |
+
+**第2段階: 届け先（MX）を調べる**
+
 ```bash
-nslookup -type=mx <ドメイン>
+nslookup -type=mx <ドメイン>.
 ```
 
-（Windows・Mac どちらにも入っている。結果の `mail exchanger =` の行を見る）
+（Windows・Mac どちらにも入っている。ドメインの**最後にドットを付ける**＝会社のネットワークで社内名が付け足されて調べ損ねるのを防ぐ。結果の `mail exchanger =` の行を見る）
 
 | 届け先に含まれる文字 | 種類 | 進む道 |
 |---|---|---|
-| `outlook.com` / `protection.outlook.com` | **Microsoft 365** | §2-A |
+| `protection.outlook.com` / `outlook.com` | **Microsoft 365** | §2-A |
 | `google.com` / `googlemail.com` | **Google Workspace** | §2-B |
-| `gmail.com` のアドレスそのもの | **Gmail（個人）** | §2-B |
-| `yahoo.co.jp` のアドレス | **Yahoo メール** | §3 |
-| `outlook.com` / `outlook.jp` / `hotmail.*` / `live.*` のアドレスそのもの | **個人の Outlook.com** | §3-5（⚠️ 公式の Microsoft 365 連携は**仕事用アカウントのみ**。サーバーに取りに行く道も Microsoft が止めている） |
 | 上記以外（`xserver.jp`、`sakura.ne.jp`、`ocn.ne.jp`、プロバイダ名、会社独自のサーバー など） | **レンタルサーバー・プロバイダ** | §3 |
 | 結果が出ない・判断できない | 不明 | 受講者に「パソコンの Outlook の『アカウント設定』の画面」を見せてもらい、サーバー名から判断 |
 
@@ -70,7 +102,9 @@ nslookup -type=mx <ドメイン>
 2. 「設定」→「コネクター」を開く
 3. 該当する連携の「連携する / Connect」を押し、会社のアカウントでログインして許可する
 4. 秘書の画面に戻り、**Claude Code を一度終了して起動し直す**（`_resume.md` にしおりを書いてから案内する）
-5. 「連携チェック」（§7）
+5. 起動し直したら、**最初に `/company` と入力してもらう**（秘書が呼び直され、しおりから続きを始める）→「連携チェック」（§7）
+
+ボタンが見当たらないとき: Team / Enterprise プランなら、Claude の組織の管理者が管理画面でその連携を有効にしていない（§0-2）。
 
 秘書側で別に「つなぐ」作業は無い。WEB で繋いだものは、同じアカウントでログインしている秘書に自動で出てくる（ツール名が `mcp__claude_ai_Gmail__...`、`mcp__claude_ai_Microsoft_365__...` のようなもの）。
 
@@ -78,8 +112,9 @@ nslookup -type=mx <ドメイン>
 
 - 1つの連携で **Outlook のメール・予定表・OneDrive・SharePoint・Teams** が入る
 - メール（下書き・送信）、予定、ファイルは書き込みもできる。**Teams は読むだけ**（個人・グループのチャット。チームのチャンネルは読めない）
-- 🔴 **最初に1回だけ、会社の Microsoft の管理者の許可（同意）が要る。** これが一番つまずく所
-  - 受講者自身が管理者なら、その場で許可できる（許可の画面が出たら「組織の代理として同意」にチェック）
+- 🔴 **最初に1回だけ、会社の Microsoft の「全体管理者（グローバル管理者）」の許可（同意）が要る。** これが一番つまずく所。ふつうの管理者（ユーザー管理だけ等）では許可できない
+  - 受講者自身が全体管理者なら、その場で許可できる（許可の画面が出たら「組織の代理として同意」にチェック）
+  - Claude を Team / Enterprise プランで使っている会社は、さらに **Claude の組織の管理者が管理画面で Microsoft 365 の連携を有効にする**必要がある（§0-2）
   - 管理者が別の人（IT業者・情報システム担当）なら、下の依頼文を渡してもらう。研修の**前日までに**済ませておくのが理想
 
 依頼文のひな形（受講者が管理者へ送る。秘書が名前と会社名を埋めて渡す）:
@@ -97,6 +132,7 @@ nslookup -type=mx <ドメイン>
 
 ・対象: Claude の「Microsoft 365」コネクター（Anthropic 社の公式のもの）
 ・手順: Anthropic 社の案内 https://support.claude.com/en/articles/12542951-set-up-the-microsoft-365-connector
+・必要な方: Microsoft 365 の全体管理者（グローバル管理者）の方
 ・権限: 各社員は自分のアカウントで接続し、本人が見られる範囲のデータだけを使います
 
 お手数をおかけしますが、よろしくお願いいたします。
@@ -116,31 +152,30 @@ nslookup -type=mx <ドメイン>
 
 - 秘書は Outlook アプリを**操作しない**。メールが置いてあるサーバーに直接取りに行く。Outlook は今までどおり使える
 - **読むだけ**: 受信箱を読み取り専用で開き、既読にもしない。削除・移動の命令は道具の中で止めてある
-- 送信もできるが、**受講者が本文を見て「送って」と言ってから**（`--yes`）。控えを自分宛てに1通送るので、Outlook の受信箱に「送った記録」が残る
+- 送信もできるが、**受講者が本文を見て「送って」と言ってから**。道具はまず送らずに中身と「確認番号」を返し、その番号を付けたときだけ送る（中身が1文字でも変われば番号も変わる）。控えを自分宛てに1通送るので、Outlook の受信箱に「送った記録」が残る
 
 ### 3-0. 準備: Python が入っているか
 
-```bash
-python3 --version || python --version || py --version
-```
+- Windows: `py -3 --version`（`python3` は使わない＝§0-3）
+- Mac: `python3 --version`
 
 入っていなければ:
-- **Windows**: `winget install -e --id Python.Python.3.12`（終わったら Claude Code を起動し直す。しおりを書く）
-- **Mac**: `xcode-select --install`（画面の案内に従う）
+- **Windows**: `winget install -e --id Python.Python.3.12`。終わったら **Cursor（またはターミナルのアプリ）ごと閉じて開き直す**（Claude Code だけ起動し直しても、入れた Python が見つからない）。閉じる前にしおりを書き、開き直したら `/company` と入力してもらう
+- **Mac**: `xcode-select --install`（10〜30分かかる。できれば準備の紙で前日までにやってもらう）
 
-以下、`python3` が無い Windows では `py` に読み替える。道具の場所はこのスキルのフォルダの `scripts/`（秘書はスキルの「Base directory」からフルパスを組み立てる）。
+道具の場所と、受講者に渡す1行の作り方は §0-3。
 
 ### 3-1. つなぐ（パスワードは受講者本人が入力する）
 
-1. 秘書が受講者に**別のターミナル**を開いてもらう（Cursor なら「ターミナル」→「新しいターミナル」）
-2. 秘書が次の1行を示し、貼り付けて実行してもらう:
-   ```
-   python3 "<scripts のフルパス>/mail_readonly.py" setup
-   ```
+1. 秘書が受講者に**別のターミナル**を開いてもらう（Cursor なら「ターミナル」→「新しいターミナル」。Windows ではこれが PowerShell になる。**Git Bash の画面では入力が見えたり止まったりすることがあるので使わない**）
+2. 秘書が §0-3 のとおり、その人のパソコン用の1行を作って示し、貼り付けて実行してもらう:
+   - Mac: `python3 "/Users/…/scripts/mail_readonly.py" setup`
+   - Windows: `py -3 "C:\Users\…\scripts\mail_readonly.py" setup`
 3. 聞かれた順に入力してもらう: メールアドレス → 受信サーバー → ID → 送信サーバー → ポート → パスワード（画面に出ない）
    - サーバー名と ID は、**パソコンの Outlook の「アカウント設定」**に書いてある（秘書が場所を案内する）
    - 「○ つながりました」と出たら、秘書の画面に戻って「連携チェック」
-4. パスワードの保存先: Mac はキーチェーン（パソコンの鍵の保管庫）。Windows はホームフォルダの `.config/bootcamp-company/mail.json`（本人のアカウントでしか読めない場所）。**受講者にもこの違いを正直に伝える**
+4. パスワードの保存先: Mac はキーチェーン（パソコンの鍵の保管庫）。Windows は Windows のデータ保護機能で暗号化して `.config/bootcamp-company/mail.json` に入る（そのパソコンの、その人のアカウントでしか元に戻せない）。秘書はこのファイルを開かない（大原則7）
+5. 受信はつながって送信だけ失敗したときは「△」と出る。読むことはできるので先に進み、送信サーバー名とポートはあとで Outlook の設定画面と見比べる
 
 ⚠️ パスワードを秘書の会話欄に貼ろうとした受講者には、「会話に貼ると記録に残ってしまうので、別のターミナルに入れてください」と止める。
 
@@ -193,12 +228,13 @@ ID とサーバー名は、パソコンの Outlook の「アカウント設定�
 ### 3-6. いつもの使い方（秘書が実行する）
 
 ```bash
-python3 <scripts>/mail_readonly.py check          # 連携チェック（件名だけ）
-python3 <scripts>/mail_readonly.py list --n 20    # 最新20通の差出人・件名
-python3 <scripts>/mail_readonly.py list --unseen  # 未読だけ（IMAP のとき）
-python3 <scripts>/mail_readonly.py read <UID>     # 1通の本文（既読にしない）
-python3 <scripts>/mail_readonly.py send --to 相手 --subject 件名 --body-file 本文.txt   # まず確認用（送らない）
-# 受講者が本文を見て「送って」と言ったら、同じ命令に --yes を付けて送る
+# Mac は python3、Windows は py -3（$S は §0-3 で探した場所）
+python3 "$S/mail_readonly.py" check          # 連携チェック（件名だけ）
+python3 "$S/mail_readonly.py" list --n 20    # 最新20通の差出人・件名
+python3 "$S/mail_readonly.py" list --unseen  # 未読だけ
+python3 "$S/mail_readonly.py" read <UID>     # 1通の本文（既読にしない）
+python3 "$S/mail_readonly.py" send --to 相手 --subject 件名 --body-file 本文.txt   # 送らずに中身と確認番号を返す
+# 中身（宛先・件名・本文）を受講者に見せ、「送って」と言われたら、同じ命令に --confirm <確認番号> を付けて送る
 ```
 
 ---
@@ -224,8 +260,8 @@ python3 <scripts>/mail_readonly.py send --to 相手 --subject 件名 --body-file
 #### iPhone（iCloud）
 
 1. 受講者に Apple のアカウント管理ページ（account.apple.com）で「App 用パスワード」を作ってもらう（Apple のアカウントに2段階認証が入っていることが条件）
-2. 別のターミナルで `python3 <scripts>/caldav_readonly.py setup` → Apple ID と App 用パスワードを入れてもらう
-3. 秘書は `caldav_readonly.py check` / `events --days 7` で読む
+2. 別のターミナルで setup を実行してもらう（1行の作り方は §0-3。Mac: `python3 "…/caldav_readonly.py" setup`／Windows: `py -3 "C:\…\caldav_readonly.py" setup`）→ Apple ID と App 用パスワードを入れてもらう
+3. 秘書は `"$S/caldav_readonly.py" check` / `events --days 7` で読む
 - ⚠️ Apple ID のパスワードを変えると App 用パスワードは無効になる → `setup` をやり直す
 - 繰り返しの予定は道具の中で1回ずつに展開する（毎週・毎月第2火曜・毎年 など）。細かすぎる規則の予定は、1回目の日付だけに「繰り返しの予定」と注記して出す
 - 出典: https://support.apple.com/en-us/102654
@@ -233,16 +269,18 @@ python3 <scripts>/mail_readonly.py send --to 相手 --subject 件名 --body-file
 #### Windows のパソコンの Outlook の予定表
 
 ```bash
-powershell -NoProfile -ExecutionPolicy Bypass -File "<scripts>/outlook_calendar_win.ps1" -Days 2
+powershell -NoProfile -ExecutionPolicy Bypass -File "$(cygpath -w "$S/outlook_calendar_win.ps1")" -Days 2
 ```
 
 - **従来の Outlook だけ**。「新しい Outlook」は外から読む仕組み（COM）に対応していない（Microsoft 公式: https://learn.microsoft.com/en-us/microsoft-365-apps/outlook/get-started/state-of-com-add-ins）→ `new_outlook_or_not_installed` が返る。その場合は「従来の Outlook に戻す」か「Google カレンダー」を相談する
 - 読むだけ。予定を入れたいときは、秘書が内容を示して受講者が Outlook に入れる
+- ⚠️ 従来版と「新しい Outlook」の両方が入っているパソコンでは、ふだん新しい方を使っていても従来版の（古い）予定表を読んでしまう。**初回は読めた予定を2〜3件見せて「いつもの予定表と同じですか」と受講者に確かめる**
+- Outlook が「ほかのプログラムがアクセスしようとしています」と確認を出して止まることがある。止まったら受講者に画面を見てもらい「許可」を押してもらう
 
 #### Mac の「カレンダー」アプリ
 
 ```bash
-osascript "<scripts>/mac_calendar.applescript" 2
+osascript "$S/mac_calendar.applescript" 2
 ```
 
 - 初回、Mac が「カレンダーへのアクセスを許可しますか」と聞く。**実行前に「確認が出たら『許可』を押してください」と一声かける**
@@ -282,8 +320,9 @@ osascript "<scripts>/mac_calendar.applescript" 2
 ### Chatwork
 
 1. 受講者に Chatwork の右上の名前 →「サービス連携」→「API トークン」でトークンを発行してもらう。**ビジネス・エンタープライズプランは組織の管理者への利用申請が要る**（パーソナルプランは不要）。出典: https://developer.chatwork.com/docs/getting-started
-2. トークンは会話に貼らせず、別のターミナルでファイルに保存してもらう:
-   - Mac: `mkdir -p ~/.config/bootcamp-company && read -s T && printf %s "$T" > ~/.config/bootcamp-company/chatwork.token && chmod 600 ~/.config/bootcamp-company/chatwork.token`
+2. トークンは会話に貼らせず、別のターミナルでファイルに保存してもらう（入力しても画面には何も出ないので、「貼り付けたら Enter を押してください」と先に伝える）:
+   - Mac: `mkdir -p ~/.config/bootcamp-company && printf 'トークン: ' && read -s T && printf %s "$T" > ~/.config/bootcamp-company/chatwork.token && chmod 600 ~/.config/bootcamp-company/chatwork.token && echo OK`
+   - Windows（PowerShell）: `$t = Read-Host 'トークン' -AsSecureString; $p = [Runtime.InteropServices.Marshal]::PtrToStringAuto([Runtime.InteropServices.Marshal]::SecureStringToBSTR($t)); New-Item -ItemType Directory -Force "$HOME\.config\bootcamp-company" | Out-Null; [IO.File]::WriteAllText("$HOME\.config\bootcamp-company\chatwork.token", $p); 'OK'`
 3. 秘書は curl で呼ぶ（Windows 10 以降・Mac に標準で入っている）:
    ```bash
    T=$(cat ~/.config/bootcamp-company/chatwork.token)
@@ -306,7 +345,7 @@ osascript "<scripts>/mac_calendar.applescript" 2
 
 | 項目 | 試すこと | ○の条件 | ×のとき言うこと |
 |---|---|---|---|
-| ログイン | ログインの種類（§0-2） | Claude のアカウント | 「APIキーでログインしています。`/logout` → `/login` で Claude のアカウントを選んでください」 |
+| ログイン | `mcp__claude_ai_` で始まる道具があるか（§0-2）。§3 の道だけの人は「－」 | ある | 受講者に `/status` を見てもらう → APIキーなら「`/logout` → `/login` で Claude のアカウントを選んでください」 |
 | メール | 公式: 受信箱の最新1通を検索／§3の人: `mail_readonly.py check` | 最新1通の**件名だけ**が取れた | 0通なら §3-2（消える設定）／ログイン失敗なら §3-3 |
 | カレンダー | 今日と明日の予定を読む | 読めた（0件でも○） | 道ごとの直し方（§4） |
 | フォルダ | 決めたフォルダの中のファイル名を5つ読む | 読めた | 「場所が変わっていないか」「起動したフォルダの外なら `/add-dir`」 |
