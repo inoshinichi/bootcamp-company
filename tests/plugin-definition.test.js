@@ -269,3 +269,71 @@ describe('plugin directory structure', () => {
     expect(pluginData.name).toBe(attributes.name);
   });
 });
+
+// ---------------------------------------------------------------------------
+// 6. Connections (2026-10: 公式の連携を正にした作り直し)
+// ---------------------------------------------------------------------------
+
+describe('connections guide', () => {
+  const skill = () => readText(resolve(SKILL_DIR, 'SKILL.md'));
+  const guide = () => readText(resolve(SKILL_DIR, 'references/connections.md'));
+
+  it.each([
+    'references/connections.md',
+    'references/connections-legacy.md',
+    'scripts/mail_readonly.py',
+    'scripts/caldav_readonly.py',
+    'scripts/outlook_calendar_win.ps1',
+    'scripts/mac_calendar.applescript',
+  ])('file should exist: %s', (file) => {
+    expect(existsSync(resolve(SKILL_DIR, file))).toBe(true);
+  });
+
+  it('onboarding asks for the email address instead of "Google or Microsoft"', () => {
+    const s = skill();
+    expect(s).toContain('#### Q3: お仕事のメールアドレス');
+    expect(s).toContain('nslookup -type=mx');
+    expect(s).not.toContain('googleBased');
+    expect(s).not.toContain('microsoftBased');
+  });
+
+  it('onboarding asks Windows or Mac', () => {
+    expect(skill()).toContain('#### Q4: パソコン');
+  });
+
+  it('old Google Cloud / Azure steps are no longer in SKILL.md (moved to legacy)', () => {
+    const s = skill();
+    expect(s).not.toContain('Google Cloud Console でプロジェクト作成');
+    expect(s).not.toContain('Azure Portal でアプリ登録');
+    expect(readText(resolve(SKILL_DIR, 'references/connections-legacy.md'))).toContain('Google Cloud Console でプロジェクト作成');
+  });
+
+  it('SKILL.md references the connections guide and has 連携チェック', () => {
+    const s = skill();
+    expect(s).toContain('references/connections.md');
+    expect(s).toContain('### 連携チェック');
+  });
+
+  it('guide covers every route decided with the owner', () => {
+    const g = guide();
+    for (const heading of [
+      '## §1. メールアドレスから種類を見分ける',
+      '### §2-A. Microsoft 365',
+      '### §2-B. Google',
+      '### 3-2. 🔴「受け取るとサーバーから消える」設定',
+      '### 3-3. サーバーの ID・パスワードが分からない人',
+      '### 3-4. Yahoo メール',
+      '### 3-5. 個人の Outlook.com・Hotmail',
+      '## §4. カレンダー',
+      '## §5. フォルダ',
+      '## §6. 社内チャット',
+      '## §7. 連携チェック',
+    ]) {
+      expect(g).toContain(heading);
+    }
+  });
+
+  it('guide forbids pasting passwords into the conversation', () => {
+    expect(guide()).toContain('パスワードを会話に貼らせない');
+  });
+});

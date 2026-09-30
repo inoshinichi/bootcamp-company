@@ -79,12 +79,22 @@ claude plugin install company@bootcamp-company --scope user
 
 | 案内タイミング | 内容 |
 |---|---|
-| `/company` 起動直後 | 5問オンボーディング（事業・目標・基盤・チャット・ダッシュボード） |
-| オンボーディング完了時 | 環境に応じた連携プラン（Google / Microsoft / Slack） |
+| `/company` 起動直後 | 6問オンボーディング（事業・目標・**メールアドレス**・Windows/Mac・チャット・ダッシュボード）。メールの種類は秘書がアドレスから自動で調べる |
+| オンボーディング完了時 | 環境に応じた連携プラン（Microsoft 365・Google は**公式の連携ボタン**／レンタルサーバー・Yahoo は**サーバーに読みに行く道具**） |
 | 「アプリ作って」と言ったとき | obra/superpowers プラグインが必要なら、その場でインストールコマンドを案内 |
-| 「Gmail 連携セットアップして」等で | OAuth 設定をステップバイステップで伴走 |
+| 「連携チェック」と言ったとき | メール・カレンダー・フォルダ・チャットのつながり具合を ○×の表で表示 |
 
 URL や手順を覚える必要はありません。秘書に話しかけて進めてください。
+
+### 研修の前に配る「準備の紙」
+
+[docs/guide/junbi.md](docs/guide/junbi.md) — アカウント作成・連携ボタン・メールのパスワード確認・Outlook の設定1か所・見せてよいフォルダ。
+
+### 連携の考え方（2026-10 改訂）
+
+- **公式の連携（Claude の「コネクター」）が正。** Claude の WEB・デスクトップアプリで一度ボタンを押せば、同じアカウントでログインした秘書から使える。Google Cloud や Azure の管理画面での作業は不要になった
+- 公式が無いメール・カレンダー（レンタルサーバー、Yahoo、iPhone、パソコンの Outlook の予定表）は、プラグイン同梱の**読むだけの道具**でつなぐ。メールを消さない・既読にしない
+- 詳細は [plugins/company/skills/company/references/connections.md](plugins/company/skills/company/references/connections.md)。古い手順（Google Cloud・Azure）は `connections-legacy.md` に予備として残してある
 
 ## 5分で立ち上がる初回セットアップ
 
