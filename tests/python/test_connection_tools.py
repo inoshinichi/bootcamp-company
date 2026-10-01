@@ -325,5 +325,74 @@ class ReviewRegressionTest(unittest.TestCase):
             self.assertEqual(json.loads(buf.getvalue())["error"], "partly_refused")
 
 
+secret = load("_secret")
+
+
+class CodexRound1Test(unittest.TestCase):
+    """2026-10-01 codex 1巡目の指摘の再発防止。"""
+
+    R = (datetime(2026, 9, 30, 15, 0, tzinfo=timezone.utc), datetime(2026, 11, 30, 15, 0, tzinfo=timezone.utc))
+
+    def test_keychain_failure_does_not_leak_password(self):
+        failed = mock.Mock(returncode=1, stderr=b"security: SecKeychainItemCreateFromContent: User interaction is not allowed.")
+        with mock.patch.object(secret, "SYSTEM", "Darwin"), \
+                mock.patch("subprocess.run", side_effect=[mock.Mock(returncode=0), failed]):
+            with self.assertRaises(Exception) as cm:
+                secret.save("svc", "acct", "SECRET-PW-123", {})
+        self.assertNotIn("SECRET-PW-123", str(cm.exception))
+        self.assertNotIn("SECRET-PW-123", repr(cm.exception))
+
+    def test_dpapi_failure_does_not_fall_back_to_plaintext(self):
+        cfg = {}
+        with mock.patch.object(secret, "SYSTEM", "Windows"), \
+                mock.patch.object(secret, "_dpapi", side_effect=OSError("boom")):
+            with self.assertRaises(Exception):
+                secret.save("svc", "acct", "pw", cfg)
+        self.assertNotIn("password", cfg)
+
+    def test_credentials_not_sent_to_other_host_or_http(self):
+        dav = cal.ReadOnlyCalDAV("https://caldav.icloud.com/", "u", "p")
+        for bad in ["http://caldav.icloud.com/x", "https://evil.example.com/x"]:
+            with mock.patch("urllib.request.urlopen") as op:
+                with self.assertRaises(RuntimeError):
+                    dav.request("PROPFIND", bad, "")
+                op.assert_not_called()
+
+    def test_server_must_be_https(self):
+        dav = cal.ReadOnlyCalDAV("http://caldav.example.jp/", "u", "p")
+        with mock.patch("urllib.request.urlopen") as op:
+            with self.assertRaises(RuntimeError):
+                dav.request("PROPFIND", "http://caldav.example.jp/", "")
+            op.assert_not_called()
+
+    def test_cancelled_single_occurrence_is_removed_from_series(self):
+        ics = ("BEGIN:VCALENDAR\nBEGIN:VEVENT\nUID:D\nSUMMARY:朝礼\nDTSTART:20261001T000000Z\nDTEND:20261001T001500Z\n"
+               "RRULE:FREQ=DAILY;COUNT=3\nEND:VEVENT\nBEGIN:VEVENT\nUID:D\nRECURRENCE-ID:20261002T000000Z\nSTATUS:CANCELLED\n"
+               "SUMMARY:朝礼\nDTSTART:20261002T000000Z\nDTEND:20261002T001500Z\nEND:VEVENT\nEND:VCALENDAR\n")
+        got = [e["start"][:10] for e in cal.parse_ics(ics, *self.R)]
+        self.assertEqual(got, ["2026-10-01", "2026-10-03"])
+
+    def test_recurring_foreign_event_follows_its_own_dst(self):
+        ics = ("BEGIN:VCALENDAR\nBEGIN:VEVENT\nUID:NY\nSUMMARY:NY定例\nDTSTART;TZID=America/New_York:20261026T090000\n"
+               "DTEND;TZID=America/New_York:20261026T100000\nRRULE:FREQ=WEEKLY;COUNT=2\nEND:VEVENT\nEND:VCALENDAR\n")
+        got = [e["start"] for e in cal.parse_ics(ics, *self.R)]
+        self.assertEqual(got, ["2026-10-26 22:00", "2026-11-02 23:00"])
+
+    def test_preview_shows_whole_body(self):
+        with tempfile.TemporaryDirectory() as d:
+            cfg_path = os.path.join(d, "mail.json")
+            with open(cfg_path, "w", encoding="utf-8") as f:
+                json.dump({"address": "u@example.jp", "user": "u", "smtp_host": "s", "smtp_port": 465}, f)
+            body = os.path.join(d, "body.txt")
+            long_body = "あ" * 5000 + "末尾の大事な一文"
+            Path(body).write_text(long_body, encoding="utf-8")
+            argv = ["mail_readonly.py", "send", "--to", "a@example.jp", "--subject", "件名", "--body-file", body]
+            with mock.patch.object(mail, "CONFIG_PATH", cfg_path), mock.patch.object(sys, "argv", argv), \
+                    redirect_stdout(io.StringIO()) as buf:
+                with self.assertRaises(SystemExit):
+                    mail.main()
+            self.assertTrue(json.loads(buf.getvalue())["preview"]["body"].endswith("末尾の大事な一文"))
+
+
 if __name__ == "__main__":
     unittest.main()

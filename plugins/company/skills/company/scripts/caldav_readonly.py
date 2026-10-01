@@ -93,6 +93,9 @@ class ReadOnlyCalDAV:
         if method not in self.ALLOWED:
             raise RuntimeError(f"読み取り専用のため {method} は実行しません")
         for _ in range(5):  # urllib は PROPFIND / REPORT の転送を追わないので、自分で追う
+            if not self._may_follow(url):
+                # パスワードを付けて送るのは https の、設定したサーバー（iCloud なら iCloud の中）だけ
+                raise RuntimeError(f"安全でない、または知らない宛先にはパスワードを送りません: {url}")
             req = urllib.request.Request(url, data=body.encode("utf-8"), method=method)
             req.add_header("Authorization", self.auth)
             req.add_header("Content-Type", "application/xml; charset=utf-8")
@@ -104,10 +107,7 @@ class ReadOnlyCalDAV:
                 loc = e.headers.get("Location") if e.code in (301, 302, 303, 307, 308) else None
                 if not loc:
                     raise
-                nxt = urljoin(url, loc)
-                if not self._may_follow(nxt):
-                    raise RuntimeError(f"知らない転送先には付いていきません: {nxt}")
-                url = nxt
+                url = urljoin(url, loc)  # 次の周の頭で宛先を確かめる
         raise RuntimeError("転送が多すぎます")
 
     def principal(self):
@@ -253,6 +253,9 @@ def read_vevents(text):
             cur["start" if name == "DTSTART" else "end"] = dt
             if name == "DTSTART":
                 cur["all_day"] = all_day
+                if not all_day and params.get("TZID") and not value.strip().endswith("Z"):
+                    # 繰り返しは「その地域の時刻」で数える（夏時間の切り替えをまたいでもずれないように）
+                    cur["start_local"] = dt.astimezone(tz_for(params.get("TZID")))
     for ev in events:
         if "end" not in ev:
             if ev.get("duration") is not None:
@@ -343,7 +346,7 @@ def matches_rule(rule, first, day):
 def expand(ev, start, end):
     """繰り返しの予定を、start〜end の範囲の1回ずつに展開する。"""
     rule = parse_rrule(ev["rrule"])
-    first = ev["start"]
+    first = ev.get("start_local", ev["start"])  # 予定が作られた地域の時刻
     unsupported = set(rule) - SUPPORTED_RRULE_KEYS or rule.get("FREQ") not in ("DAILY", "WEEKLY", "MONTHLY", "YEARLY")
     if not unsupported and rule.get("FREQ") == "YEARLY" and rule.get("BYDAY") and "BYMONTH" not in rule \
             and any(re.match(r"^[+-]?\d", d) for d in rule["BYDAY"].split(",")):
@@ -364,6 +367,7 @@ def expand(ev, start, end):
     result = []
 
     def consider(occ):
+        occ = occ.astimezone(JST)
         key = occ.date() if ev.get("all_day") else occ.timestamp()
         if key not in exdates and occ < e_jst and occ + dur > s_jst:
             one = dict(ev)
@@ -373,10 +377,10 @@ def expand(ev, start, end):
     consider(first)  # 初回（DTSTART）は規則に合わなくても必ず1回目に数える（RFC 5545）
     n = 1
     day = first.date() + timedelta(days=1)
-    last_day = e_jst.date()
+    last_day = e_jst.astimezone(first.tzinfo).date() + timedelta(days=1)
     while day <= last_day and (count is None or n < count):
         if matches_rule(rule, first.date(), day):
-            occ = datetime.combine(day, first.timetz())
+            occ = datetime.combine(day, first.timetz()).astimezone(JST)
             if until and occ > until:
                 break
             n += 1
@@ -386,9 +390,10 @@ def expand(ev, start, end):
 
 
 def parse_ics(text, start, end):
-    events = [e for e in read_vevents(text) if e.get("status") != "CANCELLED"]
-    # 個別に変更された回（RECURRENCE-ID）は、元の繰り返しのその回と差し替える
-    overridden = {(e.get("uid"), e["recurrence_id"].timestamp()) for e in events if "recurrence_id" in e}
+    all_events = read_vevents(text)
+    # 個別に変更・取り消された回（RECURRENCE-ID）は、元の繰り返しのその回と差し替える（取り消しは消すだけ）
+    overridden = {(e.get("uid"), e["recurrence_id"].timestamp()) for e in all_events if "recurrence_id" in e}
+    events = [e for e in all_events if e.get("status") != "CANCELLED"]
     flat = []
     for ev in events:
         if "rrule" in ev and "recurrence_id" not in ev:

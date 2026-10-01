@@ -15,6 +15,10 @@ import subprocess
 SYSTEM = platform.system()
 
 
+class SecretStoreError(Exception):
+    """パスワードをしまえなかった。メッセージにパスワードを含めない。"""
+
+
 # ---------------------------------------------------------------------------
 # Windows DPAPI（標準ライブラリの ctypes だけで呼ぶ）
 # ---------------------------------------------------------------------------
@@ -50,17 +54,21 @@ def save(service, account, secret, cfg):
         cfg.pop(key, None)
     if SYSTEM == "Darwin":
         subprocess.run(["security", "delete-generic-password", "-s", service, "-a", account], capture_output=True)
-        subprocess.run(["security", "add-generic-password", "-s", service, "-a", account, "-w", secret],
-                       check=True, capture_output=True)
+        r = subprocess.run(["security", "add-generic-password", "-s", service, "-a", account, "-w", secret],
+                           capture_output=True)
+        if r.returncode != 0:
+            # 失敗の文面にコマンド（＝パスワード）を含めない
+            raise SecretStoreError("キーチェーンに保存できませんでした（Mac の『キーチェーンアクセス』がロックされていないか確かめてください）")
         cfg["password_store"] = "keychain"
         return
     if SYSTEM == "Windows":
         try:
             cfg["password_dpapi"] = base64.b64encode(_dpapi(secret.encode("utf-8"), True)).decode()
-            cfg["password_store"] = "dpapi"
-            return
         except Exception:
-            pass  # DPAPI が使えない特殊な環境だけ、下のファイル保存に落とす
+            # 黙ってそのままの形で保存しない。保存をやめて知らせる
+            raise SecretStoreError("Windows のデータ保護機能でパスワードを暗号化できませんでした。何も保存していません。秘書に伝えてください")
+        cfg["password_store"] = "dpapi"
+        return
     cfg["password_store"] = "file"
     cfg["password"] = secret
 

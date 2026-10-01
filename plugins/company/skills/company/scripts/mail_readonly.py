@@ -381,7 +381,9 @@ def cmd_send(args):
         out({"ok": False, "error": "not_confirmed", "confirm_code": code,
              "hint": ("まだ送っていません。受講者に下の中身を見せ、『送って』と言われたら、"
                       f"同じ命令に --confirm {code} を付けて実行します。中身を1文字でも変えたら番号も変わります。"),
-             "preview": {"from": cfg["address"], "to": to, "cc": cc, "subject": args.subject, "body": body[:4000]}}, 3)
+             # 送るものは全部見せる（見せていない部分を送らない）
+             "preview": {"from": cfg["address"], "to": to, "cc": cc, "subject": args.subject, "body": body,
+                         "body_chars": len(body)}}, 3)
     msg = EmailMessage()
     msg["From"] = cfg["address"]
     msg["To"] = ", ".join(to)
