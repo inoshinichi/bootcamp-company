@@ -217,13 +217,21 @@ class ReadOnlyIMAP:
         typ, data = self.conn.uid("FETCH", uid, "(BODY.PEEK[])")
         raw = self._raw(data)
         msg = email.message_from_bytes(raw)
-        text, html_text, attachments = "", "", []
+        texts, htmls, attachments = [], [], []
 
         def own_parts(part):
-            """このメール自身の部品だけ（添付ファイルや、添付されたメールの中までは入らない）。"""
+            """このメール自身の本文の部品だけ（添付ファイルや、添付されたメールの中までは入らない）。"""
             if part.get_filename() or part.get_content_type() == "message/rfc822" \
                     or part.get_content_disposition() == "attachment":
                 attachments.append(dec(part.get_filename()) or "（添付されたメール）")
+                return
+            if part.get_content_type() == "multipart/alternative":
+                # 同じ本文の「文字だけ版」と「HTML版」。二重にしないよう、文字だけ版を1つ選ぶ
+                subs = part.get_payload()
+                pick = next((x for x in subs if x.get_content_type() == "text/plain"), None) \
+                    or next((x for x in subs if x.is_multipart()), None) or (subs[-1] if subs else None)
+                if pick is not None:
+                    yield from own_parts(pick)
                 return
             if part.is_multipart():
                 for sub in part.get_payload():
@@ -231,13 +239,13 @@ class ReadOnlyIMAP:
             else:
                 yield part
 
-        for part in own_parts(msg) if msg.is_multipart() else [msg]:
+        for part in own_parts(msg):
             payload = part.get_payload(decode=True) or b""
-            if part.get_content_type() == "text/plain" and not text:
-                text = decode_bytes(payload, part.get_content_charset())
-            elif part.get_content_type() == "text/html" and not html_text:
-                html_text = html_to_text(decode_bytes(payload, part.get_content_charset()))
-        text = text or html_text
+            if part.get_content_type() == "text/plain":
+                texts.append(decode_bytes(payload, part.get_content_charset()))
+            elif part.get_content_type() == "text/html":
+                htmls.append(html_to_text(decode_bytes(payload, part.get_content_charset())))
+        text = "\n\n".join(texts) if texts else "\n\n".join(htmls)
         return {"uid": uid, "from": dec(msg.get("From")), "to": dec(msg.get("To")),
                 "subject": dec(msg.get("Subject")), "date": msg.get("Date", ""),
                 "attachments": attachments, "body": text[:limit], "truncated": len(text) > limit}

@@ -508,5 +508,47 @@ class CodexRound5Test(unittest.TestCase):
                          ["2026-10-05", "2026-10-12", "2026-10-19", "2026-10-26"])
 
 
+
+class CodexRound6Test(unittest.TestCase):
+    R = (datetime(2026, 9, 30, 15, 0, tzinfo=timezone.utc), datetime(2026, 10, 31, 15, 0, tzinfo=timezone.utc))
+
+    def test_multi_day_all_day_keeps_last_day(self):
+        evs = cal.parse_ics("BEGIN:VCALENDAR\nBEGIN:VEVENT\nSUMMARY:出張\nDTSTART;VALUE=DATE:20261001\nDTEND;VALUE=DATE:20261004\n"
+                            "END:VEVENT\nEND:VCALENDAR\n", *self.R)
+        self.assertEqual((evs[0]["start"], evs[0]["end"]), ("2026-10-01", "2026-10-03"))
+
+    def test_unknown_timezone_is_flagged(self):
+        with mock.patch.object(cal, "tz_for", side_effect=lambda t: cal.JST), \
+                mock.patch.object(cal, "tz_known", return_value=False):
+            evs = cal.parse_ics("BEGIN:VCALENDAR\nBEGIN:VEVENT\nSUMMARY:NY\nDTSTART;TZID=America/New_York:20261002T090000\n"
+                                "DTEND;TZID=America/New_York:20261002T100000\nEND:VEVENT\nEND:VCALENDAR\n", *self.R)
+        self.assertIn("note", evs[0])
+
+    def test_two_plain_text_parts_are_both_returned(self):
+        from email.mime.multipart import MIMEMultipart
+        from email.mime.text import MIMEText
+        m = MIMEMultipart("mixed")
+        m.attach(MIMEText("前半です", "plain", "utf-8"))
+        m.attach(MIMEText("後半の注意事項", "plain", "utf-8"))
+        box = mail.ReadOnlyIMAP.__new__(mail.ReadOnlyIMAP)
+        box.conn = mock.Mock()
+        box.conn.uid.return_value = ("OK", [(b"1 (BODY[] {1}", m.as_bytes()), b")"])
+        b = box.body(b"1")
+        self.assertIn("前半です", b["body"])
+        self.assertIn("後半の注意事項", b["body"])
+
+    def test_alternative_parts_are_not_doubled(self):
+        from email.message import EmailMessage
+        m = EmailMessage()
+        m.set_content("プレーン本文")
+        m.add_alternative("<p>HTML本文</p>", subtype="html")
+        box = mail.ReadOnlyIMAP.__new__(mail.ReadOnlyIMAP)
+        box.conn = mock.Mock()
+        box.conn.uid.return_value = ("OK", [(b"1 (BODY[] {1}", m.as_bytes()), b")"])
+        b = box.body(b"1")
+        self.assertIn("プレーン本文", b["body"])
+        self.assertNotIn("HTML本文", b["body"])
+
+
 if __name__ == "__main__":
     unittest.main()

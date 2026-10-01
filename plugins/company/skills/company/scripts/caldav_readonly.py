@@ -179,6 +179,19 @@ def split_prop(line):
     return parts[0].upper(), params, value
 
 
+def tz_known(tzid):
+    """この時差の表をこのパソコンで引けるか（Windows で時差の表が無いと引けない）。"""
+    name = WINDOWS_TZ.get(tzid, tzid)
+    if name in ("Asia/Tokyo", "Japan"):
+        return True
+    try:
+        from zoneinfo import ZoneInfo
+        ZoneInfo(name)
+        return True
+    except Exception:
+        return False
+
+
 def tz_for(tzid):
     if not tzid:
         return JST
@@ -261,6 +274,8 @@ def read_vevents(text):
         elif name == "DURATION":
             cur["duration"] = parse_duration(value)
         elif name in ("DTSTART", "DTEND"):
+            if params.get("TZID") and not tz_known(params["TZID"]):
+                cur["note"] = f"時差（{params['TZID']}）を計算できなかったので、日本時間として表示しています。時刻はカレンダーで確かめてください"
             dt, all_day = parse_dt(params, value)
             cur["start" if name == "DTSTART" else "end"] = dt
             if name == "DTSTART":
@@ -452,7 +467,8 @@ def parse_ics(text, start, end):
         item = {"title": ev.get("title", "(件名なし)"), "location": ev.get("location", ""),
                 "all_day": ev.get("all_day", False),
                 "start": s.strftime("%Y-%m-%d") if ev.get("all_day") else s.strftime("%Y-%m-%d %H:%M"),
-                "end": "" if ev.get("all_day") else e.strftime("%Y-%m-%d %H:%M")}
+                # 終日の終わり（DTEND）は「次の日」で書かれているので、最終日に直して返す
+                "end": max(s, e - timedelta(days=1)).strftime("%Y-%m-%d") if ev.get("all_day") else e.strftime("%Y-%m-%d %H:%M")}
         if ev.get("note"):
             item["note"] = ev["note"]
         res.append(item)
