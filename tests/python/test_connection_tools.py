@@ -604,5 +604,26 @@ class CodexRound8Test(unittest.TestCase):
                          [("2026-10-01 10:00", "2026-10-01 11:00"), ("2026-10-02 10:00", "2026-10-02 12:00")])
 
 
+
+class CodexRound9Test(unittest.TestCase):
+    def test_invalid_recipient_stops_sending(self):
+        with self.assertRaises(ValueError):
+            mail.parse_recipients("a@example.com, invalid-address")
+
+    def test_forbidden_resourcetype_propstat_is_failure(self):
+        xml = (b'<?xml version="1.0"?><d:multistatus xmlns:d="DAV:" xmlns:c="urn:ietf:params:xml:ns:caldav">'
+               b'<d:response><d:href>/cal/x/</d:href>'
+               b'<d:propstat><d:prop><d:displayname>X</d:displayname></d:prop><d:status>HTTP/1.1 200 OK</d:status></d:propstat>'
+               b'<d:propstat><d:prop><d:resourcetype/></d:prop><d:status>HTTP/1.1 403 Forbidden</d:status></d:propstat>'
+               b'</d:response></d:multistatus>')
+        res = mock.MagicMock()
+        res.__enter__.return_value = res
+        res.geturl.return_value = "https://caldav.icloud.com/home/"
+        res.read.return_value = xml
+        dav = cal.ReadOnlyCalDAV("https://caldav.icloud.com/", "u", "p")
+        with mock.patch("urllib.request.urlopen", return_value=res):
+            self.assertEqual(dav.calendars("https://caldav.icloud.com/home/"), ([], 1))
+
+
 if __name__ == "__main__":
     unittest.main()

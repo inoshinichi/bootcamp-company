@@ -129,8 +129,14 @@ class ReadOnlyCalDAV:
         base, tree = self.request("PROPFIND", home_url, body, depth="1")
         cals, failed = [], 0
         for resp in tree.findall("d:response", NS):
-            statuses = [(x.text or "").split() for x in resp.findall(".//d:status", NS)]
-            if statuses and not any(st[1:2] == ["200"] for st in statuses):
+            # 種類（resourcetype）を読めなかった項目は、カレンダーかどうか判断できない＝失敗として数える
+            bad = False
+            for ps in resp.findall("d:propstat", NS):
+                st = (ps.findtext("d:status", default="", namespaces=NS) or "").split()
+                if st[1:2] != ["200"] and ps.find("d:prop/d:resourcetype", NS) is not None:
+                    bad = True
+            whole = (resp.findtext("d:status", default="", namespaces=NS) or "").split()
+            if bad or (whole and whole[1:2] != ["200"]):
                 failed += 1  # 共有カレンダーの権限エラーなど。黙って飛ばさず数える
                 continue
             if resp.find(".//d:resourcetype/c:calendar", NS) is None:

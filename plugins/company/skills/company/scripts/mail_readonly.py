@@ -279,7 +279,14 @@ def connect():
 def parse_recipients(value):
     # 末尾や連続のカンマがあると、新しい Python は全体を読めないもの扱いにするので先に整える
     cleaned = re.sub(r"(,\s*)+$", "", re.sub(r",\s*,", ",", (value or "").strip()))
-    return [addr for _, addr in getaddresses([cleaned]) if addr and "@" in addr]
+    if not cleaned:
+        return []
+    pairs = getaddresses([cleaned])
+    bad = [addr or name for name, addr in pairs if not addr or "@" not in addr]
+    if bad:
+        # 読めない宛先を黙って外して送ると、一部の相手に届かない。止めて直してもらう
+        raise ValueError(f"読み取れない宛先があります: {', '.join(bad) or '(空)'}。宛先を直してください（まだ送っていません）")
+    return [addr for _, addr in pairs]
 
 
 def confirm_code(sender, to, cc, bcc, subject, body):
@@ -399,7 +406,10 @@ def cmd_send(args):
     cfg = load_config()
     with open(args.body_file, encoding="utf-8") as f:
         body = f.read()
-    to, cc = parse_recipients(args.to), parse_recipients(args.cc)
+    try:
+        to, cc = parse_recipients(args.to), parse_recipients(args.cc)
+    except ValueError as e:
+        out({"ok": False, "error": "bad_recipient", "hint": str(e)}, 1)
     if not to:
         out({"ok": False, "error": "no_recipient", "hint": "宛先のメールアドレスが読み取れません。"}, 1)
     bcc = [] if args.no_bcc_self else [cfg["address"]]  # 控え: Outlook の受信箱にも1通届くので、送った記録が残る
