@@ -301,8 +301,8 @@ class ReviewRegressionTest(unittest.TestCase):
         self.assertEqual(mail.parse_recipients('"山田, 太郎" <y@a.jp>, b@b.jp,'), ["y@a.jp", "b@b.jp"])
 
     def test_confirm_code_changes_when_body_changes(self):
-        a = mail.confirm_code(["a@b.jp"], [], "件名", "本文")
-        self.assertNotEqual(a, mail.confirm_code(["a@b.jp"], [], "件名", "本文。"))
+        a = mail.confirm_code("me@x.jp", ["a@b.jp"], [], [], "件名", "本文")
+        self.assertNotEqual(a, mail.confirm_code("me@x.jp", ["a@b.jp"], [], [], "件名", "本文。"))
 
     def test_partly_refused_is_reported_as_failure(self):
         with tempfile.TemporaryDirectory() as d:
@@ -312,7 +312,7 @@ class ReviewRegressionTest(unittest.TestCase):
                            "smtp_port": 465, "password_store": "file", "password": "x"}, f)
             body = os.path.join(d, "body.txt")
             Path(body).write_text("こんにちは", encoding="utf-8")
-            code = mail.confirm_code(["a@example.jp"], [], "件名", "こんにちは")
+            code = mail.confirm_code("u@example.jp", ["a@example.jp"], [], ["u@example.jp"], "件名", "こんにちは")
             argv = ["mail_readonly.py", "send", "--to", "a@example.jp", "--subject", "件名", "--body-file", body,
                     "--confirm", code]
             fake = mock.MagicMock()
@@ -392,6 +392,37 @@ class CodexRound1Test(unittest.TestCase):
                 with self.assertRaises(SystemExit):
                     mail.main()
             self.assertTrue(json.loads(buf.getvalue())["preview"]["body"].endswith("末尾の大事な一文"))
+
+
+
+class CodexRound2Test(unittest.TestCase):
+    R = (datetime(2026, 9, 30, 15, 0, tzinfo=timezone.utc), datetime(2026, 10, 31, 15, 0, tzinfo=timezone.utc))
+
+    def test_confirm_code_covers_sender_and_bcc(self):
+        base = dict(to=["a@b.jp"], cc=[], subject="件名", body="本文")
+        a = mail.confirm_code(sender="me@x.jp", bcc=["me@x.jp"], **base)
+        self.assertNotEqual(a, mail.confirm_code(sender="other@x.jp", bcc=["me@x.jp"], **base))
+        self.assertNotEqual(a, mail.confirm_code(sender="me@x.jp", bcc=[], **base))
+
+    def test_utc_weekly_keeps_utc_weekday(self):
+        ics = ("BEGIN:VCALENDAR\nBEGIN:VEVENT\nUID:U\nSUMMARY:月曜18時UTC\nDTSTART:20261005T180000Z\nDTEND:20261005T190000Z\n"
+               "RRULE:FREQ=WEEKLY;BYDAY=MO;COUNT=2\nEND:VEVENT\nEND:VCALENDAR\n")
+        self.assertEqual([e["start"] for e in cal.parse_ics(ics, *self.R)], ["2026-10-06 03:00", "2026-10-13 03:00"])
+
+    def test_rdate_adds_occurrences(self):
+        ics = ("BEGIN:VCALENDAR\nBEGIN:VEVENT\nUID:R\nSUMMARY:説明会\nDTSTART:20261001T010000Z\nDTEND:20261001T020000Z\n"
+               "RDATE:20261003T010000Z\nEND:VEVENT\nEND:VCALENDAR\n")
+        self.assertEqual([e["start"][:10] for e in cal.parse_ics(ics, *self.R)], ["2026-10-01", "2026-10-03"])
+
+    def test_this_and_future_is_flagged_not_silently_wrong(self):
+        ics = ("BEGIN:VCALENDAR\nBEGIN:VEVENT\nUID:T\nSUMMARY:朝会\nDTSTART:20261001T000000Z\nDTEND:20261001T001500Z\n"
+               "RRULE:FREQ=DAILY;COUNT=4\nEND:VEVENT\nBEGIN:VEVENT\nUID:T\nRECURRENCE-ID;RANGE=THISANDFUTURE:20261002T000000Z\n"
+               "SUMMARY:朝会\nDTSTART:20261002T020000Z\nDTEND:20261002T021500Z\nEND:VEVENT\nEND:VCALENDAR\n")
+        evs = sorted(cal.parse_ics(ics, *self.R), key=lambda e: e["start"])
+        later = [e for e in evs if e["start"] >= "2026-10-03"]
+        self.assertTrue(later)
+        for e in later:
+            self.assertIn("note", e)
 
 
 if __name__ == "__main__":

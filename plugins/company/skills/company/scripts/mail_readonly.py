@@ -256,9 +256,9 @@ def parse_recipients(value):
     return [addr for _, addr in getaddresses([cleaned]) if addr and "@" in addr]
 
 
-def confirm_code(to, cc, subject, body):
-    """下見した中身と送る中身が同じであることを確かめる番号（中身が1文字でも変われば別の番号になる）。"""
-    h = hashlib.sha256("\x1f".join([",".join(to), ",".join(cc), subject, body]).encode("utf-8")).hexdigest()
+def confirm_code(sender, to, cc, bcc, subject, body):
+    """下見した中身と送る中身が同じであることを確かめる番号（差出人・宛先・控え・件名・本文のどれが1文字変わっても別の番号）。"""
+    h = hashlib.sha256("\x1f".join([sender, ",".join(to), ",".join(cc), ",".join(bcc), subject, body]).encode("utf-8")).hexdigest()
     return h[:8]
 
 
@@ -376,13 +376,14 @@ def cmd_send(args):
     to, cc = parse_recipients(args.to), parse_recipients(args.cc)
     if not to:
         out({"ok": False, "error": "no_recipient", "hint": "宛先のメールアドレスが読み取れません。"}, 1)
-    code = confirm_code(to, cc, args.subject, body)
+    bcc = [] if args.no_bcc_self else [cfg["address"]]  # 控え: Outlook の受信箱にも1通届くので、送った記録が残る
+    code = confirm_code(cfg["address"], to, cc, bcc, args.subject, body)
     if args.confirm != code:
         out({"ok": False, "error": "not_confirmed", "confirm_code": code,
              "hint": ("まだ送っていません。受講者に下の中身を見せ、『送って』と言われたら、"
                       f"同じ命令に --confirm {code} を付けて実行します。中身を1文字でも変えたら番号も変わります。"),
              # 送るものは全部見せる（見せていない部分を送らない）
-             "preview": {"from": cfg["address"], "to": to, "cc": cc, "subject": args.subject, "body": body,
+             "preview": {"from": cfg["address"], "to": to, "cc": cc, "bcc（控え）": bcc, "subject": args.subject, "body": body,
                          "body_chars": len(body)}}, 3)
     msg = EmailMessage()
     msg["From"] = cfg["address"]
@@ -393,9 +394,7 @@ def cmd_send(args):
     msg["Date"] = formatdate(localtime=True)
     msg["Message-ID"] = make_msgid(domain=cfg["address"].split("@")[-1])
     msg.set_content(body)
-    recipients = to + cc
-    if not args.no_bcc_self:
-        recipients.append(cfg["address"])  # 控え: Outlook の受信箱にも1通届くので、送った記録が残る
+    recipients = to + cc + bcc
     s = smtp_login(cfg, get_password(cfg))
     try:
         refused = s.send_message(msg, to_addrs=recipients)

@@ -244,6 +244,10 @@ def read_vevents(text):
             cur["rrule"] = value
         elif name == "RECURRENCE-ID":
             cur["recurrence_id"] = parse_dt(params, value)[0]
+            if params.get("RANGE", "").upper() == "THISANDFUTURE":
+                cur["this_and_future"] = True
+        elif name == "RDATE" and params.get("VALUE", "").upper() != "PERIOD":
+            cur.setdefault("rdates", []).extend(parse_dt(params, v)[0] for v in value.split(",") if v)
         elif name == "EXDATE":
             cur["exdates"].extend(parse_dt(params, v)[0] for v in value.split(",") if v)
         elif name == "DURATION":
@@ -253,8 +257,11 @@ def read_vevents(text):
             cur["start" if name == "DTSTART" else "end"] = dt
             if name == "DTSTART":
                 cur["all_day"] = all_day
-                if not all_day and params.get("TZID") and not value.strip().endswith("Z"):
-                    # 繰り返しは「その地域の時刻」で数える（夏時間の切り替えをまたいでもずれないように）
+                if not all_day and value.strip().endswith("Z"):
+                    # 繰り返しは「登録された時刻の基準」で数える（UTC で登録された予定は UTC の曜日で）
+                    cur["start_local"] = dt.astimezone(timezone.utc)
+                elif not all_day and params.get("TZID"):
+                    # 予定が作られた地域の時刻で数える（夏時間の切り替えをまたいでもずれないように）
                     cur["start_local"] = dt.astimezone(tz_for(params.get("TZID")))
     for ev in events:
         if "end" not in ev:
@@ -393,13 +400,31 @@ def parse_ics(text, start, end):
     all_events = read_vevents(text)
     # 個別に変更・取り消された回（RECURRENCE-ID）は、元の繰り返しのその回と差し替える（取り消しは消すだけ）
     overridden = {(e.get("uid"), e["recurrence_id"].timestamp()) for e in all_events if "recurrence_id" in e}
+    # 「この回以降を変更」（RANGE=THISANDFUTURE）は、その回より後を正しく計算できないので注記を付ける
+    future_changed = {}
+    for e in all_events:
+        if e.get("this_and_future"):
+            t = e["recurrence_id"].timestamp()
+            future_changed[e.get("uid")] = min(t, future_changed.get(e.get("uid"), t))
     events = [e for e in all_events if e.get("status") != "CANCELLED"]
     flat = []
     for ev in events:
-        if "rrule" in ev and "recurrence_id" not in ev:
-            for occ in expand(ev, start, end):
-                if (ev.get("uid"), occ["start"].timestamp()) not in overridden:
-                    flat.append(occ)
+        if ("rrule" in ev or ev.get("rdates")) and "recurrence_id" not in ev:
+            occs = expand(ev, start, end) if "rrule" in ev else [ev] if ev["end"] > start.astimezone(JST) else []
+            for extra in ev.get("rdates", []):  # 追加の開催日（RDATE）
+                one = dict(ev)
+                one["start"], one["end"] = extra, extra + (ev["end"] - ev["start"])
+                exd = {x.timestamp() for x in ev.get("exdates", [])}
+                if extra.timestamp() not in exd:
+                    occs.append(one)
+            for occ in occs:
+                if (ev.get("uid"), occ["start"].timestamp()) in overridden:
+                    continue
+                cut = future_changed.get(ev.get("uid"))
+                if cut is not None and occ["start"].timestamp() > cut:
+                    occ = dict(occ)
+                    occ["note"] = "「この回以降を変更」された予定です。変更前の時刻で表示しているので、カレンダーで確かめてください"
+                flat.append(occ)
         else:
             flat.append(ev)
     s_jst, e_jst = start.astimezone(JST), end.astimezone(JST)
