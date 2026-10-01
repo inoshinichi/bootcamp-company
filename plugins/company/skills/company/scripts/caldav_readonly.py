@@ -246,8 +246,11 @@ def read_vevents(text):
             cur["recurrence_id"] = parse_dt(params, value)[0]
             if params.get("RANGE", "").upper() == "THISANDFUTURE":
                 cur["this_and_future"] = True
-        elif name == "RDATE" and params.get("VALUE", "").upper() != "PERIOD":
-            cur.setdefault("rdates", []).extend(parse_dt(params, v)[0] for v in value.split(",") if v)
+        elif name == "RDATE":
+            if params.get("VALUE", "").upper() == "PERIOD":
+                cur["rdate_period"] = True  # 「開始/終了」で書かれた追加日は計算しない（注記を付ける）
+            else:
+                cur.setdefault("rdates", []).extend(parse_dt(params, v)[0] for v in value.split(",") if v)
         elif name == "EXDATE":
             cur["exdates"].extend(parse_dt(params, v)[0] for v in value.split(",") if v)
         elif name == "DURATION":
@@ -376,7 +379,8 @@ def expand(ev, start, end):
     def consider(occ):
         occ = occ.astimezone(JST)
         key = occ.date() if ev.get("all_day") else occ.timestamp()
-        if key not in exdates and occ < e_jst and occ + dur > s_jst:
+        in_range = occ < e_jst and (occ + dur > s_jst if dur > timedelta(0) else occ >= s_jst)  # 長さ0の予定は単発と同じ判定
+        if key not in exdates and in_range:
             one = dict(ev)
             one["start"], one["end"] = occ, occ + dur
             result.append(one)
@@ -446,6 +450,8 @@ def parse_ics(text, start, end):
                 "end": "" if ev.get("all_day") else e.strftime("%Y-%m-%d %H:%M")}
         if ev.get("note"):
             item["note"] = ev["note"]
+        elif ev.get("rdate_period"):
+            item["note"] = "追加の開催日が「開始〜終了」の形で書かれた予定です。追加日の分は表示できていないので、カレンダーで確かめてください"
         res.append(item)
     return res
 

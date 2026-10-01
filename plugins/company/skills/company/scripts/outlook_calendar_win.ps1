@@ -43,6 +43,7 @@ try {
   $found = $items.Restrict($filter)
 
   $events = @()
+  $truncated = $false
   foreach ($it in $found) {
     $events += [ordered]@{
       title    = $it.Subject
@@ -51,10 +52,16 @@ try {
       all_day  = [bool]$it.AllDayEvent
       location = $it.Location
     }
-    if ($events.Count -ge 200) { break }
+    if ($events.Count -ge 200) { $truncated = $true; break }
   }
 
-  Out-Json ([ordered]@{ ok = $true; days = $Days; count = $events.Count; events = $events })
+  $res = [ordered]@{ ok = $true; days = $Days; count = $events.Count; events = $events }
+  if ($truncated) {
+    # 打ち切ったことを必ず伝える（全部読めたように見せない）
+    $res.truncated = $true
+    $res.hint = "予定が200件を超えたので、ここで打ち切りました。日数（-Days）を短くして読み直してください。"
+  }
+  Out-Json $res
 } catch {
   Out-Json @{ ok = $false; error = "read_failed"; detail = $_.Exception.Message }
   exit 1

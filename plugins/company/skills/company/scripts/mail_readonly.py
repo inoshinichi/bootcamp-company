@@ -183,10 +183,14 @@ class ReadOnlyIMAP:
             return []
         if unseen:
             typ, data = self.conn.uid("SEARCH", None, "UNSEEN")
+            if typ != "OK":
+                raise RuntimeError(f"未読の一覧を取れませんでした: {data}")
             uids = data[0].split() if data and data[0] else []
             return list(reversed(uids[-n:]))
         lo = max(1, self.count - n + 1)
         typ, data = self.conn.fetch(f"{lo}:{self.count}", "(UID)")
+        if typ != "OK":
+            raise RuntimeError(f"メールの一覧を取れませんでした: {data}")
         uids = []
         for line in data or []:
             raw = line.decode() if isinstance(line, bytes) else str(line)
