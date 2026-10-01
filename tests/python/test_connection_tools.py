@@ -625,5 +625,40 @@ class CodexRound9Test(unittest.TestCase):
             self.assertEqual(dav.calendars("https://caldav.icloud.com/home/"), ([], 1))
 
 
+
+class CodexRound10Test(unittest.TestCase):
+    def test_forbidden_calendar_data_propstat_is_failure(self):
+        xml = (b'<?xml version="1.0"?><d:multistatus xmlns:d="DAV:" xmlns:c="urn:ietf:params:xml:ns:caldav">'
+               b'<d:response><d:href>/cal/1.ics</d:href>'
+               b'<d:propstat><d:prop><d:getetag>"1"</d:getetag></d:prop><d:status>HTTP/1.1 200 OK</d:status></d:propstat>'
+               b'<d:propstat><d:prop><c:calendar-data/></d:prop><d:status>HTTP/1.1 403 Forbidden</d:status></d:propstat>'
+               b'</d:response></d:multistatus>')
+        res = mock.MagicMock()
+        res.__enter__.return_value = res
+        res.geturl.return_value = "https://caldav.icloud.com/cal/"
+        res.read.return_value = xml
+        dav = cal.ReadOnlyCalDAV("https://caldav.icloud.com/", "u", "p")
+        with mock.patch("urllib.request.urlopen", return_value=res):
+            with self.assertRaises(RuntimeError):
+                dav.events("https://caldav.icloud.com/cal/", *CodexRound6Test.R)
+
+    def test_mac_calendar_script_reports_failed_calendars(self):
+        src = (SCRIPTS / "mac_calendar.applescript").read_text(encoding="utf-8")
+        self.assertIn("on error", src)
+        self.assertIn("FAILED", src)
+
+
+    @unittest.skipUnless(sys.platform == "darwin", "Mac だけで確かめられる")
+    def test_mac_calendar_script_compiles(self):
+        import shutil
+        import subprocess
+        if not shutil.which("osacompile"):
+            self.skipTest("osacompile が無い")
+        with tempfile.TemporaryDirectory() as d:
+            r = subprocess.run(["osacompile", "-o", os.path.join(d, "x.scpt"), str(SCRIPTS / "mac_calendar.applescript")],
+                               capture_output=True, text=True)
+        self.assertEqual(r.returncode, 0, r.stderr)
+
+
 if __name__ == "__main__":
     unittest.main()

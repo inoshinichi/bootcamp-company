@@ -7,6 +7,8 @@
 --
 -- ⚠️ 初回だけ「ターミナル（または Cursor）がカレンダーにアクセスしようとしています」と
 --    Mac が確認を出す。受講者に「許可」を押してもらう（押す前に秘書が一声かける）。
+-- 出力: 1行1件「日時<TAB>カレンダー名<TAB>件名」。読めなかったカレンダーは「FAILED<TAB>カレンダー名<TAB>理由」。
+--       FAILED の行が1つでもあれば、秘書は「一部のカレンダーが読めていない」と受講者に伝え、予定なしと言わない。
 -- ⚠️ 繰り返しの予定は、最初の回の日付でしか拾えないことがある（カレンダーアプリの仕様）。
 --    抜けが気になる受講者には iCloud の道（caldav_readonly.py）を案内する。
 
@@ -17,7 +19,7 @@ on run argv
 	set time of startDate to 0
 	set endDate to startDate + dayCount * days
 	set outLines to {}
-	tell application "Calendar"
+	tell application "/System/Applications/Calendar.app" -- 名前で呼ぶと、環境によってはカレンダーの用語が読めず文法エラーになるため場所で呼ぶ（2026-10-01 実測）
 		repeat with cal in calendars
 			set calName to name of cal
 			try
@@ -27,6 +29,9 @@ on run argv
 					set s to start date of ev
 					set end of outLines to (my fmt(s)) & tab & calName & tab & t
 				end repeat
+			on error errMsg
+				-- 読めなかったカレンダーを黙って飛ばさない（「予定なし」と区別できるように行として返す）
+				set end of outLines to "FAILED" & tab & calName & tab & errMsg
 			end try
 		end repeat
 	end tell

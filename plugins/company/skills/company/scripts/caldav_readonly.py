@@ -159,8 +159,14 @@ class ReadOnlyCalDAV:
         _, tree = self.request("REPORT", cal_url, body, depth="1")
         items, failed = [], 0
         for resp in tree.findall("d:response", NS):
-            statuses = [x.text or "" for x in resp.findall(".//d:status", NS)]
-            if statuses and not any(st.split()[1:2] == ["200"] for st in statuses):
+            # 予定の中身（calendar-data）を読めなかった項目は失敗。ほかの項目が 200 でも見逃さない
+            bad = False
+            for ps in resp.findall("d:propstat", NS):
+                st = (ps.findtext("d:status", default="", namespaces=NS) or "").split()
+                if st[1:2] != ["200"] and ps.find("d:prop/c:calendar-data", NS) is not None:
+                    bad = True
+            whole = (resp.findtext("d:status", default="", namespaces=NS) or "").split()
+            if bad or (whole and whole[1:2] != ["200"]):
                 failed += 1  # この予定は読めなかった（権限エラーなど）。黙って「予定なし」にしない
                 continue
             for data in resp.findall(".//c:calendar-data", NS):
