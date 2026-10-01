@@ -354,6 +354,14 @@ Q1〜Q3 は自由に答えてもらう質問なので**通常の会話で**聞�
 
 🔴 **古い CLAUDE.md の文と、この絶対ルールがぶつかったら、絶対ルールが優先。**
 
+#### 以前の版で Google・Microsoft を古い手順（Google Cloud・Azure）でつないでいた人
+
+v1.1.0 で、プラグインに同梱していた古い連携の設定（gmail・google-calendar・google-drive・ms-365・slack）を外した。`~/.gmail-mcp/` や `~/.config/ms-365-mcp/` があるのに、`mcp__claude_ai_` の道具も古い連携の道具も見当たらない人には、一度だけこう伝える:
+
+> 「プラグインの更新で、Google（Microsoft）の連携が、Claude の公式の連携ボタンに変わりました。前より簡単で、7日ごとのつなぎ直しも要りません。`references/connections.md` §2 の手順で、ボタンを押し直しましょう」
+
+どうしても古い手順を続けたい人だけ、`references/connections-legacy.md` 冒頭の `claude mcp add` で登録し直す。
+
 ### 7ステップ判断フロー（運営モードの中核）
 
 依頼を受けたら、必ず以下の7ステップで処理する。**初学者でもわかりやすいよう、内部で順を追って判断する**:

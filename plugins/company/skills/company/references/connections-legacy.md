@@ -6,8 +6,23 @@
 - Claude のアカウントではなく APIキーでしかログインできない
 - 以前この手順で連携済みで、そのまま使い続けたい受講者（2026-10 より前の受講者）
 
-同梱の `.mcp.json`（gmail / google-calendar / google-drive / ms-365 / slack）は、この古い手順のためのもの。
-公式の連携でつないだ受講者は、これらを使わない（公式の `mcp__claude_ai_...` を使う）。
+⚠️ **v1.1.0 からプラグインに同梱の `.mcp.json`（gmail / google-calendar / google-drive / ms-365 / slack）を外した。**
+（鍵の無い人まで起動のたびに5つのサーバーが立ち上がろうとして失敗表示が出ていたため。Windows ではそもそも起動していなかった）
+この古い手順を使う人だけ、下の「サーバーの登録（秘書が代行）」でその人のパソコンに登録する。
+
+### サーバーの登録（秘書が代行・必要なものだけ）
+
+`<HOME>` は `echo $HOME` の結果（`~` は使えない）。Windows は Git Bash で実行し、`npx` の前に `cmd /c` を付ける。
+
+```bash
+claude mcp add --scope user gmail -- npx -y @gongrzhe/server-gmail-autoauth-mcp
+claude mcp add --scope user google-calendar -e GOOGLE_OAUTH_CREDENTIALS=<HOME>/.gmail-mcp/gcp-oauth.keys.json -- npx -y @cocal/google-calendar-mcp
+claude mcp add --scope user google-drive -e GDRIVE_CREDS_DIR=<HOME>/.gmail-mcp -- npx -y @isaacphi/mcp-gdrive
+claude mcp add --scope user ms-365 -- npx -y @softeria/ms-365-mcp-server        # Azure のアプリ登録が済んだ人だけ
+claude mcp add --scope user slack -- npx -y @modelcontextprotocol/server-slack  # Bot Token がある人だけ
+```
+
+登録したら Claude Code を起動し直してもらう（しおりを書き、起動し直したら `/company` と入力してもらう）。
 
 ---
 
@@ -61,14 +76,13 @@ echo "配置完了。HOME は $HOME です（次の Step 5.5 で使います）"
 > Calendar(@cocal)と Drive(@isaacphi)は固定パスを持たず、環境変数で鍵の場所を教える方式です（各 MCP の公式仕様）。
 > Gmail と同じ `~/.gmail-mcp/gcp-oauth.keys.json` を指せば共用でき、**追加のコピーは不要**です。
 
-### Step 5.5: .mcp.json の絶対パスを実ユーザー名に置換（**秘書が自動で代行**）
+### Step 5.5: サーバーを登録する（**秘書が自動で代行**）
 
-プラグイン同梱の `.mcp.json` は Calendar/Drive 向けに `GOOGLE_OAUTH_CREDENTIALS` / `GDRIVE_CREDS_DIR` を持つが、
-**MCP の環境変数は `~` や `$HOME` を展開しない**ため、絶対パスの `REPLACE_ME` を実ユーザー名へ置き換える必要がある。
-秘書は `echo $HOME` で確認した上で、ユーザー設定の `.mcp.json`（`~/.claude.json` 等の該当 mcpServers）または該当環境変数に
+このファイルの冒頭「サーバーの登録」の `claude mcp add` を、Gmail・Calendar・Drive の3行だけ実行する。
+**MCP の環境変数は `~` や `$HOME` を展開しない**ため、`<HOME>` は `echo $HOME` で確かめた実際の場所に置き換える（例:
 `/Users/<実ユーザー名>/.gmail-mcp/gcp-oauth.keys.json`（Drive は `/Users/<実ユーザー名>/.gmail-mcp`）を反映する。
 
-> 💡 実装メモ: 同梱 `plugins/company/.mcp.json` の `REPLACE_ME` はプレースホルダ。受講者環境の HOME に合わせて秘書が置換する。
+> 💡 v1.0.0 までは同梱の `.mcp.json` に `REPLACE_ME` を書き換える方式だった。v1.1.0 からは上の `claude mcp add` でその人のパソコンに登録する。
 
 ### Step 6: Claude Code を再起動（人間操作）
 

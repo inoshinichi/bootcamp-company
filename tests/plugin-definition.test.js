@@ -423,3 +423,15 @@ describe('organization rules: no stale instructions', () => {
     }
   });
 });
+
+describe('legacy bundled MCP servers', () => {
+  it('plugin no longer bundles .mcp.json (official connectors are the default)', () => {
+    expect(existsSync(resolve(PLUGIN_DIR, '.mcp.json'))).toBe(false);
+  });
+
+  it('legacy guide explains how to register the old servers per user', () => {
+    const l = readText(resolve(SKILL_DIR, 'references/connections-legacy.md'));
+    expect(l).toContain('claude mcp add --scope user gmail');
+    expect(l).not.toContain('REPLACE_ME を実ユーザー名へ置き換える');
+  });
+});
