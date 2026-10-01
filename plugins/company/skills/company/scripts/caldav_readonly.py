@@ -147,9 +147,16 @@ class ReadOnlyCalDAV:
                 f'<c:time-range start="{s}" end="{e}"/>'
                 '</c:comp-filter></c:comp-filter></c:filter></c:calendar-query>')
         _, tree = self.request("REPORT", cal_url, body, depth="1")
-        items = []
-        for data in tree.findall(".//c:calendar-data", NS):
-            items.extend(parse_ics(data.text or "", start, end))
+        items, failed = [], 0
+        for resp in tree.findall("d:response", NS):
+            statuses = [x.text or "" for x in resp.findall(".//d:status", NS)]
+            if statuses and not any(" 200 " in f" {st} " or st.split()[1:2] == ["200"] for st in statuses):
+                failed += 1  # この予定は読めなかった（権限エラーなど）。黙って「予定なし」にしない
+                continue
+            for data in resp.findall(".//c:calendar-data", NS):
+                items.extend(parse_ics(data.text or "", start, end))
+        if failed:
+            raise RuntimeError(f"予定のうち {failed} 件を読めませんでした（権限などのエラー）。この結果では予定を案内しないでください")
         return items
 
 

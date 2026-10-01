@@ -550,5 +550,34 @@ class CodexRound6Test(unittest.TestCase):
         self.assertNotIn("HTML本文", b["body"])
 
 
+
+class CodexRound7Test(unittest.TestCase):
+    def test_html_body_plus_plain_footer_keeps_both(self):
+        from email.mime.multipart import MIMEMultipart
+        from email.mime.text import MIMEText
+        m = MIMEMultipart("mixed")
+        m.attach(MIMEText("<p>MAIN BODY</p>", "html", "utf-8"))
+        m.attach(MIMEText("FOOTER", "plain", "utf-8"))
+        box = mail.ReadOnlyIMAP.__new__(mail.ReadOnlyIMAP)
+        box.conn = mock.Mock()
+        box.conn.uid.return_value = ("OK", [(b"1 (BODY[] {1}", m.as_bytes()), b")"])
+        b = box.body(b"1")
+        self.assertIn("MAIN BODY", b["body"])
+        self.assertIn("FOOTER", b["body"])
+
+    def test_per_item_error_in_calendar_report_is_not_silent(self):
+        xml = (b'<?xml version="1.0"?><d:multistatus xmlns:d="DAV:" xmlns:c="urn:ietf:params:xml:ns:caldav">'
+               b'<d:response><d:href>/cal/1.ics</d:href><d:propstat><d:prop><c:calendar-data/></d:prop>'
+               b'<d:status>HTTP/1.1 403 Forbidden</d:status></d:propstat></d:response></d:multistatus>')
+        res = mock.MagicMock()
+        res.__enter__.return_value = res
+        res.geturl.return_value = "https://caldav.icloud.com/cal/"
+        res.read.return_value = xml
+        dav = cal.ReadOnlyCalDAV("https://caldav.icloud.com/", "u", "p")
+        with mock.patch("urllib.request.urlopen", return_value=res):
+            with self.assertRaises(RuntimeError):
+                dav.events("https://caldav.icloud.com/cal/", *CodexRound6Test.R)
+
+
 if __name__ == "__main__":
     unittest.main()

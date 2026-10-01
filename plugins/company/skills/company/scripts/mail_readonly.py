@@ -217,7 +217,7 @@ class ReadOnlyIMAP:
         typ, data = self.conn.uid("FETCH", uid, "(BODY.PEEK[])")
         raw = self._raw(data)
         msg = email.message_from_bytes(raw)
-        texts, htmls, attachments = [], [], []
+        texts, attachments = [], []
 
         def own_parts(part):
             """このメール自身の本文の部品だけ（添付ファイルや、添付されたメールの中までは入らない）。"""
@@ -239,13 +239,13 @@ class ReadOnlyIMAP:
             else:
                 yield part
 
-        for part in own_parts(msg):
+        for part in own_parts(msg):  # 本文の部品は、形式を問わず順番につなぐ（同じ本文の別形式は own_parts で1つに絞り済み）
             payload = part.get_payload(decode=True) or b""
             if part.get_content_type() == "text/plain":
                 texts.append(decode_bytes(payload, part.get_content_charset()))
             elif part.get_content_type() == "text/html":
-                htmls.append(html_to_text(decode_bytes(payload, part.get_content_charset())))
-        text = "\n\n".join(texts) if texts else "\n\n".join(htmls)
+                texts.append(html_to_text(decode_bytes(payload, part.get_content_charset())))
+        text = "\n\n".join(t.strip() for t in texts if t.strip())
         return {"uid": uid, "from": dec(msg.get("From")), "to": dec(msg.get("To")),
                 "subject": dec(msg.get("Subject")), "date": msg.get("Date", ""),
                 "attachments": attachments, "body": text[:limit], "truncated": len(text) > limit}
