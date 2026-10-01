@@ -478,16 +478,34 @@ class CodexRound4Test(unittest.TestCase):
         with self.assertRaises(RuntimeError):
             box.recent_uids(3, unseen=True)
 
-    def test_rdate_period_is_flagged(self):
+    def test_rdate_period_is_expanded(self):
         ics = ("BEGIN:VCALENDAR\nBEGIN:VEVENT\nUID:P\nSUMMARY:会\nDTSTART:20261001T010000Z\nDTEND:20261001T020000Z\n"
-               "RDATE;VALUE=PERIOD:20261003T010000Z/20261003T030000Z\nEND:VEVENT\nEND:VCALENDAR\n")
+               "RDATE;VALUE=PERIOD:20261003T010000Z/PT2H\nEND:VEVENT\nEND:VCALENDAR\n")
         evs = cal.parse_ics(ics, *self.R)
-        self.assertTrue(any("note" in e for e in evs))
+        self.assertEqual([(e["start"], e["end"]) for e in evs],
+                         [("2026-10-01 10:00", "2026-10-01 11:00"), ("2026-10-03 10:00", "2026-10-03 12:00")])
 
     def test_recurring_zero_length_at_window_start(self):
         ics = ("BEGIN:VCALENDAR\nBEGIN:VEVENT\nUID:Z\nSUMMARY:日次\nDTSTART;TZID=Asia/Tokyo:20260930T000000\n"
                "RRULE:FREQ=DAILY;COUNT=3\nEND:VEVENT\nEND:VCALENDAR\n")
         self.assertEqual([e["start"][:10] for e in cal.parse_ics(ics, *self.R)], ["2026-10-01", "2026-10-02"])
+
+
+
+class CodexRound5Test(unittest.TestCase):
+    R = (datetime(2026, 9, 30, 15, 0, tzinfo=timezone.utc), datetime(2026, 10, 31, 15, 0, tzinfo=timezone.utc))
+
+    def test_rdate_period_inside_window_when_first_is_outside(self):
+        ics = ("BEGIN:VCALENDAR\nBEGIN:VEVENT\nUID:P2\nSUMMARY:説明会\nDTSTART:20260901T010000Z\nDTEND:20260901T020000Z\n"
+               "RDATE;VALUE=PERIOD:20261003T010000Z/20261003T030000Z\nEND:VEVENT\nEND:VCALENDAR\n")
+        evs = cal.parse_ics(ics, *self.R)
+        self.assertEqual([(e["start"], e["end"]) for e in evs], [("2026-10-03 10:00", "2026-10-03 12:00")])
+
+    def test_yearly_byday_without_bymonth_is_every_week(self):
+        ics = ("BEGIN:VCALENDAR\nBEGIN:VEVENT\nUID:Y2\nSUMMARY:月曜\nDTSTART;VALUE=DATE:20260105\nDTEND;VALUE=DATE:20260106\n"
+               "RRULE:FREQ=YEARLY;BYDAY=MO\nEND:VEVENT\nEND:VCALENDAR\n")
+        self.assertEqual([e["start"] for e in cal.parse_ics(ics, *self.R)],
+                         ["2026-10-05", "2026-10-12", "2026-10-19", "2026-10-26"])
 
 
 if __name__ == "__main__":

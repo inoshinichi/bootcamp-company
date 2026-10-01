@@ -247,10 +247,15 @@ def read_vevents(text):
             if params.get("RANGE", "").upper() == "THISANDFUTURE":
                 cur["this_and_future"] = True
         elif name == "RDATE":
-            if params.get("VALUE", "").upper() == "PERIOD":
-                cur["rdate_period"] = True  # 「開始/終了」で書かれた追加日は計算しない（注記を付ける）
-            else:
-                cur.setdefault("rdates", []).extend(parse_dt(params, v)[0] for v in value.split(",") if v)
+            for v in (x for x in value.split(",") if x):
+                if "/" in v:  # VALUE=PERIOD: 「開始/終了」か「開始/長さ」
+                    a, b = v.split("/", 1)
+                    s_dt = parse_dt({k: x for k, x in params.items() if k != "VALUE"}, a)[0]
+                    d = parse_duration(b)
+                    e_dt = s_dt + d if d is not None else parse_dt({k: x for k, x in params.items() if k != "VALUE"}, b)[0]
+                    cur.setdefault("rdates", []).append((s_dt, e_dt))
+                else:
+                    cur.setdefault("rdates", []).append((parse_dt(params, v)[0], None))
         elif name == "EXDATE":
             cur["exdates"].extend(parse_dt(params, v)[0] for v in value.split(",") if v)
         elif name == "DURATION":
@@ -345,8 +350,8 @@ def matches_rule(rule, first, day):
     if freq == "YEARLY":
         if (day.year - first.year) % interval:
             return False
-        if not bymonth and day.month != first.month:
-            return False
+        if not bymonth and day.month != first.month and not (byday or "BYMONTHDAY" in rule):
+            return False  # 月の指定も曜日・日付の指定も無いときだけ、初回の月に限る
         if "BYMONTHDAY" in rule or byday:
             return ("BYMONTHDAY" not in rule or bymonthday_ok(rule, day)) and (not byday or byday_in_month(byday, day))
         return day.day == first.day
@@ -419,9 +424,9 @@ def parse_ics(text, start, end):
                 occs = expand(ev, start, end)
             else:  # RDATE だけの予定: 初回も取り消し（EXDATE）を確かめる
                 occs = [] if ev["start"].timestamp() in exd else [ev]
-            for extra in ev.get("rdates", []):  # 追加の開催日（RDATE）
+            for extra, extra_end in ev.get("rdates", []):  # 追加の開催日（RDATE）
                 one = dict(ev)
-                one["start"], one["end"] = extra, extra + (ev["end"] - ev["start"])
+                one["start"], one["end"] = extra, extra_end or extra + (ev["end"] - ev["start"])
                 if extra.timestamp() not in exd:
                     occs.append(one)
             seen = set()
@@ -450,8 +455,6 @@ def parse_ics(text, start, end):
                 "end": "" if ev.get("all_day") else e.strftime("%Y-%m-%d %H:%M")}
         if ev.get("note"):
             item["note"] = ev["note"]
-        elif ev.get("rdate_period"):
-            item["note"] = "追加の開催日が「開始〜終了」の形で書かれた予定です。追加日の分は表示できていないので、カレンダーで確かめてください"
         res.append(item)
     return res
 
