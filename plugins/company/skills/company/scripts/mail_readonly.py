@@ -195,25 +195,39 @@ class ReadOnlyIMAP:
                 uids.append(m.group(1).encode())
         return list(reversed(uids))
 
+    @staticmethod
+    def _raw(data):
+        raw = next((part[1] for part in (data or []) if isinstance(part, tuple)), None)
+        if raw is None:
+            raise RuntimeError("このメールは見つかりません（ほかのメールソフトで削除・移動された可能性があります）")
+        return raw
+
     def headers(self, uid):
         typ, data = self.conn.uid("FETCH", uid, "(BODY.PEEK[HEADER.FIELDS (FROM SUBJECT DATE)])")
-        raw = next((part[1] for part in data if isinstance(part, tuple)), b"")
+        raw = self._raw(data)
         msg = email.message_from_bytes(raw)
         return {"uid": uid.decode() if isinstance(uid, bytes) else uid,
                 "from": dec(msg.get("From")), "subject": dec(msg.get("Subject")), "date": msg.get("Date", "")}
 
     def body(self, uid, limit=8000):
         typ, data = self.conn.uid("FETCH", uid, "(BODY.PEEK[])")
-        raw = next((part[1] for part in data if isinstance(part, tuple)), b"")
+        raw = self._raw(data)
         msg = email.message_from_bytes(raw)
         text, html_text, attachments = "", "", []
-        for part in msg.walk():
-            if part.get_content_maintype() == "multipart":
-                continue
-            fname = part.get_filename()
-            if fname:
-                attachments.append(dec(fname))
-                continue
+
+        def own_parts(part):
+            """このメール自身の部品だけ（添付ファイルや、添付されたメールの中までは入らない）。"""
+            if part.get_filename() or part.get_content_type() == "message/rfc822" \
+                    or part.get_content_disposition() == "attachment":
+                attachments.append(dec(part.get_filename()) or "（添付されたメール）")
+                return
+            if part.is_multipart():
+                for sub in part.get_payload():
+                    yield from own_parts(sub)
+            else:
+                yield part
+
+        for part in own_parts(msg) if msg.is_multipart() else [msg]:
             payload = part.get_payload(decode=True) or b""
             if part.get_content_type() == "text/plain" and not text:
                 text = decode_bytes(payload, part.get_content_charset())

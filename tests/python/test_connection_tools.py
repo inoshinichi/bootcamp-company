@@ -425,5 +425,43 @@ class CodexRound2Test(unittest.TestCase):
             self.assertIn("note", e)
 
 
+
+class CodexRound3Test(unittest.TestCase):
+    R = (datetime(2026, 9, 30, 15, 0, tzinfo=timezone.utc), datetime(2026, 10, 31, 15, 0, tzinfo=timezone.utc))
+
+    def test_attached_eml_does_not_replace_body(self):
+        from email.message import EmailMessage
+        inner = EmailMessage(); inner["Subject"] = "old"; inner.set_content("ATTACHMENT BODY")
+        outer = EmailMessage(); outer["Subject"] = "now"
+        outer.set_content("<p>CURRENT BODY</p>", subtype="html")
+        outer.add_attachment(inner)
+        raw = outer.as_bytes()
+        box = mail.ReadOnlyIMAP.__new__(mail.ReadOnlyIMAP)
+        box.conn = mock.Mock()
+        box.conn.uid.return_value = ("OK", [(b"1 (BODY[] {1}", raw), b")"])
+        b = box.body(b"1")
+        self.assertIn("CURRENT BODY", b["body"])
+        self.assertNotIn("ATTACHMENT BODY", b["body"])
+
+    def test_missing_message_is_an_error(self):
+        box = mail.ReadOnlyIMAP.__new__(mail.ReadOnlyIMAP)
+        box.conn = mock.Mock()
+        box.conn.uid.return_value = ("OK", [None])
+        with self.assertRaises(RuntimeError):
+            box.body(b"9")
+        with self.assertRaises(RuntimeError):
+            box.headers(b"9")
+
+    def test_rdate_only_respects_exdate_on_first(self):
+        ics = ("BEGIN:VCALENDAR\nBEGIN:VEVENT\nUID:X\nSUMMARY:会\nDTSTART:20261001T010000Z\nDTEND:20261001T020000Z\n"
+               "RDATE:20261003T010000Z\nEXDATE:20261001T010000Z\nEND:VEVENT\nEND:VCALENDAR\n")
+        self.assertEqual([e["start"][:10] for e in cal.parse_ics(ics, *self.R)], ["2026-10-03"])
+
+    def test_rdate_duplicate_of_rrule_is_shown_once(self):
+        ics = ("BEGIN:VCALENDAR\nBEGIN:VEVENT\nUID:Y\nSUMMARY:会\nDTSTART:20261001T010000Z\nDTEND:20261001T020000Z\n"
+               "RRULE:FREQ=DAILY;COUNT=2\nRDATE:20261002T010000Z\nEND:VEVENT\nEND:VCALENDAR\n")
+        self.assertEqual([e["start"][:10] for e in cal.parse_ics(ics, *self.R)], ["2026-10-01", "2026-10-02"])
+
+
 if __name__ == "__main__":
     unittest.main()

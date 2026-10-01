@@ -410,14 +410,21 @@ def parse_ics(text, start, end):
     flat = []
     for ev in events:
         if ("rrule" in ev or ev.get("rdates")) and "recurrence_id" not in ev:
-            occs = expand(ev, start, end) if "rrule" in ev else [ev] if ev["end"] > start.astimezone(JST) else []
+            exd = {x.timestamp() for x in ev.get("exdates", [])}
+            if "rrule" in ev:
+                occs = expand(ev, start, end)
+            else:  # RDATE だけの予定: 初回も取り消し（EXDATE）を確かめる
+                occs = [] if ev["start"].timestamp() in exd else [ev]
             for extra in ev.get("rdates", []):  # 追加の開催日（RDATE）
                 one = dict(ev)
                 one["start"], one["end"] = extra, extra + (ev["end"] - ev["start"])
-                exd = {x.timestamp() for x in ev.get("exdates", [])}
                 if extra.timestamp() not in exd:
                     occs.append(one)
+            seen = set()
             for occ in occs:
+                if occ["start"].timestamp() in seen:  # 規則と追加日が重なった回は1回だけ
+                    continue
+                seen.add(occ["start"].timestamp())
                 if (ev.get("uid"), occ["start"].timestamp()) in overridden:
                     continue
                 cut = future_changed.get(ev.get("uid"))
