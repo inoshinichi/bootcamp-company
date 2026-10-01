@@ -127,8 +127,12 @@ class ReadOnlyCalDAV:
         body = ('<d:propfind xmlns:d="DAV:" xmlns:c="urn:ietf:params:xml:ns:caldav">'
                 '<d:prop><d:displayname/><d:resourcetype/><c:supported-calendar-component-set/></d:prop></d:propfind>')
         base, tree = self.request("PROPFIND", home_url, body, depth="1")
-        cals = []
+        cals, failed = [], 0
         for resp in tree.findall("d:response", NS):
+            statuses = [(x.text or "").split() for x in resp.findall(".//d:status", NS)]
+            if statuses and not any(st[1:2] == ["200"] for st in statuses):
+                failed += 1  # 共有カレンダーの権限エラーなど。黙って飛ばさず数える
+                continue
             if resp.find(".//d:resourcetype/c:calendar", NS) is None:
                 continue
             comps = [c.get("name") for c in resp.findall(".//c:supported-calendar-component-set/c:comp", NS)]
@@ -136,7 +140,7 @@ class ReadOnlyCalDAV:
                 continue  # リマインダー等は除く
             name = resp.findtext(".//d:displayname", default="", namespaces=NS)
             cals.append({"name": name, "url": urljoin(base, resp.findtext("d:href", namespaces=NS).strip())})
-        return cals
+        return cals, failed
 
     def events(self, cal_url, start, end):
         s = start.strftime("%Y%m%dT%H%M%SZ")
@@ -150,7 +154,7 @@ class ReadOnlyCalDAV:
         items, failed = [], 0
         for resp in tree.findall("d:response", NS):
             statuses = [x.text or "" for x in resp.findall(".//d:status", NS)]
-            if statuses and not any(" 200 " in f" {st} " or st.split()[1:2] == ["200"] for st in statuses):
+            if statuses and not any(st.split()[1:2] == ["200"] for st in statuses):
                 failed += 1  # この予定は読めなかった（権限エラーなど）。黙って「予定なし」にしない
                 continue
             for data in resp.findall(".//c:calendar-data", NS):
@@ -446,11 +450,13 @@ def parse_ics(text, start, end):
                 occs = expand(ev, start, end)
             else:  # RDATE だけの予定: 初回も取り消し（EXDATE）を確かめる
                 occs = [] if ev["start"].timestamp() in exd else [ev]
+            extras = []
             for extra, extra_end in ev.get("rdates", []):  # 追加の開催日（RDATE）
                 one = dict(ev)
                 one["start"], one["end"] = extra, extra_end or extra + (ev["end"] - ev["start"])
                 if extra.timestamp() not in exd:
-                    occs.append(one)
+                    extras.append(one)
+            occs = extras + occs  # 同じ開始時刻なら、追加日の側（長さの指定あり）を優先して残す
             seen = set()
             for occ in occs:
                 if occ["start"].timestamp() in seen:  # 規則と追加日が重なった回は1回だけ
@@ -479,6 +485,7 @@ def parse_ics(text, start, end):
         if ev.get("note"):
             item["note"] = ev["note"]
         res.append(item)
+    res.sort(key=lambda e: e["start"])
     return res
 
 
@@ -496,7 +503,10 @@ def collect(cfg, days):
     start, end = today.astimezone(timezone.utc), (today + timedelta(days=days)).astimezone(timezone.utc)
     home = cfg.get("home_url") or dav.calendar_home(dav.principal())
     result = []
-    for cal in dav.calendars(home):
+    cals, failed = dav.calendars(home)
+    if failed:
+        raise RuntimeError(f"カレンダーのうち {failed} 個を読めませんでした（共有カレンダーの権限など）。この結果では予定を案内しないでください")
+    for cal in cals:
         for ev in dav.events(cal["url"], start, end):
             ev["calendar"] = cal["name"]
             result.append(ev)
@@ -514,7 +524,9 @@ def cmd_setup(args):
     try:
         dav = ReadOnlyCalDAV(server, user, password)
         home = dav.calendar_home(dav.principal())
-        cals = dav.calendars(home)
+        cals, failed_cals = dav.calendars(home)
+        if failed_cals:
+            print(f"\n△ カレンダーのうち {failed_cals} 個は読めませんでした（共有カレンダーの権限など）。秘書に伝えてください。")
     except urllib.error.HTTPError as e:
         if e.code == 401:
             print("\n× Apple ID か App 用パスワードが違うようです。もう一度確かめてください。何も保存していません。")

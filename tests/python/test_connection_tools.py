@@ -175,10 +175,10 @@ class CalendarParseTest(unittest.TestCase):
         end = start + timedelta(days=2)
         evs = cal.parse_ics(ICS, start, end)
         titles = [e["title"] for e in evs]
-        self.assertEqual(titles, ["定例会議", "お休み", "長い件名が折り返されている"])
+        self.assertEqual(titles, ["定例会議", "長い件名が折り返されている", "お休み"])  # 開始の早い順
         self.assertEqual(evs[0]["start"], "2026-10-01 10:00")  # UTC 1:00 → 日本時間 10:00
-        self.assertTrue(evs[1]["all_day"])
-        self.assertEqual(evs[2]["start"], "2026-10-01 15:00")
+        self.assertEqual(evs[1]["start"], "2026-10-01 15:00")
+        self.assertTrue(evs[2]["all_day"])
 
     def test_only_read_methods_are_allowed(self):
         dav = cal.ReadOnlyCalDAV("https://caldav.example.jp/", "u", "p")
@@ -577,6 +577,31 @@ class CodexRound7Test(unittest.TestCase):
         with mock.patch("urllib.request.urlopen", return_value=res):
             with self.assertRaises(RuntimeError):
                 dav.events("https://caldav.icloud.com/cal/", *CodexRound6Test.R)
+
+
+
+class CodexRound8Test(unittest.TestCase):
+    R = CodexRound6Test.R
+
+    def test_forbidden_calendar_in_listing_is_reported(self):
+        xml = (b'<?xml version="1.0"?><d:multistatus xmlns:d="DAV:" xmlns:c="urn:ietf:params:xml:ns:caldav">'
+               b'<d:response><d:href>/cal/shared/</d:href><d:propstat><d:prop><d:resourcetype/></d:prop>'
+               b'<d:status>HTTP/1.1 403 Forbidden</d:status></d:propstat></d:response></d:multistatus>')
+        res = mock.MagicMock()
+        res.__enter__.return_value = res
+        res.geturl.return_value = "https://caldav.icloud.com/home/"
+        res.read.return_value = xml
+        dav = cal.ReadOnlyCalDAV("https://caldav.icloud.com/", "u", "p")
+        with mock.patch("urllib.request.urlopen", return_value=res):
+            cals, failed = dav.calendars("https://caldav.icloud.com/home/")
+        self.assertEqual((cals, failed), ([], 1))
+
+    def test_rdate_period_wins_over_rule_at_same_start(self):
+        ics = ("BEGIN:VCALENDAR\nBEGIN:VEVENT\nUID:W\nSUMMARY:会\nDTSTART:20261001T010000Z\nDTEND:20261001T020000Z\n"
+               "RRULE:FREQ=DAILY;COUNT=2\nRDATE;VALUE=PERIOD:20261002T010000Z/20261002T030000Z\nEND:VEVENT\nEND:VCALENDAR\n")
+        evs = cal.parse_ics(ics, *self.R)
+        self.assertEqual([(e["start"], e["end"]) for e in evs],
+                         [("2026-10-01 10:00", "2026-10-01 11:00"), ("2026-10-02 10:00", "2026-10-02 12:00")])
 
 
 if __name__ == "__main__":
