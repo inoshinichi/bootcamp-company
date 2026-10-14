@@ -784,20 +784,15 @@ Gmail・Calendar・Drive の3つは **同じ1つの鍵ファイル（`gcp-oauth.
 ```bash
 mkdir -p ~/.gmail-mcp
 cp "<ダウンロードした鍵ファイルのパス>" ~/.gmail-mcp/gcp-oauth.keys.json
-echo "配置完了。HOME は $HOME です（次の Step 5.5 で使います）"
+echo "配置完了: $HOME/.gmail-mcp/gcp-oauth.keys.json"
 ```
 
 > Calendar(@cocal)と Drive(@isaacphi)は固定パスを持たず、環境変数で鍵の場所を教える方式です（各 MCP の公式仕様）。
 > Gmail と同じ `~/.gmail-mcp/gcp-oauth.keys.json` を指せば共用でき、**追加のコピーは不要**です。
 
-#### Step 5.5: .mcp.json の絶対パスを実ユーザー名に置換（**秘書が自動で代行**）
-
-プラグイン同梱の `.mcp.json` は Calendar/Drive 向けに `GOOGLE_OAUTH_CREDENTIALS` / `GDRIVE_CREDS_DIR` を持つが、
-**MCP の環境変数は `~` や `$HOME` を展開しない**ため、絶対パスの `REPLACE_ME` を実ユーザー名へ置き換える必要がある。
-秘書は `echo $HOME` で確認した上で、ユーザー設定の `.mcp.json`（`~/.claude.json` 等の該当 mcpServers）または該当環境変数に
-`/Users/<実ユーザー名>/.gmail-mcp/gcp-oauth.keys.json`（Drive は `/Users/<実ユーザー名>/.gmail-mcp`）を反映する。
-
-> 💡 実装メモ: 同梱 `plugins/company/.mcp.json` の `REPLACE_ME` はプレースホルダ。受講者環境の HOME に合わせて秘書が置換する。
+> 💡 実装メモ: 同梱 `.mcp.json` の Calendar/Drive は `GOOGLE_OAUTH_CREDENTIALS` / `GDRIVE_CREDS_DIR` に `~/.gmail-mcp/...` を指定している。
+> MCP の環境変数は `~` を展開しないため、`scripts/with-home.mjs` が起動時に OS のホームフォルダ（Mac: `/Users/<名前>`、Windows: `C:\Users\<名前>`）へ展開してから `npx` で起動する。
+> **秘書が `.mcp.json` のパスを書き換える必要はない**（Mac / Windows 共通）。
 
 #### Step 6: Claude Code を再起動（人間操作）
 

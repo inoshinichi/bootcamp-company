@@ -168,9 +168,10 @@ export function startServer(companyDir, port) {
     }
   });
 
-  app.listen(port, () => {
+  // 同じネットワークの他端末から .company/ を読まれないよう、自分の PC からのみ接続を受け付ける
+  app.listen(port, "127.0.0.1", () => {
     console.log(`\n  cc-company dashboard`);
-    console.log(`  http://localhost:${port}\n`);
+    console.log(`  http://127.0.0.1:${port}\n`);
     console.log(`  Watching: ${companyDir}\n`);
   });
 }

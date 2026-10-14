@@ -8,19 +8,19 @@
       }
     },
     "google-calendar": {
-      "command": "npx",
-      "args": ["-y", "@cocal/google-calendar-mcp"],
+      "command": "node",
+      "args": ["${CLAUDE_PLUGIN_ROOT}/scripts/with-home.mjs", "@cocal/google-calendar-mcp"],
       "env": {
-        "GOOGLE_OAUTH_CREDENTIALS": "/Users/REPLACE_ME/.gmail-mcp/gcp-oauth.keys.json",
-        "_NOTE": "Google基盤ユーザー向け。@cocal/google-calendar-mcp は npx利用時 GOOGLE_OAUTH_CREDENTIALS 環境変数で OAuthキーの絶対パスを指す方式(README明記)。Gmail と同じ gcp-oauth.keys.json を共用できるので追加のファイル配置は不要。⚠️ MCP env は ~ や $HOME を展開しないため絶対パス必須。秘書が `echo $HOME` で確認し REPLACE_ME を実ユーザー名に書き換える。"
+        "GOOGLE_OAUTH_CREDENTIALS": "~/.gmail-mcp/gcp-oauth.keys.json",
+        "_NOTE": "Google基盤ユーザー向け。@cocal/google-calendar-mcp は npx利用時 GOOGLE_OAUTH_CREDENTIALS 環境変数で OAuthキーの絶対パスを指す方式(README明記)。Gmail と同じ gcp-oauth.keys.json を共用できるので追加のファイル配置は不要。MCP env は ~ を展開しないため、scripts/with-home.mjs が先頭の ~ を OS のホームフォルダ(Mac: /Users/<名前>、Windows: C:\\Users\\<名前>)に展開してから npx で起動する。パスの書き換えは不要。"
       }
     },
     "google-drive": {
-      "command": "npx",
-      "args": ["-y", "@isaacphi/mcp-gdrive"],
+      "command": "node",
+      "args": ["${CLAUDE_PLUGIN_ROOT}/scripts/with-home.mjs", "@isaacphi/mcp-gdrive"],
       "env": {
-        "GDRIVE_CREDS_DIR": "/Users/REPLACE_ME/.gmail-mcp",
-        "_NOTE": "Google基盤ユーザー向け。@isaacphi/mcp-gdrive は GDRIVE_CREDS_DIR で指定したディレクトリの gcp-oauth.keys.json を読む(README明記)。Gmail の ~/.gmail-mcp をそのまま指せば共用でき、コピー不要。⚠️ MCP env は ~ を展開しないため絶対パス必須。秘書が `echo $HOME` で確認し REPLACE_ME を実ユーザー名に書き換える。"
+        "GDRIVE_CREDS_DIR": "~/.gmail-mcp",
+        "_NOTE": "Google基盤ユーザー向け。@isaacphi/mcp-gdrive は GDRIVE_CREDS_DIR で指定したディレクトリの gcp-oauth.keys.json を読む(README明記)。Gmail の ~/.gmail-mcp をそのまま指せば共用でき、コピー不要。~ は scripts/with-home.mjs が OS のホームフォルダに展開する(Mac/Windows 共通・パスの書き換え不要)。"
       }
     },
     "ms-365": {

@@ -66,5 +66,5 @@ if (!companyDir) {
 startServer(companyDir, port);
 
 if (!noOpen) {
-  import("open").then((mod) => mod.default(`http://localhost:${port}`)).catch(() => {});
+  import("open").then((mod) => mod.default(`http://127.0.0.1:${port}`)).catch(() => {});
 }
