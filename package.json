@@ -14,7 +14,12 @@
     "type": "git",
     "url": "git+https://github.com/inoshinichi/bootcamp-company.git"
   },
-  "keywords": ["company", "claude-code", "bootcamp", "ai-orchestration"],
+  "keywords": [
+    "company",
+    "claude-code",
+    "bootcamp",
+    "ai-orchestration"
+  ],
   "author": "inoshinichi",
   "license": "MIT",
   "bugs": {
@@ -25,5 +30,11 @@
   "devDependencies": {
     "vitepress": "^1.6.4",
     "vitest": "^4.1.1"
+  },
+  "allowScripts": {
+    "esbuild@0.21.5": true
+  },
+  "dependencies": {
+    "motion-v": "^2.8.0"
   }
 }
