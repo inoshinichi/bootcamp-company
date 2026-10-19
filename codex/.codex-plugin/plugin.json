@@ -1,0 +1,21 @@
+{
+  "name": "company",
+  "version": "1.1.0",
+  "description": "秘書から始める仮想組織スキル。経営者が AI に仕事を任せていく仕組みをつくる（コーデックス版）。",
+  "author": {
+    "name": "inoshinichi"
+  },
+  "repository": "https://github.com/inoshinichi/bootcamp-company",
+  "license": "MIT",
+  "keywords": ["company", "organization", "secretary", "bootcamp", "small-business"],
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "仮想組織（company）",
+    "shortDescription": "秘書から始める仮想組織",
+    "longDescription": "会社フォルダで $company と入力すると、秘書が最初の設定から日々の仕事までを手伝います。Claude 版と同じ会社フォルダが使えます。",
+    "developerName": "inoshinichi",
+    "category": "Productivity",
+    "capabilities": ["Interactive", "Write"],
+    "defaultPrompt": ["$company"]
+  }
+}
