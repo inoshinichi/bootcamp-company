@@ -46,7 +46,8 @@ codex plugin add company@bootcamp-company
 最初の設定では、秘書が次のことを順番に案内します。
 
 - メール・予定表・チャットなどを、コーデックスの「アプリ（コネクター）」でつなぐこと
-- Chrome の拡張機能（コーデックス用）を入れて、つないで、動くか確かめること
+- Chrome の拡張機能（OpenAI の「ChatGPT」）を入れて、つないで、動くか確かめること
+  （ブラウザを動かす機能は **ChatGPT のデスクトップアプリ**から使う仕組みで、黒い画面のコーデックスだけでは使えません。秘書がデスクトップアプリでの入れ方を案内します）
 
 詳しくは [codex/skills/company/references/connections-codex.md](skills/company/references/connections-codex.md) を見てください。
 会社のパソコンの決まりなどで入れられないものがあっても大丈夫です。秘書が理由と代わりのやり方を伝え、あとでやることとして記録しておきます。
