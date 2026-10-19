@@ -36,6 +36,8 @@ uname -s 2>/dev/null || echo Windows
 1. 秘書の使える道具に `mcp__claude_ai_` で始まるものが1つでもあれば → Claude のアカウントでログインしている（○）
 2. 1つも無いとき → 受講者に `/status` と入力してもらい、ログイン方法の欄を読んでもらう。「API キー」系なら `/logout` → `/login` で Claude のアカウントを選び直してもらう。Claude のアカウントなのに1つも無いなら、まだどの連携も押していないだけ（§2 へ）
 
+（Microsoft 365 の連携は無料プランを含むすべてのプランで使える。出典: https://support.claude.com/en/articles/12542951-set-up-the-microsoft-365-connector ）
+
 ⚠️ **Team / Enterprise プランの会社**は、Claude の組織の管理者（オーナー）が管理画面で各連携（とくに Microsoft 365）を**有効にしないと、社員の画面にボタンが出ない**。ボタンが見当たらないときは、まずここを疑う。
 
 ### 0-3. 道具の場所と、受講者に渡す1行の作り方
@@ -111,7 +113,10 @@ nslookup -type=mx <ドメイン>.
 ### §2-A. Microsoft 365
 
 - 1つの連携で **Outlook のメール・予定表・OneDrive・SharePoint・Teams** が入る
-- メール（下書き・送信）、予定、ファイルは書き込みもできる。**Teams は読むだけ**（個人・グループのチャット。チームのチャンネルは読めない）
+- 読む・探すは、いつでもできる（Outlook のメール・予定表・OneDrive・SharePoint・Teams の、本人が参加しているチャットとチャンネル）
+- 書き込み（メールの下書き・送信、予定の登録、ファイルの作成、Teams への送信）は、**会社の管理者が「書き込み」を有効にしたときだけ**。有効でなければ読むだけになる。Teams へ送るときは毎回確認が出る。添付ファイル付きのメールは送れない
+- 個人の Outlook.com・Hotmail・live.com ではつなげない（仕事用・学校用のアカウントだけ）
+- 出典: https://support.claude.com/en/articles/15183774-connect-to-microsoft-365 ・ https://support.claude.com/en/articles/12542951-set-up-the-microsoft-365-connector
 - 🔴 **最初に1回だけ、会社の Microsoft の「全体管理者（グローバル管理者）」の許可（同意）が要る。** これが一番つまずく所。ふつうの管理者（ユーザー管理だけ等）では許可できない
   - 受講者自身が全体管理者なら、その場で許可できる（許可の画面が出たら「組織の代理として同意」にチェック）
   - Claude を Team / Enterprise プランで使っている会社は、さらに **Claude の組織の管理者が管理画面で Microsoft 365 の連携を有効にする**必要がある（§0-2）
@@ -313,7 +318,7 @@ osascript "$S/mac_calendar.applescript" 2
 | チャット | つなぎ方 | 秘書ができること |
 |---|---|---|
 | **Slack** | 公式の連携（§2 と同じ手順で「Slack」） | 読む・投稿（投稿は受講者が本文を見てから） |
-| **Teams** | Microsoft 365 の公式連携に含まれる | **読むだけ**（個人・グループのチャット。チャンネルは不可）と最初に伝える |
+| **Teams** | Microsoft 365 の公式連携に含まれる | 読むのは参加しているチャットとチャンネル。送るのは管理者が「書き込み」を有効にしたときだけ（毎回確認あり）と最初に伝える（§2-A） |
 | **Chatwork** | Chatwork の「API トークン」を受講者が発行し、秘書が Chatwork の API を呼ぶ | 読む・投稿（投稿は本文を見せてから） |
 | **LINE WORKS** | 今は繋がない | 秘書が返信の文案を作り、受講者が貼り付けて送る |
 | **Google Chat** | 今は繋がない（Google Cloud の設定が要るため） | 同上 |
@@ -351,6 +356,7 @@ osascript "$S/mac_calendar.applescript" 2
 | カレンダー | 今日と明日の予定を読む | 読めた（0件でも○） | 道ごとの直し方（§4） |
 | フォルダ | 決めたフォルダの中のファイル名を5つ読む | 読めた | 「場所が変わっていないか」「起動したフォルダの外なら `/add-dir`」 |
 | チャット | 公式: 最近のメッセージを1件／Chatwork: 部屋の一覧 | 読めた | 道ごとの直し方（§6）。繋がない種類は「－（代わりの使い方あり）」 |
+| ブラウザ | Claude in Chrome の `tabs_context_mcp` を1回（今開いているタブを**見るだけ**。クリック・入力・移動はしない） | タブの数と題名が読めた | 道具が無い・「not connected」なら §9-3。入れられない事情があるなら §9-4 |
 
 表示の決まり:
 - メールは**件名だけ**を出す。本文・差出人のアドレスは出さない（研修の場で隣の人に見えないように）
@@ -369,8 +375,9 @@ osascript "$S/mac_calendar.applescript" 2
 | カレンダー | × | Outlook が「新しい Outlook」のため読めません → 相談しましょう |
 | フォルダ | ○ | 「共有/営業資料」を読めました |
 | チャット | － | LINE WORKS（文案づくりで使えます） |
+| ブラウザ | ○ | Chrome のタブ 3 つを確認（見るだけ） |
 
-○ 3 / × 1。カレンダーを一緒に直しましょうか？
+○ 4 / × 1。カレンダーを一緒に直しましょうか？
 ```
 
 研修での使い方: 最初と最後に全員に「連携チェック」と言ってもらう。講師は ○ の数を見るだけで、誰がどこで止まっているか分かる。
@@ -388,10 +395,55 @@ osascript "$S/mac_calendar.applescript" 2
 - カレンダー: パソコンの Outlook（Windows 従来版）… ○
 - フォルダ: Z:\共有\営業資料 … ○
 - チャット: Chatwork … ○
+- ブラウザ: Claude in Chrome（Chrome）… ○
 - 残り: なし
 ```
 
+ブラウザが入れられない人は「- ブラウザ: Claude in Chrome … ×（理由: 会社のパソコンで拡張機能を入れられない）」のように理由を書き、「残り」にも書く。
+
 パスワード・トークンは**ここに書かない**（`.company/` はバックアップでコピーされることがある）。
+
+---
+
+## §9. ブラウザ（拡張機能）
+
+秘書が受講者の**普段の Chrome（ログイン済みのまま）**を使うための拡張機能 **Claude in Chrome** を、オンボーディングの手順の1つとして入れる（SKILL.md の Step 3-B）。MCP の設定ファイル（`.mcp.json`）には入れない。出典: https://code.claude.com/docs/en/chrome
+
+### 9-1. 使える条件（公式）
+
+- ブラウザ: Google Chrome か Microsoft Edge（ほかの Chromium 系も可）
+- Claude のアカウント（Pro・Max・Team・Enterprise）で `/login` していること。**APIキーでログインしていると使えない**
+- Windows の WSL の中では使えない
+- 会社によっては管理者が止めていることがある（拡張機能の禁止、Enterprise の一部設定など）
+
+### 9-2. 入れる → つなぐ
+
+1. Chrome で公式の Chrome ウェブストアのページを開き、「Chrome に追加」: https://chromewebstore.google.com/detail/claude/fcoeoabgfenejglbffodgkkbkcdhcgfn
+2. 拡張機能のアイコンから、**Claude Code と同じ Claude のアカウント・同じ組織**でログイン（組織が違うと「Browser extension is not connected」になる。Claude Code 側の組織は `/status` の Organization の行で分かる）
+3. Claude Code で `/chrome` → 「Status: Enabled」「Extension: Installed」と出れば成功。続けて「Enabled by default」を選ぶ（次回から自動でつながる）
+4. 操作してよいサイトは、拡張機能の設定でサイトごとに許可する。ブラウザの操作の前に「Claude in Chrome wants to ...」と許可を求められたら、受講者が判断して押す
+
+### 9-3. 確かめる・つながらないとき
+
+- 確かめ方: 秘書が `tabs_context_mcp` を1回だけ呼び、今開いているタブを**見るだけ**（クリック・入力・移動はしない）
+- 「Not detected」: `chrome://extensions` で拡張機能が有効か確かめる → Chrome を閉じて開き直す（初回は開き直しが要ることがある）→ `/chrome` →「Reconnect extension」
+- 「Browser extension is not connected」: 拡張機能と Claude Code のアカウント・組織が同じか確かめる → Chrome と Claude Code を両方起動し直す
+- 「Receiving end does not exist」・しばらく使わずに切れた: `/chrome` →「Reconnect extension」
+- 画面に確認の小窓（alert など）が出たまま止まった: 受講者に閉じてもらってから続ける
+- 起動し直しが要るときは、先に `secretary/_resume.md` にしおりを書く（「起動し直したら、最初に `/company` と入力してください」と添える）
+
+### 9-4. 入れられない人
+
+理由を短く伝え、代わりの道を言い、しおりに「残り」と書く。
+
+| 事情 | 代わりの道 |
+|---|---|
+| APIキーでログイン／有料プランでない | `/logout` → `/login` で Claude のアカウントを選ぶ。それまではページの文・画面の写しを貼ってもらう |
+| 会社のパソコンで拡張機能を入れられない | 情報システムの担当の方に許可を聞いてもらう。それまではページの文・画面の写しを貼ってもらう |
+| Chrome も Edge も無い | Google Chrome を入れる（無料）。それまではページの文・画面の写しを貼ってもらう |
+| WSL の中で使っている | Windows のふつうのターミナルで Claude Code を起動する |
+
+記録: 「連携の状態」に「- ブラウザ: Claude in Chrome … ×（理由: ○○）」、`secretary/_resume.md` に「- 残り: ブラウザの拡張機能（理由: ○○／次にやること: ○○）」。
 
 ---
 
