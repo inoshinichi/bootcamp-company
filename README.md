@@ -54,6 +54,10 @@ claude plugin install company@bootcamp-company --scope user
 /company
 ```
 
+> 🌐 **あわせて Chrome と「Claude in Chrome」を入れておいてください**（秘書と同じ Claude のアカウントでログイン）。
+> Google Chrome を入れる → Chrome ウェブストアの [Claude](https://chromewebstore.google.com/detail/claude/fcoeoabgfenejglbffodgkkbkcdhcgfn) で「Chrome に追加」→ 拡張機能にログイン。Pro・Max・Team・Enterprise のプランで使えます（Chrome 以外のブラウザ・スマホは対象外）。
+> 最初の `/company` のとき、秘書が「入れる → つなぐ → 確かめる」まで案内します。入れられない事情（プラン・会社のパソコンの制限）があれば、そのまま伝えれば代わりの道を案内します。
+
 **それ以降は秘書が全部案内します。**
 
 > 🔴 **`--scope user` は必ず付けてください（超重要）**
@@ -92,9 +96,9 @@ URL や手順を覚える必要はありません。秘書に話しかけて進�
 
 ### 連携の考え方（2026-10 改訂）
 
-- **公式の連携（Claude の「コネクター」）が正。** Claude の WEB・デスクトップアプリで一度ボタンを押せば、同じアカウントでログインした秘書から使える。Google Cloud や Azure の管理画面での作業は不要になった
-- 公式が無いメール・カレンダー（レンタルサーバー、Yahoo、iPhone、パソコンの Outlook の予定表）は、プラグイン同梱の**読むだけの道具**でつなぐ。メールを消さない・既読にしない
-- 詳細は [plugins/company/skills/company/references/connections.md](plugins/company/skills/company/references/connections.md)。古い手順（Google Cloud・Azure）は `connections-legacy.md` に予備として残してある
+- **公式の連携（Claude の「コネクター」）が正。** Claude の WEB・デスクトップアプリで一度ボタンを押せば、同じアカウントでログインした秘書から使える。Google Cloud や Azure の管理画面での作業は不要になった（バージョン 1.1.0）
+- 公式が無いメール・カレンダー（レンタルサーバー、Yahoo、iPhone、パソコンの Outlook の予定表）は、プラグインに入っている**読むだけの道具**でつなぐ。メールを消さない・既読にしない
+- 詳細は [plugins/company/skills/company/references/connections.md](plugins/company/skills/company/references/connections.md)。古い手順（Google Cloud・Azure の鍵づくり）は本線から外し、`connections-legacy.md` に**予備**として残してある（通常は使いません）
 
 ## 5分で立ち上がる初回セットアップ
 
@@ -212,8 +216,8 @@ URL や手順を覚える必要はありません。秘書に話しかけて進�
 |---|---|
 | Microsoft 365（Outlook・Teams・OneDrive） | Claude の「コネクター」で **Microsoft 365** を押すだけ（最初に1回、会社の全体管理者の許可が要ります）。Teams は読むだけ |
 | Google（Gmail・カレンダー・ドライブ） | Claude の「コネクター」で各サービスを押すだけ |
-| レンタルサーバー・プロバイダ・Yahoo のメール | 同梱の**読むだけの道具**で、秘書がサーバーに読みに行きます（メールを消さない・既読にしない） |
-| iPhone のカレンダー／パソコンの Outlook の予定表／Mac のカレンダー | 同梱の読むだけの道具でつなぎます |
+| レンタルサーバー・プロバイダ・Yahoo のメール | プラグイン内蔵の**読むだけの道具**で、秘書がサーバーに読みに行きます（メールを消さない・既読にしない） |
+| iPhone のカレンダー／パソコンの Outlook の予定表／Mac のカレンダー | プラグイン内蔵の読むだけの道具でつなぎます |
 | フォルダ | パソコンに見えているフォルダ（OneDrive・Google ドライブ・Dropbox・社内の共有フォルダ）をそのまま秘書に見せます |
 | Slack／Chatwork | Slack は公式の連携、Chatwork は API トークン |
 | LINE WORKS／Google Chat | 今は直接つなげません（返信の文案づくりで使えます） |
@@ -221,14 +225,22 @@ URL や手順を覚える必要はありません。秘書に話しかけて進�
 「**連携チェック**」と話しかけると、つながり具合を ○×の表で確認できます。
 詳しい手順は [plugins/company/skills/company/references/connections.md](plugins/company/skills/company/references/connections.md)。
 
-### ブラウザ操作は MCP ではなく Claude in Chrome
+### ブラウザ操作は Claude in Chrome（拡張機能）
 
-ブラウザを触る作業は **Claude in Chrome（Chrome拡張）** で行います。Playwright MCP は同梱していません。
+ブラウザを触る作業は **Claude in Chrome（Chrome 拡張）** で行います。Playwright MCP は入れていません。
 
-Claude Code で **`/chrome`** と入力し、案内どおり拡張をインストール＋ペアリングするだけ（2分）。
+最初のセットアップの手順の1つです：**入れる → つなぐ → 確かめる → 「連携の状態」に記録**。
 
-**あなたが普段使っている Chrome を、ログイン済みのまま**秘書が操作できます。
-自社の管理画面・SNS・仕入先サイトなど「ログインしていないと始まらない」作業がそのまま頼めます。
+1. Google Chrome で Chrome ウェブストアの [Claude](https://chromewebstore.google.com/detail/claude/fcoeoabgfenejglbffodgkkbkcdhcgfn) を開き「Chrome に追加」
+2. 拡張機能に、秘書と同じ Claude のアカウントでログイン
+3. Claude Code で **`/chrome`** と入力し、つながりを確かめる
+
+**あなたが普段使っている Chrome を、ログイン済みのまま**秘書が操作できます。自社の管理画面・SNS・仕入先サイトなど「ログインしていないと始まらない」作業がそのまま頼めます。
+入れられないとき（プランが対象外・会社のパソコンの制限・Chrome が無い）は、理由と代わりの道を秘書が伝え、`secretary/_resume.md` の「残り」に書きます。
+
+## コーデックスで使う場合
+
+OpenAI の Codex CLI でも、**同じ秘書・同じ会社フォルダ**が使えます（呼び方は `$company`）。入れ方は [codex/README.md](codex/README.md) を見てください。
 
 ## ブラウザでダッシュボード
 

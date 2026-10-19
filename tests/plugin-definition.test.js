@@ -435,3 +435,54 @@ describe('legacy bundled MCP servers', () => {
     expect(l).not.toContain('REPLACE_ME を実ユーザー名へ置き換える');
   });
 });
+
+describe('browser extension (Claude in Chrome) onboarding', () => {
+  const STORE_URL = 'https://chromewebstore.google.com/detail/claude/fcoeoabgfenejglbffodgkkbkcdhcgfn';
+
+  it('onboarding has a Claude in Chrome step: install, connect, verify (look only), record', () => {
+    const s = readText(resolve(SKILL_DIR, 'SKILL.md'));
+    expect(s).toContain('### Step 3-B: ブラウザの拡張機能（Claude in Chrome）を入れる');
+    const step = s.slice(s.indexOf('### Step 3-B'), s.indexOf('**完了メッセージ'));
+    expect(step).toContain(STORE_URL);
+    expect(step).toContain('/chrome');
+    expect(step).toContain('tabs_context_mcp');
+    expect(step).toContain('「ブラウザ」の行');
+    expect(step).toContain('_resume.md');
+    expect(step).toContain('残り');
+    // Step 3 list routes to Step 3-B before the completion message
+    expect(s).toMatch(/9\. \*\*ブラウザの拡張機能（Claude in Chrome）/);
+  });
+
+  it('completion message and startup reminder no longer treat Chrome as a last-minute aside', () => {
+    const s = readText(resolve(SKILL_DIR, 'SKILL.md'));
+    expect(s).not.toContain('表示されたコードでペアリング');
+    expect(s).toContain('Step 3-B の結果を書く');
+    expect(s).toContain('Step 3-B の続きから');
+  });
+
+  it('connections.md has §9 browser and a ブラウザ row in §7 and §8', () => {
+    const c = readText(resolve(SKILL_DIR, 'references/connections.md'));
+    expect(c).toContain('## §9. ブラウザ（拡張機能）');
+    expect(c).toContain(STORE_URL);
+    const s7 = c.slice(c.indexOf('## §7.'), c.indexOf('## §8.'));
+    expect(s7).toMatch(/^\| ブラウザ \|/m);
+    const s8 = c.slice(c.indexOf('## §8.'), c.indexOf('## §9.'));
+    expect(s8).toContain('- ブラウザ:');
+    // existing section headings kept
+    for (const h of ['## §0.', '## §1.', '## §2.', '## §3.', '## §4.', '## §5.', '## §6.', '## §7.', '## §8.']) {
+      expect(c).toContain(h);
+    }
+  });
+
+  it('claude-md-template has a ブラウザ line in 連携の状態', () => {
+    const t = readText(resolve(SKILL_DIR, 'references/claude-md-template.md'));
+    expect(t).toContain('- ブラウザ:');
+  });
+
+  it('Microsoft 365 facts match the official help (all plans, write tools admin-controlled)', () => {
+    const c = readText(resolve(SKILL_DIR, 'references/connections.md'));
+    expect(c).toContain('無料プランを含むすべてのプラン');
+    expect(c).not.toContain('**Teams は読むだけ**');
+    expect(c).toContain('会社の管理者が「書き込み」を有効にしたときだけ');
+  });
+});
