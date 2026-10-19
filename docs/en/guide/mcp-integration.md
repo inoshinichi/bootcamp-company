@@ -45,7 +45,9 @@ Create an API token at [Notion Integrations](https://www.notion.so/my-integratio
 
 ---
 
-### Google Calendar
+### Google Calendar (fallback)
+
+> Normally not needed: connect Google Calendar with the one-click Claude connector instead. This is a fallback only for when the connector cannot be used (it needs a Google Cloud key and is hard for beginners).
 
 Schedule management. The secretary can register meetings and set reminders.
 
