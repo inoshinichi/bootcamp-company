@@ -85,6 +85,7 @@ $m = Get-ChildItem (Join-Path $HOME '.claude\plugins') -Recurse -Filter mail_rea
 |---|---|---|
 | `gmail.com` | **Gmail（個人）** | §2-B |
 | `yahoo.co.jp` / `ymail.ne.jp` | **Yahoo メール** | §3（§3-4） |
+| `icloud.com` / `me.com` / `mac.com` | **iCloud メール** | §3（設定値は道具に入っている。パスワードは Apple の「App 用パスワード」を作って使う＝§4 の iPhone（iCloud）と同じ作り方。Apple のアカウントに2段階認証が要る。この道具での実機の確認はまだ） |
 | `outlook.com` / `outlook.jp` / `hotmail.com` / `hotmail.co.jp` / `live.com` / `live.jp` / `msn.com` | **個人の Outlook.com** | §3-5（⚠️ 公式の Microsoft 365 連携は**仕事用アカウントのみ**。サーバーに取りに行く道も Microsoft が止めている） |
 | それ以外（会社のドメインなど） | → 第2段階へ | |
 
@@ -455,7 +456,7 @@ osascript "$S/mac_calendar.applescript" 2
 
 ### 9-1. 使える条件（公式）
 
-- ブラウザ: Claude Code の公式説明では Google Chrome と Microsoft Edge で動く（Brave・Arc・Vivaldi・Opera は拡張機能を見つけて接続の設定まではする）。ただし Claude in Chrome の案内ページ（https://support.claude.com/en/articles/12012173-getting-started-with-claude-in-chrome ）は Chrome だけを挙げているので、**Chrome があれば Chrome を使う**。Edge で入れるときの画面の流れは未確認
+- ブラウザ: Claude Code の公式説明では Google Chrome と Microsoft Edge で動く（Brave・Arc・Vivaldi・Opera は拡張機能を見つけて接続の設定まではする）。ただし Claude in Chrome の案内ページ（https://support.claude.com/en/articles/12012173-getting-started-with-claude-in-chrome ）は Chrome だけを挙げているので、**Chrome があれば Chrome を使う**。Chrome が無く、ソフトを入れてよいパソコンなら先に Google Chrome を入れてもらう（https://www.google.com/chrome/ ）。Edge は会社のパソコンで Chrome を入れられないときだけ。Edge で入れるときの画面の流れは未確認（「他のストアからの拡張機能を許可」の画面が出たら許可する、と言われているが未確認）
 - 拡張機能の版は 1.0.36 以上
 - Claude のアカウント（Pro・Max・Team・Enterprise）で `/login` していること。**APIキーでログインしていると使えない**
 - Windows の WSL の中では使えない
@@ -476,7 +477,7 @@ osascript "$S/mac_calendar.applescript" 2
 - 「Browser extension is not connected」: 拡張機能と Claude Code のアカウント・組織が同じか確かめる → Chrome と Claude Code を両方起動し直す
 - 「Receiving end does not exist」・しばらく使わずに切れた: `/chrome` →「Reconnect extension」
 - 画面に確認の小窓（alert など）が出たまま止まった: 受講者に閉じてもらってから続ける
-- 起動し直しが要るときは、先に `secretary/_resume.md` にしおりを書く（「今と同じフォルダで起動し直して、最初に `/company` と入力してください」と添える）
+- 起動し直しが要るときは、先に `secretary/_resume.md` にしおりを書く（「今と同じフォルダで起動し直して、最初に `/company` と入力してください」と添える。フォルダの場所は受講者に見せる形＝Mac は `~/my-company`、Windows は `C:\Users\…` の形で書き、Windows には `Set-Location "$HOME\my-company"` のような1行も添える）
 
 ### 9-4. 入れられない人
 
@@ -486,7 +487,7 @@ osascript "$S/mac_calendar.applescript" 2
 |---|---|
 | APIキーでログイン／有料プランでない | `/logout` → `/login` で Claude のアカウントを選ぶ。それまではページの文・画面の写しを貼ってもらう |
 | 会社のパソコンで拡張機能を入れられない | 情報システムの担当の方に許可を聞いてもらう。それまではページの文・画面の写しを貼ってもらう |
-| Chrome も Edge も無い | Google Chrome を入れる（無料）。それまではページの文・画面の写しを貼ってもらう |
+| Chrome が無い（Mac。Windows には Edge が入っている） | Google Chrome を入れる（無料）。それまではページの文・画面の写しを貼ってもらう |
 | WSL の中で使っている | Windows のふつうのターミナルで Claude Code を起動する |
 
 記録: 「連携の状態」に「- ブラウザ: Claude in Chrome … ×（理由: ○○）」、`secretary/_resume.md` に「- 残り: ブラウザの拡張機能（理由: ○○／次にやること: ○○）」。

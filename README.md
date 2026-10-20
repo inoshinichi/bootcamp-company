@@ -34,7 +34,7 @@ irm https://claude.ai/install.ps1 | iex
 - 動く環境: macOS 13 以降／Windows 10（1809 以降）・Windows 11
 - Windows で要るもの: Claude Code 本体は上の PowerShell だけで入ります
 - **このプラグインを入れる（手順4）には「Git」が要ります**（Claude Code 本体には不要ですが、プラグインを GitHub から取ってくるときに使います）
-  - Windows: PowerShell で `winget install --id Git.Git -e --source winget` と打ち、入ったら PowerShell を閉じて開き直します
+  - Windows: PowerShell で `winget install --id Git.Git -e --source winget --accept-package-agreements --accept-source-agreements` と打ち、入ったら PowerShell を閉じて開き直します（はじめて winget を使うときに質問が出たら `Y`、「このアプリがデバイスに変更を加えることを許可しますか」と出たら「はい」を押します。出ないこともあります）
   - Mac: ターミナルで `xcode-select --install` と打ち、画面の案内に従います（10〜30分。すでに入っていれば「already installed」と出ます）
   - `git --version` と打って番号が出れば準備できています。会社のパソコンで入れられないときは、下の「うまくいかないとき」の「Git が入れられない」の行を見てください
 - 会社のパソコンで入れられないときは、情報システムの担当の方に相談してください（公式のトラブル対応: https://code.claude.com/docs/en/troubleshoot-install ）
@@ -142,7 +142,7 @@ Claude Code を一度終了して、そのフォルダで起動し直してか�
 | ログインで「API」や「Console」を選んでしまった | ログインの選び間違い | Claude Code の中で `/logout` → `/login` で、Claude のアカウント（Pro などのプラン）を選び直す |
 | Windows で赤い文字が出て命令が通らない | 「コマンドプロンプト」で打っている | スタートから「PowerShell」を開き直す（行の頭が `PS C:\`） |
 | `Executable not found in $PATH: "git"`・`Fetching the marketplace from GitHub failed` と出る | Git が入っていない | 手順2の「Git」を入れ、画面を開き直してから手順4をやり直す |
-| 会社のパソコンで Git が入れられない | ソフトの導入が止められている | GitHub のこのページの「Code」→「Download ZIP」で取って解凍し、`claude plugin marketplace add "<解凍したフォルダ>" --scope user` → `claude plugin install company@bootcamp-company --scope user` と打つ（新しい版が出たら ZIP を取り直して同じことをします） |
+| 会社のパソコンで Git が入れられない | ソフトの導入が止められている | GitHub のこのページの「Code」→「Download ZIP」で取って解凍し、解凍したフォルダを消さない場所（ホームの `my-company-plugin` など。ダウンロードフォルダは掃除で消えやすい）へ移してから、`claude plugin marketplace add "<そのフォルダ>" --scope user` → `claude plugin install company@bootcamp-company --scope user` と打つ。指定するのは**中に `plugins` と `README.md` が見えるフォルダ**です（Windows の「すべて展開」では `bootcamp-company-main` の中にもう一段 `bootcamp-company-main` ができることがあり、その内側を指定します）。打ったあと `claude plugin list` で入ったことを確かめます。このフォルダを消すと `/company` も使えなくなります（新しい版が出たら ZIP を取り直して同じことをします） |
 | `/company` が出てこない・消えた | プラグインがフォルダ限定で入っている | `claude plugin list` で `company@bootcamp-company` の「Scope」を見る → `user` でなければ書き方B で入れ直す |
 | 秘書が初対面のように振る舞う／今までの記録が無い | 前回と違うフォルダで起動している | 「毎回の始め方」のとおり会社フォルダで起動し直す。分からなければ `/company` と言えば、秘書が親フォルダとホームを探します |
 | Cursor を再起動したら上の2つが起きた | Cursor が別のフォルダで開き直した | Cursor で「フォルダを開く」→ 会社フォルダ（`my-company`）を選び直す。Cursor は使わなくても大丈夫です（ターミナルだけで使えます） |
@@ -334,6 +334,8 @@ URL や手順を覚える必要はありません。秘書に話しかけて進�
 入れられないとき（プランが対象外・会社のパソコンの制限・ブラウザが無い）は、理由と代わりの道を秘書が伝え、`secretary/_resume.md` の「残り」に書きます。
 
 ## コーデックスで使う場合
+
+> ⚠️ **コーデックス版は準備中です。研修では上の Claude Code 版を使ってください**（このあとの説明は準備ができてからのものです）。
 
 OpenAI の Codex CLI でも、**同じ秘書・同じ会社フォルダ**が使えます（呼び方は `$company`）。入れ方は [codex/README.md](codex/README.md) を見てください。
 
