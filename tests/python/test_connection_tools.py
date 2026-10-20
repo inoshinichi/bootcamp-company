@@ -336,11 +336,33 @@ class CodexRound1Test(unittest.TestCase):
     def test_keychain_failure_does_not_leak_password(self):
         failed = mock.Mock(returncode=1, stderr=b"security: SecKeychainItemCreateFromContent: User interaction is not allowed.")
         with mock.patch.object(secret, "SYSTEM", "Darwin"), \
-                mock.patch("subprocess.run", side_effect=[mock.Mock(returncode=0), failed]):
+                mock.patch("subprocess.run", return_value=failed):
             with self.assertRaises(Exception) as cm:
                 secret.save("svc", "acct", "SECRET-PW-123", {})
         self.assertNotIn("SECRET-PW-123", str(cm.exception))
         self.assertNotIn("SECRET-PW-123", repr(cm.exception))
+
+    def test_keychain_save_updates_in_place_without_deleting_first(self):
+        # 先に消すと、保存に失敗したとき古いパスワードまで無くなる（2026-10-20）
+        cfg = {}
+        with mock.patch.object(secret, "SYSTEM", "Darwin"), \
+                mock.patch("subprocess.run", return_value=mock.Mock(returncode=0)) as run:
+            secret.save("svc", "acct", "PW", cfg)
+        cmds = [c.args[0] for c in run.call_args_list]
+        self.assertFalse(any("delete-generic-password" in c for c in cmds), cmds)
+        self.assertTrue(any("add-generic-password" in c and "-U" in c for c in cmds), cmds)
+        self.assertEqual(cfg.get("password_store"), "keychain")
+        self.assertNotIn("password", cfg)
+
+    def test_mail_config_is_created_private(self):
+        with tempfile.TemporaryDirectory() as d:
+            path = os.path.join(d, "sub", "mail.json")
+            with mock.patch.object(mail, "CONFIG_DIR", os.path.dirname(path)), \
+                    mock.patch.object(mail, "CONFIG_PATH", path):
+                mail.write_config({"user": "a@example.jp"})
+            if os.name == "posix":
+                self.assertEqual(os.stat(path).st_mode & 0o777, 0o600)
+                self.assertEqual(os.stat(os.path.dirname(path)).st_mode & 0o777, 0o700)
 
     def test_dpapi_failure_does_not_fall_back_to_plaintext(self):
         cfg = {}
