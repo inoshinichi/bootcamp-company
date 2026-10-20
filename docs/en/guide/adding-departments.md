@@ -1,41 +1,37 @@
 # Adding Departments
 
-This is the core feature of cc-company. As you use it, the secretary suggests adding departments.
+This is the core feature of bootcamp-company. As you use it, the secretary suggests adding departments.
 
 ## Suggestions from the Secretary
 
-When tasks in the same area are repeated, the secretary suggests a new department.
+When the same task comes up a second time, the secretary proposes a department together with a manual (written procedure). Empty departments are never created.
 
 ```
 > Research competitors for me
 Secretary: Sure, I'll look into it.
-  → Saved to secretary/notes/2026-03-19-competitor-research.md
 
 (A few days later...)
 
-> I'd also like to know about overseas trends
-Secretary: Research requests are increasing.
-           Shall I create a Research department?
-           It can systematically manage research results in a dedicated folder.
+> Research another competitor
+Secretary: This is the second competitor research.
+           I'll create a Research department and put today's steps there as a "Competitor research" manual.
+           Next time, the Research department will follow it. Shall I create it?
 
 You: Yes, create it
 
-→ research/ is automatically generated
+→ .company/research/ is created with one manual in manuals/
 ```
-
-::: tip Note
-If a department doesn't exist yet, the secretary saves results in `secretary/notes/`. Once a department is created, it gets its own dedicated management.
-:::
 
 ## Direct Requests
 
-Of course, you can also request directly.
+You can also request directly. The secretary first asks for one task to hand over, and that becomes the first manual.
 
 ```
 > Create a PM department
-Secretary: Creating a PM department now!
+Secretary: Sure. Tell me one task you want PM to handle first.
+           I'll make it PM's first manual.
 
-→ pm/ is automatically generated
+→ .company/pm/ is created with one manual in manuals/
 ```
 
 ## What Gets Created

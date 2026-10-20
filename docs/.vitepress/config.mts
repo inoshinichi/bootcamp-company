@@ -36,7 +36,7 @@ export default defineConfig({
               items: [
                 { text: "秘書との日常", link: "/guide/daily-usage" },
                 { text: "部署を追加する", link: "/guide/adding-departments" },
-                { text: "ダッシュボード", link: "/guide/dashboard" },
+                { text: "ダッシュボード（今は案内していません）", link: "/guide/dashboard" },
                 { text: "研修の前の準備", link: "/guide/junbi" },
                 { text: "MCP連携ガイド", link: "/guide/mcp-integration" },
                 {
@@ -110,7 +110,7 @@ export default defineConfig({
                   link: "/en/guide/adding-departments",
                 },
                 {
-                  text: "Dashboard",
+                  text: "Dashboard (not offered now)",
                   link: "/en/guide/dashboard",
                 },
                 {
