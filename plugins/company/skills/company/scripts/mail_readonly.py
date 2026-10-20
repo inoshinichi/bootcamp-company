@@ -57,7 +57,7 @@ KNOWN_SERVERS = {
     "yahoo.co.jp": ("imap.mail.yahoo.co.jp", 993, "smtp.mail.yahoo.co.jp", 465),
     "ymail.ne.jp": ("imap.mail.yahoo.co.jp", 993, "smtp.mail.yahoo.co.jp", 465),
     "ocn.ne.jp": ("imap.ocn.ne.jp", 993, "smtp.ocn.ne.jp", 465),
-    # iCloud メール（Apple 公式: https://support.apple.com/en-us/102525 。送信は 587＋STARTTLS）
+    # iCloud メール（Apple が案内している設定値。送信は 587＋STARTTLS。App 用パスワードが要る。この道具での実機の確認はまだ）
     "icloud.com": ("imap.mail.me.com", 993, "smtp.mail.me.com", 587),
     "me.com": ("imap.mail.me.com", 993, "smtp.mail.me.com", 587),
     "mac.com": ("imap.mail.me.com", 993, "smtp.mail.me.com", 587),

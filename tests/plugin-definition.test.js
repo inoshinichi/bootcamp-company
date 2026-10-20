@@ -541,3 +541,14 @@ describe('2026-10-20 distribution guards (core)', () => {
     expect(s).toContain('secretary/MEMORY.md');
   });
 });
+
+describe('version strings agree (so claude plugin update delivers fixes)', () => {
+  it('plugin.json, marketplace.json, codex plugin.json and package.json share one version', () => {
+    const v = readJson(resolve(PLUGIN_DIR, '.claude-plugin/plugin.json')).version;
+    const market = readJson(resolve(ROOT, '.claude-plugin/marketplace.json'));
+    const entry = market.plugins.find((p) => p.name === 'company');
+    expect(entry.version).toBe(v);
+    expect(readJson(resolve(ROOT, 'codex/.codex-plugin/plugin.json')).version).toBe(v);
+    expect(readJson(resolve(ROOT, 'package.json')).version).toBe(v);
+  });
+});
