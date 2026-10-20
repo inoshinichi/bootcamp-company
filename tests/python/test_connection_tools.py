@@ -660,5 +660,24 @@ class CodexRound10Test(unittest.TestCase):
         self.assertEqual(r.returncode, 0, r.stderr)
 
 
+
+class ReadOnlyScriptsTest(unittest.TestCase):
+    """Outlook と Mac のカレンダーの道具が「読むだけ」であること（2026-10-20）。"""
+
+    def test_outlook_ps1_has_no_write_calls_and_keeps_bom(self):
+        raw = (SCRIPTS / "outlook_calendar_win.ps1").read_bytes()
+        self.assertTrue(raw.startswith(b"\xef\xbb\xbf"), "Windows PowerShell 5.1 で日本語が化けないよう BOM が要る")
+        text = raw.decode("utf-8-sig")
+        import re
+        bad = re.findall(r"\.(Delete|Save|Send|Move|Display)\s*\(|\bRemove-\w+", text)
+        self.assertEqual(bad, [], f"書き込みの呼び出しがある: {bad}")
+
+    def test_mac_calendar_applescript_does_not_write(self):
+        import re
+        text = (SCRIPTS / "mac_calendar.applescript").read_text(encoding="utf-8")
+        self.assertIsNone(re.search(r"\bdelete\b|\bmake new\b|\bsave\b", text, re.I))
+        self.assertIsNone(re.search(r"set\s+\w+(\s+\w+)?\s+of\s+(ev|cal)\b", text))
+
+
 if __name__ == "__main__":
     unittest.main()
