@@ -53,7 +53,7 @@ uname -s 2>/dev/null || echo Windows
 道具（`scripts/`）はプラグインの中にあり、場所はプラグインの版ごとに変わる。**毎回探す**:
 
 ```bash
-X=$(find ~/.claude/plugins -name mail_readonly.py -path '*company*' 2>/dev/null | xargs ls -t 2>/dev/null | head -1); S=$(dirname "$X"); [ -n "$X" ] && echo "$S" || echo "スクリプトが見つかりません（プラグインの入れ直しが必要）"
+X=""; while IFS= read -r f; do [ -z "$X" ] || [ "$f" -nt "$X" ] && X="$f"; done < <(find ~/.claude/plugins -name mail_readonly.py -path '*company*' 2>/dev/null); S=$(dirname "$X"); [ -n "$X" ] && echo "$S" || echo "スクリプトが見つかりません（プラグインの入れ直しが必要）"
 ```
 
 （スキルを呼んだときに「Base directory」としてこのスキルの置き場所が示されていれば、その中の `scripts/` を最優先で使う。上の `find` は予備。複数の版があるときは更新日が新しいものを選ぶ）
@@ -313,10 +313,7 @@ Git for Windows が無い（秘書が PowerShell で命令を動かしている�
 powershell -NoProfile -ExecutionPolicy Bypass -File (Join-Path $S 'outlook_calendar_win.ps1') -Days 2
 ```
 
-- **止まったとき**（会社のパソコンでは、グループポリシーで決められた実行の決まりが優先され、`-ExecutionPolicy Bypass` が効かないことがある）: 代わりに、ファイルを実行せず中身を読んで動かす書き方を1回だけ試す（Windows 実機では未確認）:
-  `powershell -NoProfile -Command "& ([ScriptBlock]::Create((Get-Content -Raw -Encoding UTF8 '$(cygpath -w "$S/outlook_calendar_win.ps1")'))) -Days 2"`
-  （PowerShell で動かしているときは: `& ([ScriptBlock]::Create((Get-Content -Raw -Encoding UTF8 (Join-Path $S 'outlook_calendar_win.ps1')))) -Days 2`）
-  これも「スクリプトの実行が無効」などで止まったら、ここで止める。会社のパソコンなら情報システムの担当の方に聞いてもらい、それまでは今日の予定を貼ってもらう（Outlook・Google の公式の連携に切り替えられるなら相談する）。`_resume.md` の残りに「予定表: 会社の設定で自動では読めない」と書く
+- **止まったとき**（会社のパソコンでは、グループポリシーで決められた実行の決まりが優先され、`-ExecutionPolicy Bypass` でも動かないことがある）: 🔴 **会社の決まりをすり抜ける書き方は使わない**（ファイルの中身を読み込んで動かす等の回り道もしない）。ここで止めて、受講者に「会社の決まりで、このパソコンでは予定表を読む道具を動かせないようです。情報システムの担当の方に相談してください」と伝える。それまでは今日の予定を貼ってもらう（Outlook・Google の公式の連携に切り替えられるなら相談する）。`_resume.md` の残りに「予定表: 会社の設定で自動では読めない」と書く
 
 - **従来の Outlook だけ**。「新しい Outlook」は外から読む仕組み（COM）に対応していない（Microsoft 公式: https://learn.microsoft.com/en-us/microsoft-365-apps/outlook/get-started/state-of-com-add-ins）→ `new_outlook_or_not_installed` が返る。その場合は「従来の Outlook に戻す」か「Google カレンダー」を相談する
 - 読むだけ。予定を入れたいときは、秘書が内容を示して受講者が Outlook に入れる
