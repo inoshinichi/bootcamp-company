@@ -6,7 +6,8 @@ bootcamp-company の連携道具が使う「パスワードのしまい方」。
            そのパソコンの、その人のアカウントでしか元に戻せない。ファイルを開いても読めない
 - その他:  設定ファイルにそのまま（本人しか読めない権限にする）
 
-秘書（Claude）が設定ファイルを開いても、Mac・Windows ではパスワードが見えないようにするのが目的。
+目的は、パスワードを設定ファイルにそのままの形で置かず、会話に出さないこと（秘書も、キーチェーンや設定ファイルは開かない決まり）。
+Mac のキーチェーンは本人の操作で取り出せるので、「秘書には絶対に見えない」仕組みではない。
 """
 import base64
 import platform
@@ -53,8 +54,8 @@ def save(service, account, secret, cfg):
     for key in ("password", "password_dpapi"):
         cfg.pop(key, None)
     if SYSTEM == "Darwin":
-        subprocess.run(["security", "delete-generic-password", "-s", service, "-a", account], capture_output=True)
-        r = subprocess.run(["security", "add-generic-password", "-s", service, "-a", account, "-w", secret],
+        # -U: 同じ項目があれば上書きする（先に消すと、保存に失敗したとき古いパスワードまで無くなる）
+        r = subprocess.run(["security", "add-generic-password", "-U", "-s", service, "-a", account, "-w", secret],
                            capture_output=True)
         if r.returncode != 0:
             # 失敗の文面にコマンド（＝パスワード）を含めない

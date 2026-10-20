@@ -103,6 +103,15 @@ if (Test-Path -LiteralPath (Join-Path $HOME '.company') -PathType Container) { "
 pwd
 d="$PWD"; while [ "$d" != "/" ]; do [ -d "$d/.company" ] && echo "FOUND: $d/.company"; d=$(dirname "$d"); done
 [ -d "$HOME/.company" ] && echo "FOUND: $HOME/.company"
+for c in "$HOME"/*/.company; do [ -d "$c" ] && echo "FOUND: $c"; done
+```
+
+Windows で上の書き方がエラーになったとき（Git for Windows が無いと、Claude Code は PowerShell で命令を動かす）は、次の PowerShell を使う:
+
+```powershell
+$d = (Get-Location).Path; while ($d) { if (Test-Path -LiteralPath (Join-Path $d '.company') -PathType Container) { "FOUND: $(Join-Path $d '.company')" }; $p = Split-Path -Parent $d; if ($p -eq $d) { break }; $d = $p }
+if (Test-Path -LiteralPath (Join-Path $HOME '.company') -PathType Container) { "FOUND: $(Join-Path $HOME '.company')" }
+Get-ChildItem -LiteralPath $HOME -Directory -ErrorAction SilentlyContinue | ForEach-Object { $c = Join-Path $_.FullName '.company'; if (Test-Path -LiteralPath $c -PathType Container) { "FOUND: $c" } }
 ```
 
 判定:
@@ -110,7 +119,7 @@ d="$PWD"; while [ "$d" != "/" ]; do [ -d "$d/.company" ] && echo "FOUND: $d/.com
 | 探索結果 | 対応 |
 |---|---|
 | カレントディレクトリに `.company/` | `.company/CLAUDE.md` を読み込み → **運営モード** |
-| 親ディレクトリ or ホームに `.company/` が見つかった | ⚠️ **オンボーディングを始めてはいけない**。下記「組織が別の場所にあった場合」へ |
+| 親ディレクトリ・ホーム・ホーム直下のフォルダ（例 `~/my-company`）に `.company/` が見つかった | ⚠️ **オンボーディングを始めてはいけない**。下記「組織が別の場所にあった場合」へ |
 | どこにも無い | **Step 2: オンボーディング**へ |
 
 #### 組織が別の場所にあった場合（秘書の記憶喪失を防ぐ）
@@ -132,9 +141,9 @@ d="$PWD"; while [ "$d" != "/" ]; do [ -d "$d/.company" ] && echo "FOUND: $d/.com
 > Cursor を開き直すと別フォルダで起動していることがあり、そこには組織が無い。
 > **毎回同じフォルダで開く**のが正解で、そのために完了メッセージで絶対パスを必ず伝える（Step 3 参照）。
 
-### Step 2: オンボーディング（6問）
+### Step 2: オンボーディング（5問）
 
-Q1〜Q3 は自由に答えてもらう質問なので**通常の会話で**聞き、Q4〜Q6 は `AskUserQuestion` で聞く。秘書の口調（丁寧だが親しみやすい）で話す。
+Q1〜Q3 は自由に答えてもらう質問なので**通常の会話で**聞き、Q4〜Q5 は `AskUserQuestion` で聞く。秘書の口調（丁寧だが親しみやすい）で話す。
 ユーザーの言語を自動検出し、同じ言語で応答する。
 **Q3〜Q5 の回答と判定結果は `.company/CLAUDE.md` の「連携の状態」に記録し、完了メッセージや今後の連携提案で活用する。**
 
@@ -171,7 +180,7 @@ Q1〜Q3 は自由に答えてもらう質問なので**通常の会話で**聞�
 > - 1) **Windows**
 > - 2) **Mac**
 
-回答を `windows` / `mac` として記録。秘書も `uname -s` で確かめ、**食い違ったら秘書の実測を正として一言添える**（例:「Mac とうかがいましたが、この画面は Windows のようです。Windows として案内しますね」）。
+回答を `windows` / `mac` として記録。`uname -s` が `Linux` を返したら WSL（Windows の中の Linux）か Linux なので、「Windows のふつうの PowerShell で Claude Code を起動し直してください（WSL の中ではブラウザの拡張機能やパソコンの Outlook が使えません）」と勧める。秘書も `uname -s` で確かめ、**食い違ったら秘書の実測を正として一言添える**（例:「Mac とうかがいましたが、この画面は Windows のようです。Windows として案内しますね」）。
 
 #### Q5: 社内コミュニケーションツール
 
@@ -185,16 +194,6 @@ Q1〜Q3 は自由に答えてもらう質問なので**通常の会話で**聞�
 > （LINE WORKS・Google Chat などは「その他」から）
 
 回答を `teams` / `slack` / `chatwork` / `lineWorks` / `googleChat` / `other`（それ以外のチャット）/ `none` として記録。
-
-#### Q6: ダッシュボード（任意）
-
-> ブラウザで組織の状況を確認できるダッシュボードがあります。
-> セットアップしますか？
->
-> `npx cc-company-dashboard` で起動できます。
-
-- **はい** → 完了メッセージにダッシュボードの起動方法を含める
-- **いいえ / スキップ** → ダッシュボードの案内をスキップ
 
 ### Step 3: 秘書室を自動作成
 
@@ -213,6 +212,7 @@ Q1〜Q3 は自由に答えてもらう質問なので**通常の会話で**聞�
     │   └── YYYY-MM-DD.md  ← 今日のTODO
     ├── notes/             ← 壁打ち・意思決定ログ
     ├── manuals/           ← 秘書室の手順書（繰り返しの仕事の手順）
+    ├── MEMORY.md          ← 覚えておくことの索引（何があっても残す）
     ├── work-log.md        ← 作業の記録（1作業1行・2回目を見つけるため）
     └── experience/        ← ケース記録（自律成長の核）
         └── INDEX.md
@@ -221,19 +221,20 @@ Q1〜Q3 は自由に答えてもらう質問なので**通常の会話で**聞�
 
 **生成手順:**
 
+0. **同期フォルダの中に作らない。** `pwd` の結果に `OneDrive`・`iCloud`・`Mobile Documents`・`Dropbox`・`Google Drive`・`GoogleDrive`・`My Drive` が含まれていたら作らずに止め、「ここは自動で同期されるフォルダなので、ファイルが戻ったり壊れたりすることがあります。`~/my-company`（Windows は `$HOME\my-company`）を作って、そこで Claude Code を開き直してください」と案内する（Windows の「ドキュメント」「デスクトップ」は OneDrive に、Mac の「書類」「デスクトップ」は iCloud Drive に同期されていることがある）
 1. `.company/` ディレクトリを作成
 2. `references/claude-md-template.md` のテンプレートを使って `.company/CLAUDE.md` を生成
    - `{{BUSINESS_TYPE}}` ← Q1 の回答
    - `{{GOALS_AND_CHALLENGES}}` ← Q2 の回答
    - `{{CREATED_DATE}}` ← 今日の日付
-   - `{{COMPANY_ABS_PATH}}` ← `pwd` の実行結果（絶対パス）。**推測で書かず必ず `pwd` を実行して埋める**
+   - `{{COMPANY_ABS_PATH}}` ← `pwd` の実行結果（絶対パス）。**推測で書かず必ず `pwd` を実行して埋める**。Windows の Git Bash では `pwd` が `/c/Users/…` の形になるので、受講者に見せる場所は `pwd -W` か `cygpath -w "$PWD"` の `C:\Users\…` の形を使う（PowerShell で動いているときは `(Get-Location).Path`）
    - `{{ADDITIONAL_DEPARTMENTS}}` ← 空（初期は秘書室のみ）
    - `{{DEPARTMENT_TABLE_ROWS}}` ← 空（初期は秘書室のみ）
    - `{{PERSONALIZATION_NOTES}}` ← Q1+Q2 から生成したパーソナライズメモ
 3. `secretary/` とサブフォルダ（`inbox/`, `todos/`, `notes/`, `experience/`, `manuals/`）を作成
 4. `references/departments.md` の「secretary/CLAUDE.md」テンプレートから `secretary/CLAUDE.md` を生成
 5. 今日の日付で `secretary/todos/YYYY-MM-DD.md` を作成
-6. `secretary/experience/INDEX.md` を初期化（空のケース一覧）
+6. `secretary/experience/INDEX.md` を初期化（空のケース一覧）と `secretary/MEMORY.md`（覚えておくことの索引・見出しだけ）を作る
 7. `secretary/work-log.md`（作業の記録・表の見出しだけ）と `secretary/manuals/INDEX.md`（秘書室の手順書の一覧）と `.company/flow-map.md`（連携表・見出しだけ）を作る（書式は `references/organization.md` §1〜§3）
 8. `.company/CLAUDE.md` の「連携の状態」を Q3〜Q5 と判定結果で埋める（例: 「パソコン: Windows」「メール: taro@example.co.jp（種類: Microsoft 365／道: 公式の連携）… 未連携」）
 9. **ブラウザの拡張機能（Claude in Chrome）を受講者と一緒に入れる**（下の「Step 3-B」）。完了メッセージより前に必ず行う。飛ばさない
@@ -244,11 +245,12 @@ Q1〜Q3 は自由に答えてもらう質問なので**通常の会話で**聞�
 
 1. **入れる**: 受講者に Chrome で次のページを開いてもらい、「Chrome に追加」を押してもらう（公式の Chrome ウェブストア）
    - https://chromewebstore.google.com/detail/claude/fcoeoabgfenejglbffodgkkbkcdhcgfn
-   - Chrome が無い人は Microsoft Edge でも同じページから入れられる（公式）。どちらも無い人は下の「入れられないとき」へ
+   - Claude Code の公式説明（https://code.claude.com/docs/en/chrome ）では、Google Chrome と Microsoft Edge で動く。ただし Claude in Chrome の案内ページは Chrome だけを挙げているので、**Chrome があれば Chrome を使う**。Chrome が無い人は Edge で同じページを開いて入れる（Edge で入れるときの画面の流れは未確認）。どちらも無い人は下の「入れられないとき」へ
+   - この手順の途中で、Claude Code の画面に「Claude wants to use your browser」という案内が出たら、そこで「Install extension」を選んでもよい（公式。同じ会話のまま接続まで進む。見つからないときは Chrome を開き直す）
 2. **ログイン**: 拡張機能のアイコン（Claude）を押し、**Claude Code と同じ Claude のアカウント（会社で複数の組織に入っている人は同じ組織）**でログインしてもらう
 3. **つなぐ**: Claude Code で `/chrome` と入力してもらう。表示に「Status: Enabled」「Extension: Installed」と出ればつながっている（公式）。続けて同じ画面の **「Enabled by default」** を選んでもらう（次回から毎回つながる）
    - 初めてのときは、Chrome を一度閉じて開き直さないと見つからないことがある（公式）。「Not detected」なら Chrome を開き直して、もう一度 `/chrome` →「Reconnect extension」
-   - 今の会話でブラウザの道具が出てこないときは、しおり（`secretary/_resume.md`）に「作業: Claude in Chrome／中断: `/chrome` で Enabled by default を選んだ → 起動し直し待ち／戻ったら: ①確かめる（Step 3-B の4）→ ②記録（Step 3-B の5）→ ③このあとの完了メッセージ（連携のプラン・チャットの案内）を必ず出す」と書いてから、Claude Code を起動し直してもらう（「起動し直したら、最初に `/company` と入力してください」と添える）
+   - 今の会話でブラウザの道具が出てこないときは、しおり（`secretary/_resume.md`）に「作業: Claude in Chrome／中断: `/chrome` で Enabled by default を選んだ → 起動し直し待ち／戻ったら: ①確かめる（Step 3-B の4）→ ②記録（Step 3-B の5）→ ③このあとの完了メッセージ（連携のプラン・チャットの案内）を必ず出す」と書いてから、Claude Code を起動し直してもらう（「**今と同じフォルダ**（`pwd` の結果）で起動し直して、最初に `/company` と入力してください」と添える。別のフォルダで開くと、しおりが見つからない）
 4. **確かめる（見るだけ）**: 秘書が `tabs_context_mcp` を1回だけ呼び、今開いているタブの数と題名を1つ読めるか確かめる。**クリック・入力・ページの移動はしない。** 許可を求める画面が出たら、受講者に「許可」を押してもらう
 5. **記録**: `.company/CLAUDE.md` の「連携の状態」の「ブラウザ」の行を書く（例: 「ブラウザ: Claude in Chrome（Chrome）… ○」）
 
@@ -305,7 +307,7 @@ Q1〜Q3 は自由に答えてもらう質問なので**通常の会話で**聞�
 
 > 📧 **メール・予定表・OneDrive（Microsoft 365）⭐ いちばん簡単な道（5分）**
 >
-> Claude の WEB（claude.ai）かデスクトップアプリで「設定 → コネクター」→「Microsoft 365」を押して、会社のアカウントでログインするだけです。
+> Claude の WEB（claude.ai）かデスクトップアプリで「カスタマイズ（Customize）→ コネクタ（Connectors）」（直接開くなら https://claude.ai/customize/connectors ）→「Microsoft 365」を押して、会社のアカウントでログインするだけです。
 > ⚠️ 最初の1回だけ、**会社の Microsoft の管理者の許可**が要ります。管理者が別の方なら、お願いの文面を私が作ります。
 > 許可が今日出なくても大丈夫です。それまでは届いたメールを貼っていただければ文案を作りますし、予定表は別の道で先に読めることがあります（`references/connections.md` §2-A の「許可が当日までに出ないとき」）。
 > 「Microsoft をつなぎたい」と話しかけてください。
@@ -314,7 +316,7 @@ Q1〜Q3 は自由に答えてもらう質問なので**通常の会話で**聞�
 
 > 📧 **Gmail・Google カレンダー・Google ドライブ ⭐ いちばん簡単な道（5分）**
 >
-> Claude の WEB かデスクトップアプリで「設定 → コネクター」→ Gmail・Google カレンダー・Google ドライブをそれぞれ押して、Google にログインするだけです。
+> Claude の WEB かデスクトップアプリで「カスタマイズ（Customize）→ コネクタ（Connectors）」（直接開くなら https://claude.ai/customize/connectors ）→ Gmail・Google カレンダー・Google ドライブをそれぞれ押して、Google にログインするだけです。
 > パソコンで Outlook アプリを使っていても、この道でつながります。
 > 「Google をつなぎたい」と話しかけてください。
 
@@ -343,7 +345,7 @@ Q1〜Q3 は自由に答えてもらう質問なので**通常の会話で**聞�
 | 回答 | 案内（要点） |
 |---|---|
 | `teams` | Microsoft 365 の公式連携に入っています。読むこと（参加しているチャット・チャンネル）ができます。送るのは、会社の管理者が「書き込み」を有効にしている場合だけで、送る前に必ず確認が出ます |
-| `slack` | 「設定 → コネクター」→ Slack を押すだけです。投稿は、本文を確認していただいてから行います |
+| `slack` | Slack の公式の連携は、Claude の Team / Enterprise プランで、Slack の管理者が Claude のアプリを承認し、Claude 側のオーナーが有効にしているときだけ使えます（公式に書かれているのは検索まで・投稿は未確認）。それ以外の方は、届いた文を貼っていただければ返信の文案を作ります |
 | `chatwork` | Chatwork の「API トークン」を発行してつなぎます（会社のプランによっては管理者の許可が要ります） |
 | `lineWorks` / `googleChat` | 今はまだ直接つなげません。届いたメッセージを貼っていただければ、返信の文案をすぐ作ります |
 | `none` | 案内しない |
@@ -364,12 +366,12 @@ Q1〜Q3 は自由に答えてもらう質問なので**通常の会話で**聞�
 > ━━━━━━━━━━━━━━━━━━━━━━━
 >
 > アプリ・LP・システムなどのプロダクト開発は **obra/superpowers プラグイン** を使います。
-> 未インストールの場合、**ターミナルで**以下を実行してください（`--scope user` を必ず付ける）:
+> 未インストールの場合、**ターミナルで**次の2行を順に実行してください（公式の入れ方。1行目はすでに登録済みでも害はありません）:
 > ```bash
-> claude plugin marketplace add obra/superpowers --scope user
-> claude plugin install superpowers --scope user
+> claude plugin marketplace add anthropics/claude-plugins-official
+> claude plugin install superpowers@claude-plugins-official
 > ```
-> ※ `--scope user` が無いとインストールしたフォルダでしか使えません（別フォルダで消えます）
+> 入れたら Claude Code を起動し直してください（同じフォルダで）。何も付けなくても、どのフォルダでも使える形（ユーザー全体）で入ります
 >
 > ━━━━━━━━━━━━━━━━━━━━━━━
 > 🎬 最初に試すおすすめ
@@ -379,8 +381,6 @@ Q1〜Q3 は自由に答えてもらう質問なので**通常の会話で**聞�
 > 2. 「○○について壁打ちしたい」 → 相談する
 > 3. 「連携チェック」 → メール・カレンダー・フォルダ・チャットのつながり具合を確認
 > 4. 「○○のLP作って」 → ハーネス開発フロー始動（superpowers必須）
->
-> 💡 ブラウザで組織を可視化: `npx cc-company-dashboard`
 >
 > 何でもお気軽にお話しください！
 
@@ -393,7 +393,9 @@ Q1〜Q3 は自由に答えてもらう質問なので**通常の会話で**聞�
 
 ### 初回起動時の依存案内（初日 or 7日以上ぶりの起動時）
 
-秘書として運営モードに入ったとき、最後の `secretary/notes/` 更新日が当日でない & まだ依存案内をしていない場合は、以下を冒頭に1回だけ表示する：
+**起動時の順番は ①しおり（`_resume.md`。あれば再開の話だけをする）→ ②この依存案内（しおりが無いときだけ・1回）→ ③inbox。** しおりがあるときは、この依存案内も結びの「何かありますか？」も出さない（再開を先にする）。
+
+秘書として運営モードに入ったとき、しおりが無く、最後の `secretary/notes/` 更新日が当日でない（notes/ が空のときも含む） & まだ依存案内をしていない場合は、以下を冒頭に1回だけ表示する：
 
 ```
 おかえりなさい！ご相談どうぞ。
@@ -402,7 +404,7 @@ Q1〜Q3 は自由に答えてもらう質問なので**通常の会話で**聞�
 - 🌐 ブラウザ操作（Claude in Chrome）: 「連携の状態」のブラウザが ○ でなければ、オンボーディングの Step 3-B の続きから（`/chrome` で状態を確かめる）
 - 🔎 メール・カレンダー・フォルダ・チャットのつながり具合は「連携チェック」で確認（`.company/CLAUDE.md` の「連携の状態」に残りがあれば一言添える）
 - ⚠️ ハーネス開発: obra/superpowers プラグインが必要
-  未インストールなら（ターミナルで）: claude plugin install superpowers@superpowers-marketplace --scope user
+  未インストールなら（ターミナルで2行）: claude plugin marketplace add anthropics/claude-plugins-official → claude plugin install superpowers@claude-plugins-official
 
 何かありますか？
 ```
@@ -516,7 +518,7 @@ Step 7. 統合報告 + ケース記録（experience/case-NNN-...md）
 | 壁打ち・相談・ブレスト   | 対話で深掘りし、まとまったら `secretary/notes/` に保存 |
 | メモ・クイックキャプチャ | `secretary/inbox/` にタイムスタンプ付きで記録          |
 | 「今日やること」         | 今日のTODOファイルを表示                               |
-| 「ダッシュボード」       | テキストで概要を表示。ブラウザ版は `npx cc-company-dashboard` を案内 |
+| 「ダッシュボード」       | テキストで概要を表示（ブラウザ版のダッシュボードは案内しない） |
 | 雑談・挨拶               | 親しみやすく応答                                       |
 
 ### 部署への振り分け
@@ -574,7 +576,6 @@ Step 7. 統合報告 + ケース記録（experience/case-NNN-...md）
 
 何かありますか？
 
-💡 ブラウザで詳しく見るには: npx cc-company-dashboard（部署どうしの連携と今月の件数は、この文字版に出ます）
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ```
 
@@ -742,8 +743,10 @@ last_updated: YYYY-MM-DD
       ※ このフローは obra/superpowers プラグインを使います。
       未インストールの場合、最初にターミナルで以下を実行してください:
 
-      claude plugin marketplace add obra/superpowers --scope user
-      claude plugin install superpowers --scope user
+      claude plugin marketplace add anthropics/claude-plugins-official
+      claude plugin install superpowers@claude-plugins-official
+
+      入れたら Claude Code を同じフォルダで起動し直してください。
 
       インストール済みでしたら、そのまま進めましょう。
 ```
@@ -837,7 +840,7 @@ last_updated: YYYY-MM-DD
 
 **正本は `references/connections.md`（連携ガイド）。** ここには秘書が必ず守る要点だけを書く。
 
-1. **公式の連携（コネクター）を最優先。** Claude の WEB かデスクトップアプリで「設定 → コネクター」を押すだけ。WEB で繋いだものは、同じ Claude のアカウントでログインしている秘書に自動で出てくる（ツール名 `mcp__claude_ai_...`）。**APIキーでログインしていると出てこない**
+1. **公式の連携（コネクター）を最優先。** Claude の WEB かデスクトップアプリで「カスタマイズ（Customize）→ コネクタ（Connectors）」（直接開くなら https://claude.ai/customize/connectors ）を押すだけ。WEB で繋いだものは、同じ Claude のアカウントでログインしている秘書に自動で出てくる（ツール名 `mcp__claude_ai_...`）。**APIキーでログインしていると出てこない**
 2. **受講者に「Google か Microsoft か」を選ばせない。** メールアドレスから秘書が調べる（連携ガイド §1）
 3. 公式が無い人（レンタルサーバー・プロバイダ・Yahoo、iPhone のカレンダー、パソコンの Outlook の予定表、Chatwork）は、このスキルの `scripts/` の道具でつなぐ。**どれも読むだけ**（メールを消さない・既読にしない・予定を書き換えない）。送信・投稿は受講者が本文を見て「送って」と言ってから
 4. **パスワード・トークンを会話に貼らせない。** 入力は受講者本人が別のターミナルで行う
@@ -908,7 +911,7 @@ OAuth設定・依存インストール等で「Claude Code を再起動してく
 
 ### 追加の連携（任意）
 
-Notion・GitHub などは、まず「設定 → コネクター」に公式の連携があるか確かめる。無いものだけ `claude mcp add --scope user ...` で追加する。
+Notion・GitHub などは、まず「カスタマイズ（Customize）→ コネクタ（Connectors）」に公式の連携があるか確かめる。無いものだけ `claude mcp add --scope user ...` で追加する。
 
 ### 連携の使い分け
 
