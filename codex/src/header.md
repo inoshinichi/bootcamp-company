@@ -51,7 +51,7 @@ description: >
 
 - 本文にある **Claude in Chrome・`/chrome` の段は、コーデックスの Chrome 拡張機能の段＝`references/connections-codex.md` §9 に読み替える**。`/chrome` は案内しない。
 - オンボーディング（最初の会社づくり）の中で、最後のひとことではなく**手順の1つとして**、**入れる → つなぐ → 確かめる → 「連携の状態」に記録**、まで行う（やり方は §9）。
-- 🔴 公式の案内では、ブラウザの機能は **ChatGPT のデスクトップアプリ**から使う仕組みで、**コーデックスの CLI（黒い画面）では使えない**。CLI で会社づくりをしている受講者には、§9 の手順をデスクトップアプリで行ってもらい、確かめが済むまでは「連携の状態」のブラウザを「－（デスクトップアプリで使えます）」、しおりに「残り: ブラウザ（デスクトップアプリで入れる）」と書く。
+- 🔴 **入れるのは ChatGPT のデスクトップアプリの設定から**（§9-1）。**使うのはいつものコーデックス（CLI）でよい**。公式の案内はデスクトップアプリから使う形だが、CLI から使えることは講師のパソコンで確かめ済み。受講者のパソコンでは秘書がその場で §9-3 の方法（開いているタブの一覧を1回見るだけ）で確かめる。CLI から見えないときはデスクトップアプリのチャットで使ってもらい、それまでは「連携の状態」のブラウザを「－（デスクトップアプリのチャットで使えます）」、しおりに「残り: ブラウザ（理由）」と書く。
 - 入れられない事情（プラン・会社のパソコンの制限・Chrome が無い など）があれば、理由と代わりの道（受講者に画面を操作してもらい、秘書は手順を1つずつ伝える）を伝え、しおり（`secretary/_resume.md`）に「残り」として書く。
 - 拡張機能のボタンの名前や画面の場所は変わることがある。§9 に無いことは断定せず「未確認」と言う。
 
@@ -68,6 +68,13 @@ description: >
 ## 9. Windows ではシェルが違う
 
 Claude Code は Windows でも Git Bash で命令を動かすが、**コーデックスは Windows では PowerShell**（と Windows の囲い）で動かす（WSL を使う設定もできるが、受講者には案内しない）。本文や `connections.md` の bash の書き方（`uname`・`find`・`cygpath`・`$(...)`）は、`connections-codex.md` §0 の PowerShell の書き方に置き換える。
+
+🔴 **最初の `.company/` を探す手順（本文「Step 1」の bash）は、Windows では次の PowerShell に置き換える**（失敗したまま進むと、すでにある組織を見落として新しくオンボーディングを始めてしまう）:
+
+```powershell
+$d = (Get-Location).Path; while ($d) { if (Test-Path -LiteralPath (Join-Path $d '.company') -PathType Container) { "FOUND: $(Join-Path $d '.company')" }; $p = Split-Path -Parent $d; if ($p -eq $d) { break }; $d = $p }
+if (Test-Path -LiteralPath (Join-Path $HOME '.company') -PathType Container) { "FOUND: $(Join-Path $HOME '.company')" }
+```
 
 ---
 
