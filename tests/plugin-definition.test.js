@@ -551,4 +551,31 @@ describe('version strings agree (so claude plugin update delivers fixes)', () =>
     expect(readJson(resolve(ROOT, 'codex/.codex-plugin/plugin.json')).version).toBe(v);
     expect(readJson(resolve(ROOT, 'package.json')).version).toBe(v);
   });
+
+  it('version is above the first published 1.2.0 (a fixed version string blocks plugin update)', () => {
+    const v = readJson(resolve(PLUGIN_DIR, '.claude-plugin/plugin.json')).version.split('.').map(Number);
+    const base = [1, 2, 0];
+    const cmp = v[0] - base[0] || v[1] - base[1] || v[2] - base[2];
+    expect(cmp).toBeGreaterThan(0);
+  });
+});
+
+describe('README install steps for learners stay intact', () => {
+  const readme = () => readText(resolve(ROOT, 'README.md'));
+
+  it('install commands use --scope user and Git preparation is present', () => {
+    const r = readme();
+    expect(r).toContain('claude plugin marketplace add inoshinichi/bootcamp-company --scope user');
+    expect(r).toContain('claude plugin install company@bootcamp-company --scope user');
+    expect(r).toContain('git --version');
+    expect(r).toContain('xcode-select --install');
+    expect(r).toContain('winget install --id Git.Git');
+    expect(r).toContain('5問');
+  });
+
+  it('ZIP route says which folder to point at and to keep it', () => {
+    const r = readme();
+    expect(r).toContain('Download ZIP');
+    expect(r).toContain('中に `plugins` と `README.md` が見えるフォルダ');
+  });
 });

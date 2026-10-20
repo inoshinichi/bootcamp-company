@@ -64,7 +64,7 @@ Outlook が「受け取ったら、サーバーからメールを消す」設定
 
 あわせて、プラグインを入れるのに使う「Git」も入れておきます（README の同じ所に書いてあります）。
 
-- Windows: PowerShell で `winget install --id Git.Git -e --source winget`（入ったら PowerShell を開き直す）
+- Windows: PowerShell で `winget install --id Git.Git -e --source winget --accept-package-agreements --accept-source-agreements`（入ったら PowerShell を開き直す。質問が出たら `Y`、許可を求める画面が出たら「はい」。出ないこともあります）
 - Mac（全員）: ターミナルで `xcode-select --install`（10〜30分。⑧と同じものです。すでに入っていれば「already installed」と出ます）
 - `git --version` で番号が出れば準備できています
 

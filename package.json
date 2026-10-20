@@ -1,6 +1,6 @@
 {
   "name": "bootcamp-company",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "ブートキャンプ受講者向け 仮想組織プラグイン (cc-company fork)",
   "main": "index.js",
   "scripts": {

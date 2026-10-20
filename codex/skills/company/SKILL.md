@@ -170,7 +170,7 @@ Q1〜Q3 は自由に答えてもらう質問なので**通常の会話で**聞�
 > メールやカレンダーをどうつなぐのが一番楽か、こちらで調べます（パスワードは要りません）。
 
 回答を受けたら、秘書が**その場で** `references/connections.md` §1 の方法（`nslookup -type=mx <ドメイン>`）で種類を判定し、
-`m365` / `google` / `server`（レンタルサーバー・プロバイダ・Yahoo）/ `outlookPersonal`（個人の Outlook.com・Hotmail）/ `unknown` として記録する。
+`m365` / `google` / `server`（レンタルサーバー・プロバイダ・Yahoo・iCloud メール。iCloud メールは「メールのパスワード」の代わりに Apple の「App 用パスワード」を作ってもらう）/ `outlookPersonal`（個人の Outlook.com・Hotmail）/ `unknown` として記録する。
 判定結果は専門用語を使わずに伝える（例:「お調べしました。○○さんのメールは Microsoft 365 で動いています。いちばん簡単な道でつなげます」）。
 
 #### Q4: パソコン
@@ -221,7 +221,7 @@ Q1〜Q3 は自由に答えてもらう質問なので**通常の会話で**聞�
 
 **生成手順:**
 
-0. **同期フォルダの中に作らない。** `pwd` の結果に `OneDrive`・`iCloud`・`Mobile Documents`・`Dropbox`・`Google Drive`・`GoogleDrive`・`My Drive` が含まれていたら作らずに止め、「ここは自動で同期されるフォルダなので、ファイルが戻ったり壊れたりすることがあります。`~/my-company`（Windows は `$HOME\my-company`）を作って、そこで Claude Code を開き直してください」と案内する（Windows の「ドキュメント」「デスクトップ」は OneDrive に、Mac の「書類」「デスクトップ」は iCloud Drive に同期されていることがある）
+0. **同期フォルダの中に作らない。** `pwd` の結果に `OneDrive`・`iCloud`・`Mobile Documents`・`Dropbox`・`Google Drive`・`GoogleDrive`・`My Drive`・`マイドライブ` が含まれていたら、または `pwd` が**ホームそのもの**（`$HOME`）か、ホームの `Desktop`・`Documents`（デスクトップ・書類／ドキュメント）とその中なら、作らずに止め、「ここは自動で同期されるフォルダなので、ファイルが戻ったり壊れたりすることがあります。`~/my-company`（Windows は `$HOME\my-company`）を作って、そこで Claude Code を開き直してください」と案内する（Windows の「ドキュメント」「デスクトップ」は OneDrive に、Mac の「書類」「デスクトップ」は iCloud Drive に同期されていることがある）
 1. `.company/` ディレクトリを作成
 2. `references/claude-md-template.md` のテンプレートを使って `.company/CLAUDE.md` を生成
    - `{{BUSINESS_TYPE}}` ← Q1 の回答
@@ -245,12 +245,12 @@ Q1〜Q3 は自由に答えてもらう質問なので**通常の会話で**聞�
 
 1. **入れる**: 受講者に Chrome で次のページを開いてもらい、「Chrome に追加」を押してもらう（公式の Chrome ウェブストア）
    - https://chromewebstore.google.com/detail/claude/fcoeoabgfenejglbffodgkkbkcdhcgfn
-   - Claude Code の公式説明（https://code.claude.com/docs/en/chrome ）では、Google Chrome と Microsoft Edge で動く。ただし Claude in Chrome の案内ページは Chrome だけを挙げているので、**Chrome があれば Chrome を使う**。Chrome が無い人は Edge で同じページを開いて入れる（Edge で入れるときの画面の流れは未確認）。どちらも無い人は下の「入れられないとき」へ
+   - Claude Code の公式説明（https://code.claude.com/docs/en/chrome ）では、Google Chrome と Microsoft Edge で動く。ただし Claude in Chrome の案内ページは Chrome だけを挙げているので、**Chrome があれば Chrome を使う**。Chrome が無い人は、**ソフトを入れてよいパソコンなら先に Google Chrome を入れてもらう**（無料。公式ページ https://www.google.com/chrome/ から）。Edge を使うのは、会社のパソコンで Chrome を入れられないときだけ（Edge で同じページを開いて入れる。「他のストアからの拡張機能を許可」のような画面が出たら許可する、と言われているが未確認。Edge で入れるときの画面の流れも未確認）
    - この手順の途中で、Claude Code の画面に「Claude wants to use your browser」という案内が出たら、そこで「Install extension」を選んでもよい（公式。同じ会話のまま接続まで進む。見つからないときは Chrome を開き直す）
 2. **ログイン**: 拡張機能のアイコン（Claude）を押し、**Claude Code と同じ Claude のアカウント（会社で複数の組織に入っている人は同じ組織）**でログインしてもらう
 3. **つなぐ**: Claude Code で `/chrome` と入力してもらう。表示に「Status: Enabled」「Extension: Installed」と出ればつながっている（公式）。続けて同じ画面の **「Enabled by default」** を選んでもらう（次回から毎回つながる）
    - 初めてのときは、Chrome を一度閉じて開き直さないと見つからないことがある（公式）。「Not detected」なら Chrome を開き直して、もう一度 `/chrome` →「Reconnect extension」
-   - 今の会話でブラウザの道具が出てこないときは、しおり（`secretary/_resume.md`）に「作業: Claude in Chrome／中断: `/chrome` で Enabled by default を選んだ → 起動し直し待ち／戻ったら: ①確かめる（Step 3-B の4）→ ②記録（Step 3-B の5）→ ③このあとの完了メッセージ（連携のプラン・チャットの案内）を必ず出す」と書いてから、Claude Code を起動し直してもらう（「**今と同じフォルダ**（`pwd` の結果）で起動し直して、最初に `/company` と入力してください」と添える。別のフォルダで開くと、しおりが見つからない）
+   - 今の会話でブラウザの道具が出てこないときは、しおり（`secretary/_resume.md`）に「作業: Claude in Chrome／中断: `/chrome` で Enabled by default を選んだ → 起動し直し待ち／戻ったら: ①確かめる（Step 3-B の4）→ ②記録（Step 3-B の5）→ ③このあとの完了メッセージ（連携のプラン・チャットの案内）を必ず出す」と書いてから、Claude Code を起動し直してもらう（「**今と同じフォルダ**で起動し直して、最初に `/company` と入力してください」と添える。フォルダの場所は受講者に見せる形で書く＝Mac は `~/my-company` のような形、Windows は `C:\Users\…` の形（Git Bash の `pwd` が `/c/Users/…` を返したら `pwd -W` か `cygpath -w "$PWD"` で直す）。Windows には、PowerShell でそのフォルダへ移る1行（例: `Set-Location "$HOME\my-company"`）も添える。別のフォルダで開くと、しおりが見つからない）
 4. **確かめる（見るだけ）**: 秘書が `tabs_context_mcp` を1回だけ呼び、今開いているタブの数と題名を1つ読めるか確かめる。**クリック・入力・ページの移動はしない。** 許可を求める画面が出たら、受講者に「許可」を押してもらう
 5. **記録**: `.company/CLAUDE.md` の「連携の状態」の「ブラウザ」の行を書く（例: 「ブラウザ: Claude in Chrome（Chrome）… ○」）
 
@@ -260,7 +260,7 @@ Q1〜Q3 は自由に答えてもらう質問なので**通常の会話で**聞�
 |---|---|---|
 | APIキーでログインしている／Claude の有料プラン（Pro・Max・Team・Enterprise）でない | Claude in Chrome は Claude のアカウント（有料プラン）で `/login` したときだけ使えます（公式） | `/logout` → `/login` でアカウントを選び直す。それまでは、見てほしいページの文や画面の写しを貼っていただく |
 | 会社のパソコンで拡張機能を入れられない（管理者が止めている） | 会社の決まりで入れられないようです。情報システムの担当の方に「Claude（Anthropic 社）の Chrome 拡張機能を入れてよいか」聞いてみてください | 許可が出るまでは、ページの文や画面の写しを貼っていただく |
-| Chrome も Edge も無い | Google Chrome を入れると使えます（無料） | 入れるまでは、ページの文や画面の写しを貼っていただく |
+| Chrome が無い（Mac。Windows には Edge が入っている） | Google Chrome を入れると使えます（無料） | 入れるまでは、ページの文や画面の写しを貼っていただく |
 | Windows の WSL の中で Claude Code を使っている | WSL の中からは使えません（公式） | Windows のふつうのターミナルで Claude Code を起動する |
 
 - このとき `secretary/_resume.md` に「- 残り: ブラウザの拡張機能（Claude in Chrome）。理由: ○○。次にやること: ○○」と書き、「連携の状態」のブラウザの行は「… ×（理由: ○○）」にする
@@ -309,6 +309,7 @@ Q1〜Q3 は自由に答えてもらう質問なので**通常の会話で**聞�
 >
 > Claude の WEB（claude.ai）かデスクトップアプリで「カスタマイズ（Customize）→ コネクタ（Connectors）」（直接開くなら https://claude.ai/customize/connectors ）→「Microsoft 365」を押して、会社のアカウントでログインするだけです。
 > ⚠️ 最初の1回だけ、**会社の Microsoft の管理者の許可**が要ります。管理者が別の方なら、お願いの文面を私が作ります。
+> ⚠️ Claude を会社の **Team / Enterprise プラン**で使っているときは、先に **Claude の組織のオーナー**が管理画面（Organization settings → Connectors）で Microsoft 365 を有効にしないと、ボタンが出ません。ボタンが見当たらないときはこれです（頼む相手は Microsoft の管理者ではなく、Claude の組織のオーナーです。お願いの文面は私が作ります）。
 > 許可が今日出なくても大丈夫です。それまでは届いたメールを貼っていただければ文案を作りますし、予定表は別の道で先に読めることがあります（`references/connections.md` §2-A の「許可が当日までに出ないとき」）。
 > 「Microsoft をつなぎたい」と話しかけてください。
 
@@ -318,6 +319,7 @@ Q1〜Q3 は自由に答えてもらう質問なので**通常の会話で**聞�
 >
 > Claude の WEB かデスクトップアプリで「カスタマイズ（Customize）→ コネクタ（Connectors）」（直接開くなら https://claude.ai/customize/connectors ）→ Gmail・Google カレンダー・Google ドライブをそれぞれ押して、Google にログインするだけです。
 > パソコンで Outlook アプリを使っていても、この道でつながります。
+> ⚠️ Claude を会社の **Team / Enterprise プラン**で使っているときは、先に **Claude の組織のオーナー**が管理画面（Organization settings → Connectors）で有効にしないと、ボタンが出ません。ボタンが見当たらないときはこれです（お願いの文面は私が作ります）。
 > 「Google をつなぎたい」と話しかけてください。
 
 #### Q3 の判定が `server` の場合 → サーバーに取りに行く道
