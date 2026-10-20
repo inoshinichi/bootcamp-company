@@ -22,9 +22,9 @@
 - ChatGPT に毎回 1から指示するのに疲れている方
 - 業種は問いません（製造業、飲食、コンサル、士業、IT、EC、不動産、教育 など）
 
-## インストール（招待された方限定）
+## インストール
 
-このリポジトリは Private です。GitHub アカウントを Outside Collaborator として招待された方のみアクセス可能です。
+GitHub へのログインは要りません。下のコマンドだけで入れられます。
 
 ### 事前に決めること: 「自分の会社フォルダ」を1つ作る
 
@@ -59,6 +59,15 @@ claude plugin install company@bootcamp-company --scope user
 > 最初の `/company` のとき、秘書が「入れる → つなぐ → 確かめる」まで案内します。入れられない事情（プラン・会社のパソコンの制限）があれば、そのまま伝えれば代わりの道を案内します。
 
 **それ以降は秘書が全部案内します。**
+
+### すでに前の版を入れている方（更新）
+
+```bash
+claude plugin marketplace update bootcamp-company
+claude plugin update company@bootcamp-company
+```
+
+更新したら Claude Code を一度終了して起動し直し、`/company` と入力してください。
 
 > 🔴 **`--scope user` は必ず付けてください（超重要）**
 > プラグインには `user` / `project` / `local` の3つのスコープがあり、
