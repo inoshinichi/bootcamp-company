@@ -1,47 +1,14 @@
-# Upgrading from v1
+# Updating from a previous version
 
-Migration guide from v1 (with CEO department) to v2.
+If you already installed an earlier version (1.0.x / 1.1.x), run these two lines in your terminal (PowerShell on Windows):
 
-## Auto-Detection
-
-When you run `/company`, it detects the existence of `.company/ceo/` and suggests an upgrade.
-
-```
-> /company
-
-Secretary: I've detected an existing organization (v1). Would you like to upgrade to v2?
-
-      Changes:
-      - CEO department → Removed (secretary handles routing directly)
-      - Review department → Removed (secretary manages this)
-      - Active departments → Carried over as-is
-      - Empty departments → Deleted
-
-      Shall I proceed with the upgrade?
+```bash
+claude plugin marketplace update bootcamp-company
+claude plugin update company@bootcamp-company
 ```
 
-## What Changes
+Then quit Claude Code, start it again in your company folder, and type `/company`.
 
-| v1 | v2 |
-|----|-----|
-| CEO routes tasks | Secretary routes directly |
-| All departments created at setup | Start with secretary only |
-| Review department always present | Secretary handles reviews |
-| 4-question onboarding | Just 2 questions |
+Your existing `.company/` is kept. If it was created by an earlier version, the secretary adds the missing files (`secretary/work-log.md`, `.company/flow-map.md`, each department's `manuals/INDEX.md`) without overwriting anything, and appends the "absolute rules" section to the CLAUDE.md files.
 
-## Migration Process
-
-1. Existing owner info (business, mission, etc.) is carried over
-2. `ceo/` folder is deleted
-3. `reviews/` folder is deleted (if present)
-4. Empty departments with no real content are deleted
-5. `.company/CLAUDE.md` is regenerated in v2 format
-6. `secretary/CLAUDE.md` is updated to v2 version
-
-::: warning Note
-Active departments (those with actual files) are NOT deleted. You can upgrade safely.
-:::
-
-## If You Decline
-
-If you decline, you continue running on v1. The upgrade will be suggested again next time you run `/company`.
+Since 1.1.0, Google and Microsoft 365 are connected with Claude's official connectors. If you connected them the old way (Google Cloud / Azure), the secretary will tell you once how to reconnect.

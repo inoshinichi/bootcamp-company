@@ -25,7 +25,7 @@ Connect with your knowledge base and databases. The secretary can read and updat
 **Method 1: OAuth (Recommended)**
 
 ```bash
-claude mcp add-json notion '{"type":"http","url":"https://mcp.notion.com/mcp"}'
+claude mcp add-json --scope user notion '{"type":"http","url":"https://mcp.notion.com/mcp"}'
 ```
 
 After running, OAuth authentication opens in your browser. No manual API key setup needed.
@@ -33,7 +33,7 @@ After running, OAuth authentication opens in your browser. No manual API key set
 **Method 2: API Token**
 
 ```bash
-claude mcp add notion -e NOTION_TOKEN=ntn_YOUR_TOKEN -- npx -y @notionhq/notion-mcp-server
+claude mcp add --scope user notion -e NOTION_TOKEN=ntn_YOUR_TOKEN -- npx -y @notionhq/notion-mcp-server
 ```
 
 Create an API token at [Notion Integrations](https://www.notion.so/my-integrations).
@@ -52,7 +52,7 @@ Create an API token at [Notion Integrations](https://www.notion.so/my-integratio
 Schedule management. The secretary can register meetings and set reminders.
 
 ```bash
-claude mcp add google-calendar \
+claude mcp add --scope user google-calendar \
   -e GOOGLE_OAUTH_CREDENTIALS=/path/to/gcp-oauth.keys.json \
   -- npx -y @cocal/google-calendar-mcp
 ```
@@ -78,13 +78,13 @@ Repository management. Great synergy with the Engineering department.
 **Method 1: HTTP (Recommended)**
 
 ```bash
-claude mcp add-json github '{"type":"http","url":"https://api.githubcopilot.com/mcp","headers":{"Authorization":"Bearer YOUR_GITHUB_PAT"}}'
+claude mcp add-json --scope user github '{"type":"http","url":"https://api.githubcopilot.com/mcp","headers":{"Authorization":"Bearer YOUR_GITHUB_PAT"}}'
 ```
 
 **Method 2: Docker**
 
 ```bash
-claude mcp add github \
+claude mcp add --scope user github \
   -e GITHUB_PERSONAL_ACCESS_TOKEN=YOUR_PAT \
   -- docker run -i --rm -e GITHUB_PERSONAL_ACCESS_TOKEN ghcr.io/github/github-mcp-server
 ```
@@ -106,7 +106,7 @@ Team communication. Works well with Sales and PM departments.
 **Method 1: OAuth (Recommended)**
 
 ```bash
-claude mcp add-json slack '{"type":"http","url":"https://mcp.slack.com/mcp","oauth":{"clientId":"1601185624273.8899143856786","callbackPort":3118}}'
+claude mcp add-json --scope user slack '{"type":"http","url":"https://mcp.slack.com/mcp","oauth":{"clientId":"1601185624273.8899143856786","callbackPort":3118}}'
 ```
 
 After running, Slack OAuth authentication opens in your browser.
@@ -134,10 +134,14 @@ Your workspace admin must have approved MCP integration.
 ### Via Command (Recommended)
 
 Just run the `claude mcp add` commands above. Restart Claude Code after setup.
+`--scope user` makes the server available in every folder. Without it, the default scope is `local` (only the folder you were in).
 
-### Manual Configuration
+### Where the settings live
 
-**Global settings (all projects):** `~/.claude/settings.json`
+MCP servers are not stored in `~/.claude/settings.json`.
+
+- **User and local scope:** `~/.claude.json` (written by `claude mcp add`; no need to edit by hand)
+- **Project scope (`--scope project`, shared in the folder):** `.mcp.json`
 
 ```json
 {
@@ -150,11 +154,7 @@ Just run the `claude mcp add` commands above. Restart Claude Code after setup.
 }
 ```
 
-**Project settings (specific project only):** `.claude/settings.json`
-
-::: tip
-Put frequently used services (calendar, Notion) in global settings, and project-specific ones (GitHub) in project settings.
-:::
+(Example of `.mcp.json`.)
 
 ---
 

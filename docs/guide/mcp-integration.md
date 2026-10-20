@@ -24,7 +24,7 @@ cc-company 側に特別な設定は不要です。Claude Code に MCP サーバ�
 **方法1: OAuth（おすすめ）**
 
 ```bash
-claude mcp add-json notion '{"type":"http","url":"https://mcp.notion.com/mcp"}'
+claude mcp add-json --scope user notion '{"type":"http","url":"https://mcp.notion.com/mcp"}'
 ```
 
 実行後、ブラウザで OAuth 認証が開きます。API キーの手動設定は不要です。
@@ -32,7 +32,7 @@ claude mcp add-json notion '{"type":"http","url":"https://mcp.notion.com/mcp"}'
 **方法2: API トークン**
 
 ```bash
-claude mcp add notion -e NOTION_TOKEN=ntn_YOUR_TOKEN -- npx -y @notionhq/notion-mcp-server
+claude mcp add --scope user notion -e NOTION_TOKEN=ntn_YOUR_TOKEN -- npx -y @notionhq/notion-mcp-server
 ```
 
 [Notion Integrations](https://www.notion.so/my-integrations) で API トークンを作成してください。
@@ -51,7 +51,7 @@ claude mcp add notion -e NOTION_TOKEN=ntn_YOUR_TOKEN -- npx -y @notionhq/notion-
 スケジュール管理。秘書がミーティングの登録やリマインダーを設定できます。
 
 ```bash
-claude mcp add google-calendar \
+claude mcp add --scope user google-calendar \
   -e GOOGLE_OAUTH_CREDENTIALS=/path/to/gcp-oauth.keys.json \
   -- npx -y @cocal/google-calendar-mcp
 ```
@@ -77,13 +77,13 @@ claude mcp add google-calendar \
 **方法1: HTTP（おすすめ）**
 
 ```bash
-claude mcp add-json github '{"type":"http","url":"https://api.githubcopilot.com/mcp","headers":{"Authorization":"Bearer YOUR_GITHUB_PAT"}}'
+claude mcp add-json --scope user github '{"type":"http","url":"https://api.githubcopilot.com/mcp","headers":{"Authorization":"Bearer YOUR_GITHUB_PAT"}}'
 ```
 
 **方法2: Docker**
 
 ```bash
-claude mcp add github \
+claude mcp add --scope user github \
   -e GITHUB_PERSONAL_ACCESS_TOKEN=YOUR_PAT \
   -- docker run -i --rm -e GITHUB_PERSONAL_ACCESS_TOKEN ghcr.io/github/github-mcp-server
 ```
@@ -100,12 +100,14 @@ claude mcp add github \
 
 ### Slack（公式）
 
+> まずは Claude の「コネクター」（https://claude.ai/customize/connectors ）で Slack を探してください。使えないときだけ、下の方法を使います。
+
 チームコミュニケーション。営業部門やPM部門と連携して活用できます。
 
 **方法1: OAuth（おすすめ）**
 
 ```bash
-claude mcp add-json slack '{"type":"http","url":"https://mcp.slack.com/mcp","oauth":{"clientId":"1601185624273.8899143856786","callbackPort":3118}}'
+claude mcp add-json --scope user slack '{"type":"http","url":"https://mcp.slack.com/mcp","oauth":{"clientId":"1601185624273.8899143856786","callbackPort":3118}}'
 ```
 
 実行後、ブラウザで Slack の OAuth 認証が開きます。
@@ -134,9 +136,14 @@ claude plugin install slack
 
 上記の `claude mcp add` コマンドを実行するだけです。設定後、Claude Code を再起動してください。
 
-### 手動で設定ファイルを編集
+`--scope user` を付けると、どのフォルダで開いても使えます。付けないと、そのとき開いていたフォルダだけで使える設定（local）になり、会社フォルダ以外で開くと見えなくなります。
 
-**グローバル設定（全プロジェクト共通）:** `~/.claude/settings.json`
+### 設定ファイルの場所
+
+MCP サーバーの設定は `~/.claude/settings.json` には書きません。
+
+- **自分のパソコンのどのフォルダでも使う（`--scope user`）・そのフォルダだけで使う（local）:** `~/.claude.json`（`claude mcp add` が書き込みます。手で直す必要はありません）
+- **フォルダの中に置いて共有する（`--scope project`）:** そのフォルダの `.mcp.json`
 
 ```json
 {
@@ -149,11 +156,7 @@ claude plugin install slack
 }
 ```
 
-**プロジェクト設定（特定プロジェクトのみ）:** `.claude/settings.json`
-
-::: tip ポイント
-よく使うサービス（カレンダー、Notion）はグローバル設定に、プロジェクト固有のもの（GitHub）はプロジェクト設定に置くのがおすすめです。
-:::
+（上は `.mcp.json` の書き方の例です）
 
 ---
 
