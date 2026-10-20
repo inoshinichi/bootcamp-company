@@ -3,23 +3,31 @@
 ## プラグインの構成
 
 ```
-cc-company/
+bootcamp-company/
 ├── .claude-plugin/
 │   └── marketplace.json        ← マーケットプレース登録情報
+├── .agents/                    ← コーデックス版の登録情報
 ├── .github/
 │   └── workflows/
-│       └── deploy-docs.yml     ← ドキュメント自動デプロイ
+│       └── deploy-docs.yml     ← 説明サイトを作る（手で動かしたときだけ）
 ├── plugins/
 │   └── company/
 │       ├── .claude-plugin/
-│       │   └── plugin.json     ← プラグインメタデータ
+│       │   └── plugin.json     ← プラグインの情報
 │       └── skills/
 │           └── company/
 │               ├── SKILL.md    ← スキル定義（ワークフロー全体）
-│               └── references/
-│                   ├── departments.md         ← 部署テンプレート集
-│                   └── claude-md-template.md  ← CLAUDE.md 生成テンプレート
-├── docs/                       ← ドキュメントサイト（VitePress）
+│               ├── references/
+│               │   ├── connections.md         ← 連携の手順（正本）
+│               │   ├── connections-legacy.md  ← 古い連携の手順（予備）
+│               │   ├── organization.md        ← 組織運営の絶対ルール
+│               │   ├── departments.md         ← 部署テンプレート集
+│               │   └── claude-md-template.md  ← CLAUDE.md 生成テンプレート
+│               └── scripts/    ← 読むだけの道具（メール・カレンダーなど）
+├── codex/                      ← コーデックス版
+├── packages/                   ← ダッシュボードのコード（今は案内していない）
+├── tests/
+├── docs/                       ← 説明（VitePress）
 ├── package.json
 ├── README.md
 └── LICENSE
@@ -34,12 +42,16 @@ cc-company/
 ```
 .company/
 ├── CLAUDE.md              ← 組織ルール・オーナー情報
+├── flow-map.md            ← 連携表（部署どうしの受け渡し）
 └── secretary/
     ├── CLAUDE.md           ← 秘書の振る舞いルール
     ├── inbox/              ← クイックキャプチャ
     ├── todos/              ← 日次タスク管理
     │   └── YYYY-MM-DD.md
-    └── notes/              ← 壁打ち・相談メモ
+    ├── notes/              ← 壁打ち・相談メモ
+    ├── manuals/            ← 秘書室の手順書 + INDEX.md
+    ├── work-log.md         ← 作業の記録（1作業1行）
+    └── experience/         ← ケース記録 + INDEX.md
 ```
 
 ### 部署追加後の例
@@ -54,9 +66,13 @@ cc-company/
 │   └── notes/
 ├── research/              ← 追加された部署
 │   ├── CLAUDE.md
+│   ├── manuals/
+│   ├── inbox/
 │   └── topics/
 └── pm/                    ← 追加された部署
     ├── CLAUDE.md
+    ├── manuals/
+    ├── inbox/
     ├── projects/
     └── tickets/
 ```
@@ -85,7 +101,7 @@ cc-company/
 - **迷ったら inbox**: 分類に迷ったら `secretary/inbox/` に入れる
 
 
-## 2026-10 追加: 手順書・作業の記録・連携表
+## 手順書・作業の記録・連携表
 
 ```
 .company/

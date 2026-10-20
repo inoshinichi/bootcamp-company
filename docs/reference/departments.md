@@ -11,6 +11,9 @@
 ```
 secretary/
 ├── CLAUDE.md
+├── manuals/       ← 秘書室の手順書 + INDEX.md
+├── work-log.md    ← 作業の記録（1作業1行）
+├── experience/    ← ケース記録 + INDEX.md
 ├── inbox/          ← クイックキャプチャ（迷ったらここ）
 ├── todos/          ← 日次タスク管理（1日1ファイル）
 │   └── YYYY-MM-DD.md
@@ -32,6 +35,8 @@ secretary/
 ```
 pm/
 ├── CLAUDE.md
+├── manuals/       ← 手順書 + INDEX.md
+├── inbox/         ← 他部署からの受け取り箱
 ├── projects/       ← 1プロジェクト1ファイル
 └── tickets/        ← 1チケット1ファイル
 ```
@@ -49,6 +54,8 @@ pm/
 ```
 research/
 ├── CLAUDE.md
+├── manuals/       ← 手順書 + INDEX.md
+├── inbox/         ← 他部署からの受け取り箱
 └── topics/         ← 1トピック1ファイル
 ```
 
@@ -63,6 +70,8 @@ research/
 ```
 marketing/
 ├── CLAUDE.md
+├── manuals/       ← 手順書 + INDEX.md
+├── inbox/         ← 他部署からの受け取り箱
 ├── content-plan/   ← 1コンテンツ1ファイル
 └── campaigns/      ← 1キャンペーン1ファイル
 ```
@@ -80,6 +89,8 @@ marketing/
 ```
 engineering/
 ├── CLAUDE.md
+├── manuals/       ← 手順書 + INDEX.md
+├── inbox/         ← 他部署からの受け取り箱
 ├── docs/           ← 技術ドキュメント・設計書
 └── debug-log/      ← バグ調査ログ
 ```
@@ -95,6 +106,8 @@ engineering/
 ```
 finance/
 ├── CLAUDE.md
+├── manuals/       ← 手順書 + INDEX.md
+├── inbox/         ← 他部署からの受け取り箱
 ├── invoices/       ← 1請求1ファイル
 └── expenses/       ← 月別またはカテゴリ別
 ```
@@ -110,6 +123,8 @@ finance/
 ```
 sales/
 ├── CLAUDE.md
+├── manuals/       ← 手順書 + INDEX.md
+├── inbox/         ← 他部署からの受け取り箱
 ├── clients/        ← 1クライアント1ファイル
 └── proposals/      ← 1提案1ファイル
 ```
@@ -127,6 +142,8 @@ sales/
 ```
 creative/
 ├── CLAUDE.md
+├── manuals/       ← 手順書 + INDEX.md
+├── inbox/         ← 他部署からの受け取り箱
 ├── briefs/         ← 1案件1ファイル
 └── assets/         ← アセット一覧
 ```
@@ -142,6 +159,8 @@ creative/
 ```
 hr/
 ├── CLAUDE.md
+├── manuals/       ← 手順書 + INDEX.md
+├── inbox/         ← 他部署からの受け取り箱
 └── hiring/         ← 1ポジション1ファイル
 ```
 
