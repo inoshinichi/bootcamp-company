@@ -118,7 +118,7 @@ export default defineConfig({
                   link: "/en/guide/mcp-integration",
                 },
                 {
-                  text: "Upgrading from v1",
+                  text: "Updating from a previous version",
                   link: "/en/guide/migration",
                 },
               ],
