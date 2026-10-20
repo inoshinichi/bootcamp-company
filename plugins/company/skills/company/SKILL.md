@@ -111,7 +111,7 @@ Q1〜Q3 は自由に答えてもらう質問なので**通常の会話で**聞�
 > - 1) **Windows**
 > - 2) **Mac**
 
-回答を `windows` / `mac` として記録。秘書も `uname -s` で確かめ、**食い違ったら秘書の実測を正として一言添える**（例:「Mac とうかがいましたが、この画面は Windows のようです。Windows として案内しますね」）。
+回答を `windows` / `mac` として記録。`uname -s` が `Linux` を返したら WSL（Windows の中の Linux）か Linux なので、「Windows のふつうの PowerShell で Claude Code を起動し直してください（WSL の中ではブラウザの拡張機能やパソコンの Outlook が使えません）」と勧める。秘書も `uname -s` で確かめ、**食い違ったら秘書の実測を正として一言添える**（例:「Mac とうかがいましたが、この画面は Windows のようです。Windows として案内しますね」）。
 
 #### Q5: 社内コミュニケーションツール
 
@@ -158,7 +158,7 @@ Q1〜Q3 は自由に答えてもらう質問なので**通常の会話で**聞�
    - `{{BUSINESS_TYPE}}` ← Q1 の回答
    - `{{GOALS_AND_CHALLENGES}}` ← Q2 の回答
    - `{{CREATED_DATE}}` ← 今日の日付
-   - `{{COMPANY_ABS_PATH}}` ← `pwd` の実行結果（絶対パス）。**推測で書かず必ず `pwd` を実行して埋める**
+   - `{{COMPANY_ABS_PATH}}` ← `pwd` の実行結果（絶対パス）。**推測で書かず必ず `pwd` を実行して埋める**。Windows の Git Bash では `pwd` が `/c/Users/…` の形になるので、受講者に見せる場所は `pwd -W` か `cygpath -w "$PWD"` の `C:\Users\…` の形を使う（PowerShell で動いているときは `(Get-Location).Path`）
    - `{{ADDITIONAL_DEPARTMENTS}}` ← 空（初期は秘書室のみ）
    - `{{DEPARTMENT_TABLE_ROWS}}` ← 空（初期は秘書室のみ）
    - `{{PERSONALIZATION_NOTES}}` ← Q1+Q2 から生成したパーソナライズメモ
