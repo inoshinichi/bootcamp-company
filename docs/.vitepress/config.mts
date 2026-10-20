@@ -40,7 +40,7 @@ export default defineConfig({
                 { text: "研修の前の準備", link: "/guide/junbi" },
                 { text: "MCP連携ガイド", link: "/guide/mcp-integration" },
                 {
-                  text: "v1 からのアップグレード",
+                  text: "前の版からの更新",
                   link: "/guide/migration",
                 },
               ],
