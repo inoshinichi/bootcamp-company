@@ -1,7 +1,174 @@
 # bootcamp-company
 
-ブートキャンプ受講者向け 仮想組織プラグイン（Claude Code）。
-[Shin-sibainu/cc-company](https://github.com/Shin-sibainu/cc-company)（MIT License）を fork し、AI初学者の中小企業経営者でも 5分で「自分専用のAI組織」が立ち上がるよう調整。
+ブートキャンプ受講者向けの「AIの秘書」プラグイン（Claude Code 用）。
+[Shin-sibainu/cc-company](https://github.com/Shin-sibainu/cc-company)（MIT License）を元に、AI を使い始めたばかりの経営者でも 5分で「自分専用のAI組織」が立ち上がるよう調整したものです（元のプラグインとは別物です。入れるのはこのページのものです）。
+
+## 受講者の方へ：入れ方
+
+上から順に進めてください。GitHub へのログインは要りません。
+
+### 1. 画面を開く
+
+- **Mac**: 「ターミナル」を開きます（Command + スペース →「ターミナル」と入力 → Enter）
+- **Windows**: 「PowerShell」を開きます（スタートボタン →「PowerShell」と入力 →「Windows PowerShell」を開く）。行の頭が `PS C:\` で始まっていれば正しい画面です（「コマンドプロンプト」ではありません）
+
+### 2. Claude Code 本体を入れる（まだ入っていない方だけ）
+
+公式の入れ方です（公式の日本語ページ: https://code.claude.com/docs/ja/setup ）。管理者の権限は要りません。
+
+Mac:
+
+```bash
+curl -fsSL https://claude.ai/install.sh | bash
+```
+
+Windows（PowerShell）:
+
+```powershell
+irm https://claude.ai/install.ps1 | iex
+```
+
+入れたら、画面をいったん閉じて**新しく開き直し**、`claude --version` と打って番号が出れば成功です。
+はじめて `claude` と打つとログインの画面が出ます。**Claude のアカウント（Pro・Max・Team・Enterprise のプラン）**を選んでください（API・Console は選びません。無料プランでは Claude Code は使えません）。
+
+- 動く環境: macOS 13 以降／Windows 10（1809 以降）・Windows 11
+- Windows で要るもの: Claude Code 本体は上の PowerShell だけで入ります
+- **このプラグインを入れる（手順4）には「Git」が要ります**（Claude Code 本体には不要ですが、プラグインを GitHub から取ってくるときに使います）
+  - Windows: PowerShell で `winget install --id Git.Git -e --source winget` と打ち、入ったら PowerShell を閉じて開き直します
+  - Mac: ターミナルで `xcode-select --install` と打ち、画面の案内に従います（10〜30分。すでに入っていれば「already installed」と出ます）
+  - `git --version` と打って番号が出れば準備できています。会社のパソコンで入れられないときは、下の「うまくいかないとき」の「Git が入れられない」の行を見てください
+- 会社のパソコンで入れられないときは、情報システムの担当の方に相談してください（公式のトラブル対応: https://code.claude.com/docs/en/troubleshoot-install ）
+
+### 3. 会社フォルダを作る（最初の1回だけ）
+
+秘書の記憶（`.company/`）は **Claude Code を起動したフォルダの中**に作られます。置き場所を1つ決めて、毎回そこで起動します。
+
+Mac:
+
+```bash
+mkdir -p ~/my-company
+cd ~/my-company
+```
+
+Windows（PowerShell）:
+
+```powershell
+New-Item -ItemType Directory -Force -Path "$HOME\my-company" | Out-Null
+Set-Location "$HOME\my-company"
+```
+
+> 📁 デスクトップ・書類（ドキュメント）・OneDrive・Dropbox・Google ドライブの中には作らないでください（同期でファイルが戻ったり壊れたりします）。上の書き方なら大丈夫です。
+
+### 4. プラグインを入れる
+
+**書き方A（Claude Code の中で打つ）**: 会社フォルダで `claude` と打って起動し、次の2つを1つずつ打ちます。
+
+```
+/plugin marketplace add inoshinichi/bootcamp-company
+/plugin install company@bootcamp-company
+```
+
+**書き方B（ターミナル・PowerShell で打つ）**: Claude Code を起動する前に、次の2行を打ちます。Mac も Windows も同じです。
+
+```bash
+claude plugin marketplace add inoshinichi/bootcamp-company --scope user
+claude plugin install company@bootcamp-company --scope user
+```
+
+どちらか一方で大丈夫です。入れたら Claude Code を一度終了して（`/exit`）、もう一度 `claude` で起動します。
+
+> 💡 「company プラグイン」と表示されますが正常です（置き場の名前が `bootcamp-company`、中のプラグインの名前が `company`）。
+
+### 5. 最初の一言
+
+Claude Code の中で、次のように打ちます。
+
+```
+/company
+```
+
+秘書が5つの質問をして、秘書室を作ります。そのあとの連携（メール・カレンダーなど）も秘書が案内します。
+
+### 毎回の始め方
+
+Mac:
+
+```bash
+cd ~/my-company
+claude
+```
+
+Windows（PowerShell）:
+
+```powershell
+Set-Location "$HOME\my-company"
+claude
+```
+
+起動したら `/company` と打ちます。別のフォルダで起動すると、秘書が今までの記録を見つけられません。
+
+### 前の版を入れている方（更新）
+
+ターミナル・PowerShell で次の2行を打ち、Claude Code を一度終了して起動し直してから `/company` と打ちます。
+
+```bash
+claude plugin marketplace update bootcamp-company
+claude plugin update company@bootcamp-company
+```
+
+`/company` と打ったあと、「連携チェック」と話しかけてください（新しく増えたブラウザの拡張機能の案内が出ます）。
+
+### AI に入れてもらう方法
+
+Claude Code を起動して、次の文をそのまま貼り付けて送ってください。Claude Code がこのページを読んで、上の命令を打ちます（命令を打つ前に確認が出たら、内容を見て許可してください）。
+
+```
+https://github.com/inoshinichi/bootcamp-company のプラグインを入れてください。
+先に、このパソコンが Windows か Mac かを確かめ、Windows なら PowerShell、Mac ならターミナルの書き方で打ってください。
+git --version で Git が入っているかを確かめ、無ければ README の「2. Claude Code 本体を入れる」の Git の入れ方を私に案内してください。
+このページの README の「受講者の方へ：入れ方」の「4. プラグインを入れる」の書き方B
+（claude plugin marketplace add inoshinichi/bootcamp-company --scope user と
+claude plugin install company@bootcamp-company --scope user）を打ち、
+入ったら claude plugin list で company@bootcamp-company が入っていることを確かめてください。
+終わったら、README の「3. 会社フォルダを作る」の会社フォルダ（Mac は ~/my-company、Windows は $HOME\my-company）を作り、
+Claude Code を一度終了して、そのフォルダで起動し直してから /company と打つように私に伝えてください（毎回そのフォルダで起動することも伝えてください）。
+```
+
+### うまくいかないとき
+
+| 困っていること | よくある原因 | 直し方 |
+|---|---|---|
+| `claude` が見つからない・認識されない | 入れたあと画面を開き直していない | ターミナル・PowerShell を閉じて開き直し、`claude --version` を打つ |
+| ログインで「API」や「Console」を選んでしまった | ログインの選び間違い | Claude Code の中で `/logout` → `/login` で、Claude のアカウント（Pro などのプラン）を選び直す |
+| Windows で赤い文字が出て命令が通らない | 「コマンドプロンプト」で打っている | スタートから「PowerShell」を開き直す（行の頭が `PS C:\`） |
+| `Executable not found in $PATH: "git"`・`Fetching the marketplace from GitHub failed` と出る | Git が入っていない | 手順2の「Git」を入れ、画面を開き直してから手順4をやり直す |
+| 会社のパソコンで Git が入れられない | ソフトの導入が止められている | GitHub のこのページの「Code」→「Download ZIP」で取って解凍し、`claude plugin marketplace add "<解凍したフォルダ>" --scope user` → `claude plugin install company@bootcamp-company --scope user` と打つ（新しい版が出たら ZIP を取り直して同じことをします） |
+| `/company` が出てこない・消えた | プラグインがフォルダ限定で入っている | `claude plugin list` で `company@bootcamp-company` の「Scope」を見る → `user` でなければ書き方B で入れ直す |
+| 秘書が初対面のように振る舞う／今までの記録が無い | 前回と違うフォルダで起動している | 「毎回の始め方」のとおり会社フォルダで起動し直す。分からなければ `/company` と言えば、秘書が親フォルダとホームを探します |
+| Cursor を再起動したら上の2つが起きた | Cursor が別のフォルダで開き直した | Cursor で「フォルダを開く」→ 会社フォルダ（`my-company`）を選び直す。Cursor は使わなくても大丈夫です（ターミナルだけで使えます） |
+
+### 研修の前に配る「準備の紙」
+
+[docs/guide/junbi.md](docs/guide/junbi.md) — アカウント作成・連携ボタン・メールのパスワード確認・Outlook の設定1か所・見せてよいフォルダ・ブラウザの拡張機能・Mac の準備。
+
+### ブラウザの拡張機能（Claude in Chrome）
+
+秘書がブラウザを操作するには、Google Chrome に拡張機能「Claude」を入れ、秘書と同じ Claude のアカウントでログインします（Chrome ウェブストアの [Claude](https://chromewebstore.google.com/detail/claude/fcoeoabgfenejglbffodgkkbkcdhcgfn) で「Chrome に追加」）。
+Google Chrome がおすすめです。Chrome が入れられない会社のパソコンでは Microsoft Edge でも使えると Claude Code の公式文書にあります（Edge で動くかは未確認）。スマホは対象外です。Pro・Max・Team・Enterprise のプランで使えます。
+事前に入れておくと当日が早く進みます。入れていなくても、最初の `/company` のときに秘書が「入れる → つなぐ → 確かめる」まで案内します。
+
+### 秘書があとで案内すること
+
+| 案内のタイミング | 内容 |
+|---|---|
+| `/company` 起動直後 | 5問の質問（事業・目標・**メールアドレス**・Windows/Mac・チャット）。メールの種類は秘書がアドレスから自動で調べる |
+| 質問が終わったとき | ブラウザの拡張機能の案内と、環境に合った連携プラン（Microsoft 365・Google は**公式の連携ボタン**／レンタルサーバー・Yahoo は**サーバーに読みに行く道具**） |
+| 「アプリ作って」と言ったとき | obra/superpowers プラグインが必要なら、その場でインストールコマンドを案内 |
+| 「連携チェック」と言ったとき | メール・カレンダー・フォルダ・チャットのつながり具合を ○×の表で表示 |
+
+URL や手順を覚える必要はありません。秘書に話しかけて進めてください。
+
+---
 
 ## このプラグインで何ができる？
 
@@ -22,92 +189,6 @@
 - ChatGPT に毎回 1から指示するのに疲れている方
 - 業種は問いません（製造業、飲食、コンサル、士業、IT、EC、不動産、教育 など）
 
-## インストール
-
-GitHub へのログインは要りません。下のコマンドだけで入れられます。
-
-### 事前に決めること: 「自分の会社フォルダ」を1つ作る
-
-秘書の記憶（`.company/`）は **Claude Code を起動したフォルダの中**に作られます。
-毎回バラバラのフォルダで開くと秘書が組織を見つけられないので、**最初に置き場所を1つ決めてください**。
-
-```bash
-mkdir -p ~/my-company
-cd ~/my-company
-```
-
-> 📁 Cursor を使う場合も、**「フォルダを開く」でこの `my-company` を開いてから**ターミナルで `claude` と入力します。
-> （プラグインのリポジトリを開いて作業しないでください。フォルダが変わると秘書が見つかりません）
-
-### 受講者がやること: 3コマンドだけ
-
-**ターミナル**（Cursor の内蔵ターミナルで OK）で、以下の2行を実行します。
-
-```bash
-claude plugin marketplace add inoshinichi/bootcamp-company --scope user
-claude plugin install company@bootcamp-company --scope user
-```
-
-そのあと `claude` を起動して、
-
-```
-/company
-```
-
-> 🌐 **あわせて Chrome と「Claude in Chrome」を入れておいてください**（秘書と同じ Claude のアカウントでログイン）。
-> Google Chrome を入れる → Chrome ウェブストアの [Claude](https://chromewebstore.google.com/detail/claude/fcoeoabgfenejglbffodgkkbkcdhcgfn) で「Chrome に追加」→ 拡張機能にログイン。Pro・Max・Team・Enterprise のプランで使えます（Chrome 以外のブラウザ・スマホは対象外）。
-> 最初の `/company` のとき、秘書が「入れる → つなぐ → 確かめる」まで案内します。入れられない事情（プラン・会社のパソコンの制限）があれば、そのまま伝えれば代わりの道を案内します。
-
-**それ以降は秘書が全部案内します。**
-
-### すでに前の版を入れている方（更新）
-
-```bash
-claude plugin marketplace update bootcamp-company
-claude plugin update company@bootcamp-company
-```
-
-更新したら Claude Code を一度終了して起動し直し、`/company` と入力してください。
-
-> 🔴 **`--scope user` は必ず付けてください（超重要）**
-> プラグインには `user` / `project` / `local` の3つのスコープがあり、
-> `project` や `local` で入れると **インストールしたフォルダでしか使えません**。
-> 別のフォルダで Claude Code を開いた瞬間に `/company` が消えます。
-> `--scope user` なら、どのフォルダで開いても秘書が使えます。
->
-> 確認コマンド: `claude plugin list` → `company@bootcamp-company` が **`Scope: user`** になっていれば OK。
-
-> 💡 **「company プラグイン」と表示されますが正常です**
-> マーケットプレイス名が `bootcamp-company`、その中の本体プラグイン名が `company` という構造です。
-
-### ❓ うまくいかないとき
-
-| 症状 | 原因 | 直し方 |
-|---|---|---|
-| **`/company` が出てこない・消えた** | プラグインが `local` / `project` スコープで入っている（フォルダに紐づいている） | `claude plugin list` でスコープを確認 → `claude plugin install company@bootcamp-company --scope user` で入れ直す |
-| **秘書が初対面のように振る舞う／今までの記録が無い** | 前回と**違うフォルダ**で Claude Code を開いている（`.company/` は起動フォルダの中にある） | 前回のフォルダで開き直す。分からなければ `/company` と言えば、秘書が親フォルダとホームを探して見つけてくれます |
-| **Cursor を再起動したら上の2つが起きた** | Cursor が別のフォルダで開き直した | Cursor で「フォルダを開く」→ 自分の会社フォルダ（例 `~/my-company`）を選び直す |
-
-### 秘書が後で案内すること（受講者は事前に何も入れなくて OK）
-
-| 案内タイミング | 内容 |
-|---|---|
-| `/company` 起動直後 | 6問オンボーディング（事業・目標・**メールアドレス**・Windows/Mac・チャット・ダッシュボード）。メールの種類は秘書がアドレスから自動で調べる |
-| オンボーディング完了時 | 環境に応じた連携プラン（Microsoft 365・Google は**公式の連携ボタン**／レンタルサーバー・Yahoo は**サーバーに読みに行く道具**） |
-| 「アプリ作って」と言ったとき | obra/superpowers プラグインが必要なら、その場でインストールコマンドを案内 |
-| 「連携チェック」と言ったとき | メール・カレンダー・フォルダ・チャットのつながり具合を ○×の表で表示 |
-
-URL や手順を覚える必要はありません。秘書に話しかけて進めてください。
-
-### 研修の前に配る「準備の紙」
-
-[docs/guide/junbi.md](docs/guide/junbi.md) — アカウント作成・連携ボタン・メールのパスワード確認・Outlook の設定1か所・見せてよいフォルダ。
-
-### 連携の考え方（2026-10 改訂）
-
-- **公式の連携（Claude の「コネクター」）が正。** Claude の WEB・デスクトップアプリで一度ボタンを押せば、同じアカウントでログインした秘書から使える。Google Cloud や Azure の管理画面での作業は不要になった（バージョン 1.1.0）
-- 公式が無いメール・カレンダー（レンタルサーバー、Yahoo、iPhone、パソコンの Outlook の予定表）は、プラグインに入っている**読むだけの道具**でつなぐ。メールを消さない・既読にしない
-- 詳細は [plugins/company/skills/company/references/connections.md](plugins/company/skills/company/references/connections.md)。古い手順（Google Cloud・Azure の鍵づくり）は本線から外し、`connections-legacy.md` に**予備**として残してある（通常は使いません）
 
 ## 5分で立ち上がる初回セットアップ
 
@@ -123,23 +204,23 @@ URL や手順を覚える必要はありません。秘書に話しかけて進�
 
 あなた: 売上を伸ばしたいけど、営業が手薄。あと請求書まわりが煩雑
 
-秘書: メール・カレンダー・ストレージは Google ベースですか？
-      Microsoft ベースですか？
+秘書: お仕事で使っているメールアドレスを教えてください。
+      メールの種類（Microsoft 365・Google など）はこちらで調べます。
 
-あなた: Microsoft です
+あなた: taro@example.co.jp です
+
+秘書: 調べたところ、Microsoft 365 のメールでした。
+      お使いのパソコンは Windows ですか？ Mac ですか？
+
+あなた: Windows です
 
 秘書: 社内チャットは何を使っていますか？
 
 あなた: Teams です
 
-秘書: ブラウザで状況を確認できるダッシュボードがあります。
-      セットアップしますか？
-
-あなた: あとで
-
 秘書: 秘書室のセットアップが完了しました！
-      Microsoft 連携（Outlook + OneDrive + Teams）の手順を
-      ステップバイステップで案内しますね...
+      続けて、ブラウザの拡張機能と、Microsoft 365（Outlook・Teams・OneDrive）の
+      つなぎ方を順番に案内しますね...
 ```
 
 これで `.company/` フォルダが作られ、**あなただけの秘書** が立ち上がります。
@@ -147,7 +228,7 @@ URL や手順を覚える必要はありません。秘書に話しかけて進�
 ## 中核機能
 
 ### 7ステップ判断フロー
-秘書は依頼を受けたとき、過去経験の検索 → 意図理解 → インプット洗い出し → 自律 / 協議判断 → 実行 → ケース記録 の流れで処理します。
+秘書は依頼を受けたとき、過去経験の検索 → 意図理解 → インプット洗い出し → 自律 / 協議の判断 → （協議のときは）提案して承認をもらう → 実行 → ケース記録 の7つの流れで処理します。
 都度の判断が積み上がり、組織が成長します。
 
 ### inbox/ システム
@@ -197,25 +278,24 @@ URL や手順を覚える必要はありません。秘書に話しかけて進�
 | 2 | `superpowers:writing-plans` | 詳細な実装計画（plan.md）を生成 |
 | 3 | `superpowers:executing-plans` + `superpowers:test-driven-development` | 計画通りに TDD で実装 |
 | 4 | `superpowers:verification-before-completion` | 完了前に必ず検証コマンドを実行 |
-| 5 | Claude in Chrome（`/chrome` で接続） | 実機 UI テストで最終確認 |
-| 任意 | `superpowers:requesting-code-review` | 第三者視点でコードレビュー |
+| 5（任意） | `superpowers:requesting-code-review` | 第三者視点でコードレビュー |
+| 6 | Claude in Chrome（`/chrome` で接続） | 実機 UI テストで最終確認 |
 | 任意 | `superpowers:dispatching-parallel-agents` | 独立タスクを並列実行 |
 | バグ時 | `superpowers:systematic-debugging` | 体系的デバッグ |
 
 ユーザーは「○○を作って」と言うだけ。秘書が上記のスキルを順に呼び出して進めます。
 
-**注意**: superpowers プラグインを先にインストールしてください（上記のインストール手順 Step 1 参照）。
+**注意**: superpowers プラグインが必要です。入っていなければ、そのときに秘書が入れ方を案内します。
 
-## 6問オンボーディング（あなたの環境に合わせて連携を提案）
+## 5問の質問（あなたの環境に合わせて連携を提案）
 
-`/company` を初回起動すると、秘書が6つの質問でお話を聞きます：
+`/company` を初回起動すると、秘書が5つの質問でお話を聞きます：
 
 1. **事業・活動**（製造業？ コンサル？ EC？）
 2. **目標・困りごと**（売上？ 業務効率？ 人手不足？）
 3. **お仕事のメールアドレス** ← メールの種類（Microsoft 365／Google／レンタルサーバー等）は秘書がアドレスから自動で調べます
 4. **パソコン** ← Windows / Mac
 5. **社内チャット** ← Teams / Slack / Chatwork / その他 / 使わない
-6. ダッシュボード（任意）
 
 3〜5問目の回答と判定に応じて、**あなたの環境に合った連携プランを秘書が案内**します。
 
@@ -223,13 +303,19 @@ URL や手順を覚える必要はありません。秘書に話しかけて進�
 
 | あなたの環境 | つなぎ方 |
 |---|---|
-| Microsoft 365（Outlook・Teams・OneDrive） | Claude の「コネクター」で **Microsoft 365** を押すだけ（最初に1回、会社の全体管理者の許可が要ります）。Teams は読むだけ |
+| Microsoft 365（Outlook・Teams・OneDrive） | Claude の「コネクター」で **Microsoft 365** を押すだけ（最初に1回、会社の全体管理者の許可が要ります）。Teams は読むのが基本（会社の管理者が書き込みを有効にした場合だけ送れ、送る前に必ず確認が出ます） |
 | Google（Gmail・カレンダー・ドライブ） | Claude の「コネクター」で各サービスを押すだけ |
 | レンタルサーバー・プロバイダ・Yahoo のメール | プラグイン内蔵の**読むだけの道具**で、秘書がサーバーに読みに行きます（メールを消さない・既読にしない） |
 | iPhone のカレンダー／パソコンの Outlook の予定表／Mac のカレンダー | プラグイン内蔵の読むだけの道具でつなぎます |
 | フォルダ | パソコンに見えているフォルダ（OneDrive・Google ドライブ・Dropbox・社内の共有フォルダ）をそのまま秘書に見せます |
-| Slack／Chatwork | Slack は公式の連携、Chatwork は API トークン |
+| Slack／Chatwork | Slack は公式の連携（Claude の Team / Enterprise プランで、Slack の管理者が承認しているときだけ・公式に書かれているのは検索まで。それ以外の方は届いた文を貼っていただきます）、Chatwork は API トークン |
 | LINE WORKS／Google Chat | 今は直接つなげません（返信の文案づくりで使えます） |
+
+### 連携の考え方（2026-10 改訂）
+
+- **公式の連携（Claude の「コネクター」）が正。** Claude の WEB・デスクトップアプリで一度ボタンを押せば、同じアカウントでログインした秘書から使える。Google Cloud や Azure の管理画面での作業は不要になった（バージョン 1.1.0）
+- 公式が無いメール・カレンダー（レンタルサーバー、Yahoo、iPhone、パソコンの Outlook の予定表）は、プラグインに入っている**読むだけの道具**でつなぐ。メールを消さない・既読にしない
+- 詳細は [plugins/company/skills/company/references/connections.md](plugins/company/skills/company/references/connections.md)。古い手順（Google Cloud・Azure の鍵づくり）は本線から外し、`connections-legacy.md` に**予備**として残してある（通常は使いません）
 
 「**連携チェック**」と話しかけると、つながり具合を ○×の表で確認できます。
 詳しい手順は [plugins/company/skills/company/references/connections.md](plugins/company/skills/company/references/connections.md)。
@@ -240,24 +326,17 @@ URL や手順を覚える必要はありません。秘書に話しかけて進�
 
 最初のセットアップの手順の1つです：**入れる → つなぐ → 確かめる → 「連携の状態」に記録**。
 
-1. Google Chrome で Chrome ウェブストアの [Claude](https://chromewebstore.google.com/detail/claude/fcoeoabgfenejglbffodgkkbkcdhcgfn) を開き「Chrome に追加」
+1. Google Chrome（入れられない会社のパソコンでは Microsoft Edge。Edge で動くかは未確認です。うまくいかないときは秘書に伝えてください）で Chrome ウェブストアの [Claude](https://chromewebstore.google.com/detail/claude/fcoeoabgfenejglbffodgkkbkcdhcgfn) を開き「Chrome に追加」
 2. 拡張機能に、秘書と同じ Claude のアカウントでログイン
 3. Claude Code で **`/chrome`** と入力し、つながりを確かめる
 
 **あなたが普段使っている Chrome を、ログイン済みのまま**秘書が操作できます。自社の管理画面・SNS・仕入先サイトなど「ログインしていないと始まらない」作業がそのまま頼めます。
-入れられないとき（プランが対象外・会社のパソコンの制限・Chrome が無い）は、理由と代わりの道を秘書が伝え、`secretary/_resume.md` の「残り」に書きます。
+入れられないとき（プランが対象外・会社のパソコンの制限・ブラウザが無い）は、理由と代わりの道を秘書が伝え、`secretary/_resume.md` の「残り」に書きます。
 
 ## コーデックスで使う場合
 
 OpenAI の Codex CLI でも、**同じ秘書・同じ会社フォルダ**が使えます（呼び方は `$company`）。入れ方は [codex/README.md](codex/README.md) を見てください。
 
-## ブラウザでダッシュボード
-
-```bash
-npx cc-company-dashboard
-```
-
-部署別の TODO・Inbox・Activity・Graph をブラウザで一覧できます。
 
 ## ライセンス・クレジット
 

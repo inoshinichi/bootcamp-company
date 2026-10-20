@@ -12,7 +12,7 @@
 
 ### サーバーの登録（秘書が代行・必要なものだけ）
 
-`<HOME>` は `echo $HOME` の結果（`~` は使えない）。Windows は Git Bash で実行し、`npx` の前に `cmd /c` を付ける。
+`<HOME>` は `echo $HOME` の結果（`~` は使えない）。Windows は Git Bash で実行し、`npx` の前に `cmd /c` を付ける。Windows の `<HOME>` は PowerShell の `$HOME`（`C:\Users\…` の形）を使う（Git Bash の `/c/Users/…` の形では動かないことがある・実機では未確認）。
 
 ```bash
 claude mcp add --scope user gmail -- npx -y @gongrzhe/server-gmail-autoauth-mcp
@@ -173,16 +173,18 @@ EOL
 ### Step 4: Team ID を取得（人間操作）
 ワークスペースの URL から Team ID を確認、または「Settings & administration → Workspace settings → About Settings」で確認
 
-### Step 5: 環境変数を設定（**秘書が自動で代行可**）
+### Step 5: 環境変数を設定（**受講者が別のターミナルで行う**）
 
-ユーザーが Bot Token と Team ID を伝えてくれたら、秘書が以下を Bash で実行:
+🔴 Bot Token は会話に貼ってもらわない（連携ガイドの大原則4）。秘書は受講者に**別のターミナル**を開いてもらい、次をその人自身に打ってもらう（`<…>` の所は本人がそのターミナルで書き換える）。秘書はできたファイルを開かない:
 ```bash
 mkdir -p ~/.config/slack-mcp
 cat > ~/.config/slack-mcp/.env <<'EOL'
 SLACK_BOT_TOKEN=<xoxb-で始まるToken>
 SLACK_TEAM_ID=<Team ID>
 EOL
+chmod 600 ~/.config/slack-mcp/.env
 ```
+（Windows の PowerShell でのファイルの作り方は未確認。Windows の人は、まず公式の連携が使えないか確かめる）
 
 ### Step 6: Claude Code 再起動 → 利用開始
 

@@ -57,6 +57,10 @@ KNOWN_SERVERS = {
     "yahoo.co.jp": ("imap.mail.yahoo.co.jp", 993, "smtp.mail.yahoo.co.jp", 465),
     "ymail.ne.jp": ("imap.mail.yahoo.co.jp", 993, "smtp.mail.yahoo.co.jp", 465),
     "ocn.ne.jp": ("imap.ocn.ne.jp", 993, "smtp.ocn.ne.jp", 465),
+    # iCloud メール（Apple が案内している設定値。送信は 587＋STARTTLS。App 用パスワードが要る。この道具での実機の確認はまだ）
+    "icloud.com": ("imap.mail.me.com", 993, "smtp.mail.me.com", 587),
+    "me.com": ("imap.mail.me.com", 993, "smtp.mail.me.com", 587),
+    "mac.com": ("imap.mail.me.com", 993, "smtp.mail.me.com", 587),
 }
 
 # 個人の Outlook.com は 2024-09-16 から ID・パスワードでのログインを Microsoft が止めている（OAuth のみ）
@@ -136,8 +140,10 @@ def get_password(cfg):
 
 
 def write_config(cfg):
-    os.makedirs(CONFIG_DIR, exist_ok=True)
-    with open(CONFIG_PATH, "w", encoding="utf-8") as f:
+    os.makedirs(CONFIG_DIR, mode=0o700, exist_ok=True)
+    # 最初から本人だけが読める形（0600）で作る（作ってから絞ると、短い隙間ができる）
+    fd = os.open(CONFIG_PATH, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
+    with os.fdopen(fd, "w", encoding="utf-8") as f:
         json.dump(cfg, f, ensure_ascii=False, indent=2)
     try:
         os.chmod(CONFIG_PATH, 0o600)
@@ -263,7 +269,7 @@ def connect():
         box = ReadOnlyIMAP(cfg)
     except Exception as e:
         out({"ok": False, "error": "connect_failed", "detail": str(e),
-             "hint": "サーバーにつながりません。インターネット接続か、受信サーバー名を確かめてください。"}, 1)
+             "hint": "サーバーにつながりません。インターネット接続か、受信サーバー名を確かめてください。会社のネットワークでメールの通り道（993・465・587 番）が止められていることもあります。その場合は情報システムの担当の方に聞いてください。"}, 1)
     try:
         box.login(get_password(cfg))
     except imaplib.IMAP4.error as e:

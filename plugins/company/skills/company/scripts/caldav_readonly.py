@@ -550,8 +550,10 @@ def cmd_setup(args):
         sys.exit(1)
     cfg["home_url"] = home
     _secret.save(KEYCHAIN_SERVICE, user, password, cfg)
-    os.makedirs(CONFIG_DIR, exist_ok=True)
-    with open(CONFIG_PATH, "w", encoding="utf-8") as f:
+    os.makedirs(CONFIG_DIR, mode=0o700, exist_ok=True)
+    # 最初から本人だけが読める形（0600）で作る
+    fd = os.open(CONFIG_PATH, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
+    with os.fdopen(fd, "w", encoding="utf-8") as f:
         json.dump(cfg, f, ensure_ascii=False, indent=2)
     try:
         os.chmod(CONFIG_PATH, 0o600)

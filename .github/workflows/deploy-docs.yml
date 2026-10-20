@@ -1,8 +1,9 @@
 name: Deploy Docs
 
+# 説明サイトは今は公開していない（2026-10-20）。手で動かしたときだけ、main から作る。
+# GitHub Pages の有効化はしていない。受講者への案内は GitHub のファイル表示で行う。
 on:
-  push:
-    branches: [master]
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -15,6 +16,7 @@ concurrency:
 
 jobs:
   build:
+    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
