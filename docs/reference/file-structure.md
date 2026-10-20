@@ -83,3 +83,18 @@ cc-company/
 - **日付チェック**: ファイル操作前に必ず今日の日付を確認
 - **上書き禁止**: 既存ファイルは追記のみ
 - **迷ったら inbox**: 分類に迷ったら `secretary/inbox/` に入れる
+
+
+## 2026-10 追加: 手順書・作業の記録・連携表
+
+```
+.company/
+├── flow-map.md            ← 連携表（部署どうしの受け渡し）
+├── secretary/
+│   ├── work-log.md        ← 作業の記録（1作業1行）
+│   └── manuals/           ← 秘書室の手順書 + INDEX.md
+└── <部署>/
+    └── manuals/           ← その部署の手順書 + INDEX.md
+```
+
+詳細はプラグイン内の `references/organization.md`（組織運営の絶対ルール）。

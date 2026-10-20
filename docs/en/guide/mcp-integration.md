@@ -1,5 +1,8 @@
 # MCP Integration Guide
 
+> **Updated 2026-10**: Mail, calendar, files and Slack should first be connected through Claude's official connectors (claude.ai → Connectors). Mail on rental servers, iPhone calendars, etc. use the read-only tools bundled in the plugin (`references/connections.md`). The methods below are only for services not covered by official connectors.
+
+
 cc-company works with MCP (Model Context Protocol) servers. Setting up MCP servers allows the secretary to directly operate external services.
 
 ## How It Works
@@ -42,7 +45,9 @@ Create an API token at [Notion Integrations](https://www.notion.so/my-integratio
 
 ---
 
-### Google Calendar
+### Google Calendar (fallback)
+
+> Normally not needed: connect Google Calendar with the one-click Claude connector instead. This is a fallback only for when the connector cannot be used (it needs a Google Cloud key and is hard for beginners).
 
 Schedule management. The secretary can register meetings and set reminders.
 

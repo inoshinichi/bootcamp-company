@@ -22,9 +22,9 @@
 - ChatGPT に毎回 1から指示するのに疲れている方
 - 業種は問いません（製造業、飲食、コンサル、士業、IT、EC、不動産、教育 など）
 
-## インストール（招待された方限定）
+## インストール
 
-このリポジトリは Private です。GitHub アカウントを Outside Collaborator として招待された方のみアクセス可能です。
+GitHub へのログインは要りません。下のコマンドだけで入れられます。
 
 ### 事前に決めること: 「自分の会社フォルダ」を1つ作る
 
@@ -54,7 +54,20 @@ claude plugin install company@bootcamp-company --scope user
 /company
 ```
 
+> 🌐 **あわせて Chrome と「Claude in Chrome」を入れておいてください**（秘書と同じ Claude のアカウントでログイン）。
+> Google Chrome を入れる → Chrome ウェブストアの [Claude](https://chromewebstore.google.com/detail/claude/fcoeoabgfenejglbffodgkkbkcdhcgfn) で「Chrome に追加」→ 拡張機能にログイン。Pro・Max・Team・Enterprise のプランで使えます（Chrome 以外のブラウザ・スマホは対象外）。
+> 最初の `/company` のとき、秘書が「入れる → つなぐ → 確かめる」まで案内します。入れられない事情（プラン・会社のパソコンの制限）があれば、そのまま伝えれば代わりの道を案内します。
+
 **それ以降は秘書が全部案内します。**
+
+### すでに前の版を入れている方（更新）
+
+```bash
+claude plugin marketplace update bootcamp-company
+claude plugin update company@bootcamp-company
+```
+
+更新したら Claude Code を一度終了して起動し直し、`/company` と入力してください。
 
 > 🔴 **`--scope user` は必ず付けてください（超重要）**
 > プラグインには `user` / `project` / `local` の3つのスコープがあり、
@@ -79,12 +92,22 @@ claude plugin install company@bootcamp-company --scope user
 
 | 案内タイミング | 内容 |
 |---|---|
-| `/company` 起動直後 | 5問オンボーディング（事業・目標・基盤・チャット・ダッシュボード） |
-| オンボーディング完了時 | 環境に応じた連携プラン（Google / Microsoft / Slack） |
+| `/company` 起動直後 | 6問オンボーディング（事業・目標・**メールアドレス**・Windows/Mac・チャット・ダッシュボード）。メールの種類は秘書がアドレスから自動で調べる |
+| オンボーディング完了時 | 環境に応じた連携プラン（Microsoft 365・Google は**公式の連携ボタン**／レンタルサーバー・Yahoo は**サーバーに読みに行く道具**） |
 | 「アプリ作って」と言ったとき | obra/superpowers プラグインが必要なら、その場でインストールコマンドを案内 |
-| 「Gmail 連携セットアップして」等で | OAuth 設定をステップバイステップで伴走 |
+| 「連携チェック」と言ったとき | メール・カレンダー・フォルダ・チャットのつながり具合を ○×の表で表示 |
 
 URL や手順を覚える必要はありません。秘書に話しかけて進めてください。
+
+### 研修の前に配る「準備の紙」
+
+[docs/guide/junbi.md](docs/guide/junbi.md) — アカウント作成・連携ボタン・メールのパスワード確認・Outlook の設定1か所・見せてよいフォルダ。
+
+### 連携の考え方（2026-10 改訂）
+
+- **公式の連携（Claude の「コネクター」）が正。** Claude の WEB・デスクトップアプリで一度ボタンを押せば、同じアカウントでログインした秘書から使える。Google Cloud や Azure の管理画面での作業は不要になった（バージョン 1.1.0）
+- 公式が無いメール・カレンダー（レンタルサーバー、Yahoo、iPhone、パソコンの Outlook の予定表）は、プラグインに入っている**読むだけの道具**でつなぐ。メールを消さない・既読にしない
+- 詳細は [plugins/company/skills/company/references/connections.md](plugins/company/skills/company/references/connections.md)。古い手順（Google Cloud・Azure の鍵づくり）は本線から外し、`connections-legacy.md` に**予備**として残してある（通常は使いません）
 
 ## 5分で立ち上がる初回セットアップ
 
@@ -133,9 +156,21 @@ URL や手順を覚える必要はありません。秘書に話しかけて進�
 ### 経験ファイル蓄積（自律成長の核）
 ケース完了時に `secretary/experience/case-NNN-...md` を残します。同種ケースが3件以上溜まると、`patterns/<種別>.md` に統合知見が生成され、次回からの判断基準になります。
 
+### 🔴 組織が本当に連携して動くための絶対ルール（2026-10）
+
+部署を作っただけでは、組織は動きません。動くのは「書いてある手順」と「書いてある受け渡し」だけです。だから秘書は次を必ず守ります。
+
+1. **同じ作業が2回目に来たら、必ず手順書にしようと提案する**（作業はすべて `secretary/work-log.md` に記録）
+2. **手順書は必ずどこかの部署に置く。** 合う部署が無ければ「営業部を作って、この手順書をそこに置きます」と部署づくりとセットで提案。空っぽの部署は作らない
+3. **手順書には「どの部署から受け取り、どの部署へ渡すか」を書き、連携表（`.company/flow-map.md`）に1行足す。** 秘書は連携表のとおりに部署をつなぐ
+
+報告は「営業部が見積書を作り、経理部が請求書の下書きを用意しました」のように動いた部署の名前で。
+「**組織の健康診断**」と話しかけると、動いていない部署・途切れた連携・手順書になっていない繰り返しを見つけて直し方を提案します（アフターフォローにも使えます）。
+詳細: [plugins/company/skills/company/references/organization.md](plugins/company/skills/company/references/organization.md)
+
 ### 部署とエージェントの自然な追加
-- 同領域のタスクが2回以上 → 部署作成を提案
-- 同部署の同種専門作業が3回以上 → 専門エージェント作成を提案
+- 同じ作業が2回目 → 手順書にして部署に置く（合う部署が無ければ部署づくりとセットで提案）
+- 同じ手順書が3回以上使われ、判断が多い → その部署の専門エージェント作成を提案
 
 最初は秘書ひとりからスタートし、使い込むほど組織が成長します。
 
@@ -171,99 +206,50 @@ URL や手順を覚える必要はありません。秘書に話しかけて進�
 
 **注意**: superpowers プラグインを先にインストールしてください（上記のインストール手順 Step 1 参照）。
 
-## 5問オンボーディング（あなたの環境に合わせて連携を提案）
+## 6問オンボーディング（あなたの環境に合わせて連携を提案）
 
-`/company` を初回起動すると、秘書が5つの質問でお話を聞きます：
+`/company` を初回起動すると、秘書が6つの質問でお話を聞きます：
 
 1. **事業・活動**（製造業？ コンサル？ EC？）
 2. **目標・困りごと**（売上？ 業務効率？ 人手不足？）
-3. **メール・カレンダー・ストレージの基盤** ← Google / Microsoft / 両方 / 使わない
-4. **社内チャット** ← Teams / Google Chat / Slack / Chatwork / 使わない
-5. ダッシュボード（任意）
+3. **お仕事のメールアドレス** ← メールの種類（Microsoft 365／Google／レンタルサーバー等）は秘書がアドレスから自動で調べます
+4. **パソコン** ← Windows / Mac
+5. **社内チャット** ← Teams / Slack / Chatwork / その他 / 使わない
+6. ダッシュボード（任意）
 
-3問目と4問目の回答に応じて、**あなたの環境に合った連携プランを秘書が動的に提案**します。
+3〜5問目の回答と判定に応じて、**あなたの環境に合った連携プランを秘書が案内**します。
 
-## 同梱 MCP サーバー（環境に応じて使い分け）
+## 連携（メール・カレンダー・フォルダ・チャット）
 
-プラグインインストール時にすべての MCP が利用可能な状態になり、OAuth 設定が完了したものから順に動き始めます。
+| あなたの環境 | つなぎ方 |
+|---|---|
+| Microsoft 365（Outlook・Teams・OneDrive） | Claude の「コネクター」で **Microsoft 365** を押すだけ（最初に1回、会社の全体管理者の許可が要ります）。Teams は読むだけ |
+| Google（Gmail・カレンダー・ドライブ） | Claude の「コネクター」で各サービスを押すだけ |
+| レンタルサーバー・プロバイダ・Yahoo のメール | プラグイン内蔵の**読むだけの道具**で、秘書がサーバーに読みに行きます（メールを消さない・既読にしない） |
+| iPhone のカレンダー／パソコンの Outlook の予定表／Mac のカレンダー | プラグイン内蔵の読むだけの道具でつなぎます |
+| フォルダ | パソコンに見えているフォルダ（OneDrive・Google ドライブ・Dropbox・社内の共有フォルダ）をそのまま秘書に見せます |
+| Slack／Chatwork | Slack は公式の連携、Chatwork は API トークン |
+| LINE WORKS／Google Chat | 今は直接つなげません（返信の文案づくりで使えます） |
 
-### ブラウザ操作は MCP ではなく Claude in Chrome
+「**連携チェック**」と話しかけると、つながり具合を ○×の表で確認できます。
+詳しい手順は [plugins/company/skills/company/references/connections.md](plugins/company/skills/company/references/connections.md)。
 
-ブラウザを触る作業は **Claude in Chrome（Chrome拡張）** で行います。Playwright MCP は同梱していません。
+### ブラウザ操作は Claude in Chrome（拡張機能）
 
-Claude Code で **`/chrome`** と入力し、案内どおり拡張をインストール＋ペアリングするだけ（2分・OAuth不要）。
+ブラウザを触る作業は **Claude in Chrome（Chrome 拡張）** で行います。Playwright MCP は入れていません。
 
-**あなたが普段使っている Chrome を、ログイン済みのまま**秘書が操作できます。
-自社の管理画面・SNS・仕入先サイトなど「ログインしていないと始まらない」作業がそのまま頼めます。
-（Playwright は自動化専用の別ブラウザを立ち上げるためログインが共有されず、経営者の実務では使いものにならない場面が多いので外しました）
+最初のセットアップの手順の1つです：**入れる → つなぐ → 確かめる → 「連携の状態」に記録**。
 
-### Google ベース利用者向け
+1. Google Chrome で Chrome ウェブストアの [Claude](https://chromewebstore.google.com/detail/claude/fcoeoabgfenejglbffodgkkbkcdhcgfn) を開き「Chrome に追加」
+2. 拡張機能に、秘書と同じ Claude のアカウントでログイン
+3. Claude Code で **`/chrome`** と入力し、つながりを確かめる
 
-| MCP | 用途 | OAuth設定 |
-|---|---|---|
-| **Gmail** | メール送受信・検索・下書き | Google Cloud Console |
-| **Google Calendar** | 予定確認・追加・調整 | 同じ Google Cloud プロジェクト |
-| **Google Drive** | ファイル検索・読込・保存 | 同じ Google Cloud プロジェクト |
+**あなたが普段使っている Chrome を、ログイン済みのまま**秘書が操作できます。自社の管理画面・SNS・仕入先サイトなど「ログインしていないと始まらない」作業がそのまま頼めます。
+入れられないとき（プランが対象外・会社のパソコンの制限・Chrome が無い）は、理由と代わりの道を秘書が伝え、`secretary/_resume.md` の「残り」に書きます。
 
-→ **3つ合わせて 1つの OAuth クライアント** で済みます（10分）
+## コーデックスで使う場合
 
-### Microsoft ベース利用者向け
-
-| MCP | 用途 | OAuth設定 |
-|---|---|---|
-| **ms-365**（統合） | Outlook メール / Outlook Calendar / OneDrive / Teams | Azure AD で1回アプリ登録 |
-
-→ **メール+カレンダー+ストレージ+チャット 全部** を1つの MCP でカバー（10分）
-
-### 社内チャット連携
-
-| MCP | 用途 | OAuth設定 |
-|---|---|---|
-| **Slack** | Slack ワークスペースへの投稿・読込 | Slack Bot Token（5分） |
-
-Teams 利用者は ms-365 MCP に含まれます。
-Google Chat / Chatwork は専用 MCP が限定的なため、必要に応じて API キー経由で個別案内します。
-
-## OAuth セットアップ手順（ステップバイステップ・秘書が伴走）
-
-`/company` 起動後に「Google 連携セットアップして」「Microsoft 連携セットアップして」「Slack 連携セットアップして」と話しかけると、秘書がステップバイステップで案内します。**人間操作が必要な部分は明示し、Claude が自動でできる部分（コマンド実行・ファイル配置）は秘書が代行します。**
-
-### Google 連携（Gmail + Calendar + Drive）の流れ
-
-1. Google Cloud Console でプロジェクト作成（人間操作）
-2. Gmail API / Calendar API / Drive API を有効化（人間操作）
-3. OAuth 同意画面を設定（公開ステータスは「テスト」のままで OK）（人間操作）
-4. 🟥 **OAuth 同意画面の「テストユーザー」に自分の Gmail アドレスを追加**（人間操作・**ここを飛ばすと必ず `access_denied` で失敗。最頻出のつまずき**）
-5. クライアントID（**デスクトップアプリ**）を作成して鍵ファイルをダウンロード（人間操作）
-6. **配置 → 秘書が自動代行**（鍵ファイルを `~/.gmail-mcp/gcp-oauth.keys.json` に1つ置くだけ。Calendar/Drive も同じ鍵を共用するのでコピー不要）
-7. Claude Code 再起動（人間操作）
-8. 初回 MCP 利用時にブラウザで Google ログイン（**テストユーザーに追加したのと同じアカウントで**）（人間操作）
-
-> 💡 困ったら「Google 連携できたか確認して」「動かない」と秘書に話しかけてください。秘書が鍵の配置を確認し、実際に1回試してエラーから原因（テストユーザー漏れ等）を特定して直し方を案内します。
-
-### Microsoft 連携（Outlook + Calendar + OneDrive + Teams）の流れ
-
-1. Azure Portal → アプリの登録（人間操作）
-2. Mail/Calendars/Files/Chat の API 権限を追加（人間操作）
-3. パブリッククライアントフローを許可（人間操作）
-4. クライアント ID をコピー（人間操作）
-5. **環境変数設定 → 秘書が自動代行**（Bashで .env 作成）
-6. Claude Code 再起動 → 初回 OAuth 認証（ブラウザでログイン）
-
-### Slack 連携の流れ
-
-1. Slack App を作成（人間操作）
-2. Bot Token Scopes 追加 → ワークスペースインストール（人間操作）
-3. Bot Token (`xoxb-...`) と Team ID をコピー（人間操作）
-4. **環境変数設定 → 秘書が自動代行**（Bashで .env 作成）
-5. Claude Code 再起動 → 利用開始
-
-### 追加 MCP（任意）
-
-「Notion使いたい」「Chatwork連携したい」と話しかけると、秘書が手順を案内します。
-Notion / GitHub などが追加可能です。
-
-MCP がなくても、`.company/` 内のファイル管理だけで完全に動作します。
+OpenAI の Codex CLI でも、**同じ秘書・同じ会社フォルダ**が使えます（呼び方は `$company`）。入れ方は [codex/README.md](codex/README.md) を見てください。
 
 ## ブラウザでダッシュボード
 

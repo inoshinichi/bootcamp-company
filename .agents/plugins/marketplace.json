@@ -1,0 +1,20 @@
+{
+  "name": "bootcamp-company",
+  "interface": {
+    "displayName": "ブートキャンプ 仮想組織"
+  },
+  "plugins": [
+    {
+      "name": "company",
+      "source": {
+        "source": "local",
+        "path": "./codex"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Productivity"
+    }
+  ]
+}

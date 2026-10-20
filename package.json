@@ -4,7 +4,7 @@
   "description": "ブートキャンプ受講者向け 仮想組織プラグイン (cc-company fork)",
   "main": "index.js",
   "scripts": {
-    "test": "vitest run",
+    "test": "vitest run && python3 -m unittest discover -s tests/python",
     "test:watch": "vitest",
     "docs:dev": "vitepress dev docs",
     "docs:build": "vitepress build docs",

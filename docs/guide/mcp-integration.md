@@ -1,5 +1,7 @@
 # MCP連携ガイド
 
+> **2026-10 改訂**: メール・カレンダー・ファイル・Slack は、まず Claude の公式の連携（claude.ai の「コネクター」）でつなぎます。レンタルサーバーのメールや iPhone のカレンダーなどは、プラグイン内蔵の読むだけの道具を使います。受講者は準備の紙（[研修の前の準備](./junbi)）を、秘書はプラグイン内の `references/connections.md` を正としてください。このページの下の方法は、公式の連携に無いサービスを追加するときの参考です。
+
 cc-company は MCP（Model Context Protocol）サーバーと連携できます。MCP サーバーを設定すると、秘書が外部サービスを直接操作できるようになります。
 
 ## 仕組み
@@ -42,7 +44,9 @@ claude mcp add notion -e NOTION_TOKEN=ntn_YOUR_TOKEN -- npx -y @notionhq/notion-
 
 ---
 
-### Google Calendar
+### Google Calendar（予備）
+
+> ⚠️ **通常は使いません。** Google カレンダーは Claude の「コネクター」のボタンでつなぎます（[準備の紙](./junbi)）。下は、コネクターが使えない特別な事情があるときの**予備の手順**です（Google Cloud での鍵づくりが必要で、初心者には難しいです）。
 
 スケジュール管理。秘書がミーティングの登録やリマインダーを設定できます。
 

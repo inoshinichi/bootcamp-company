@@ -3,6 +3,9 @@ name: company
 description: >
   秘書から始める仮想組織スキル。経営者が AI に仕事を任せていく仕組みをつくる。
   3ステップで即運用開始。部署とエージェントは必要に応じて自然に増える。
+  「連携チェック」「メールをつなぎたい」「Microsoft をつなぎたい」「Google をつなぎたい」「カレンダーをつなぎたい」
+  「Outlook」「Gmail」「Chatwork」「つながらない」など、メール・カレンダー・フォルダ・チャットの連携の話でも使う。
+  「組織の健康診断」「手順書にして」「部署を作って」「部署が連携していない」など組織の話でも使う。
 trigger: /company
 ---
 
@@ -16,6 +19,8 @@ trigger: /company
 - `/company` を実行したとき
 - 「秘書」「TODO」「管理」「壁打ち」「相談」と言われたとき
 - 「○○の戦略を考えて」「市場調査して」「○○について整理して」など、組織的な動きが必要な依頼
+- 「連携チェック」「メール（カレンダー・フォルダ・チャット）をつなぎたい」「つながらない」など連携の話 → `references/connections.md`
+- 「組織の健康診断」「組織を見直して」「部署が連携していない」「手順書にして」など組織の話 → `references/organization.md`
 
 ---
 
@@ -58,11 +63,14 @@ d="$PWD"; while [ "$d" != "/" ]; do [ -d "$d/.company" ] && echo "FOUND: $d/.com
 > Cursor を開き直すと別フォルダで起動していることがあり、そこには組織が無い。
 > **毎回同じフォルダで開く**のが正解で、そのために完了メッセージで絶対パスを必ず伝える（Step 3 参照）。
 
-### Step 2: オンボーディング（5問）
+### Step 2: オンボーディング（6問）
 
-`AskUserQuestion` で対話的にヒアリングする。秘書の口調（丁寧だが親しみやすい）で話す。
+Q1〜Q3 は自由に答えてもらう質問なので**通常の会話で**聞き、Q4〜Q6 は `AskUserQuestion` で聞く。秘書の口調（丁寧だが親しみやすい）で話す。
 ユーザーの言語を自動検出し、同じ言語で応答する。
-**Q3 と Q4 の回答は `.company/CLAUDE.md` に記録し、完了メッセージや今後の連携提案で活用する。**
+**Q3〜Q5 の回答と判定結果は `.company/CLAUDE.md` の「連携の状態」に記録し、完了メッセージや今後の連携提案で活用する。**
+
+🔴 **「Google か Microsoft か」を受講者に選ばせない。** 受講者の自己申告はよく外れる（画面が Outlook でも中身は Google、など）。
+秘書がメールアドレスから自分で調べる。詳細は `references/connections.md`（連携ガイド・正本）。
 
 #### Q1: 事業・活動
 
@@ -78,31 +86,38 @@ d="$PWD"; while [ "$d" != "/" ]; do [ -d "$d/.company" ] && echo "FOUND: $d/.com
 >
 > 例: 「売上を伸ばしたい」「人が足りない」「資料作成が大変」「経理が回らない」
 
-#### Q3: メール・カレンダー・ストレージの基盤
+#### Q3: お仕事のメールアドレス（通常の会話で聞く）
 
-> 普段お使いのメール・カレンダー・ファイル保管場所を教えてください。
-> 連携できる機能が変わります。
+> お仕事でお使いのメールアドレスを教えてください。
+> メールやカレンダーをどうつなぐのが一番楽か、こちらで調べます（パスワードは要りません）。
+
+回答を受けたら、秘書が**その場で** `references/connections.md` §1 の方法（`nslookup -type=mx <ドメイン>`）で種類を判定し、
+`m365` / `google` / `server`（レンタルサーバー・プロバイダ・Yahoo）/ `outlookPersonal`（個人の Outlook.com・Hotmail）/ `unknown` として記録する。
+判定結果は専門用語を使わずに伝える（例:「お調べしました。○○さんのメールは Microsoft 365 で動いています。いちばん簡単な道でつなげます」）。
+
+#### Q4: パソコン
+
+> お使いのパソコンは Windows と Mac のどちらですか？
 >
-> - 1) **Google ベース**（Gmail / Google Calendar / Google Drive）
-> - 2) **Microsoft ベース**（Outlook / Outlook Calendar / OneDrive）
-> - 3) **両方使っている（ハイブリッド）**
-> - 4) **特に使っていない / あとで決める**
+> - 1) **Windows**
+> - 2) **Mac**
 
-回答を `googleBased` / `microsoftBased` / `hybrid` / `none` として記録。
+回答を `windows` / `mac` として記録。秘書も `uname -s` で確かめ、**食い違ったら秘書の実測を正として一言添える**（例:「Mac とうかがいましたが、この画面は Windows のようです。Windows として案内しますね」）。
 
-#### Q4: 社内コミュニケーションツール
+#### Q5: 社内コミュニケーションツール
 
 > 社内のチャット・コミュニケーションは何を使っていますか？
 >
 > - 1) **Microsoft Teams**
-> - 2) **Google Chat**
-> - 3) **Slack**
-> - 4) **Chatwork**
-> - 5) **特に使っていない / メールベース**
+> - 2) **Slack**
+> - 3) **Chatwork**
+> - 4) **特に使っていない / メールだけ**
+>
+> （LINE WORKS・Google Chat などは「その他」から）
 
-回答を `teams` / `googleChat` / `slack` / `chatwork` / `none` として記録。
+回答を `teams` / `slack` / `chatwork` / `lineWorks` / `googleChat` / `other`（それ以外のチャット）/ `none` として記録。
 
-#### Q5: ダッシュボード（任意）
+#### Q6: ダッシュボード（任意）
 
 > ブラウザで組織の状況を確認できるダッシュボードがあります。
 > セットアップしますか？
@@ -128,8 +143,11 @@ d="$PWD"; while [ "$d" != "/" ]; do [ -d "$d/.company" ] && echo "FOUND: $d/.com
     ├── todos/
     │   └── YYYY-MM-DD.md  ← 今日のTODO
     ├── notes/             ← 壁打ち・意思決定ログ
+    ├── manuals/           ← 秘書室の手順書（繰り返しの仕事の手順）
+    ├── work-log.md        ← 作業の記録（1作業1行・2回目を見つけるため）
     └── experience/        ← ケース記録（自律成長の核）
         └── INDEX.md
+（.company/flow-map.md ← 連携表：部署どうしの受け渡しの一覧）
 ```
 
 **生成手順:**
@@ -143,12 +161,41 @@ d="$PWD"; while [ "$d" != "/" ]; do [ -d "$d/.company" ] && echo "FOUND: $d/.com
    - `{{ADDITIONAL_DEPARTMENTS}}` ← 空（初期は秘書室のみ）
    - `{{DEPARTMENT_TABLE_ROWS}}` ← 空（初期は秘書室のみ）
    - `{{PERSONALIZATION_NOTES}}` ← Q1+Q2 から生成したパーソナライズメモ
-3. `secretary/` とサブフォルダ（`inbox/`, `todos/`, `notes/`, `experience/`）を作成
+3. `secretary/` とサブフォルダ（`inbox/`, `todos/`, `notes/`, `experience/`, `manuals/`）を作成
 4. `references/departments.md` の「secretary/CLAUDE.md」テンプレートから `secretary/CLAUDE.md` を生成
 5. 今日の日付で `secretary/todos/YYYY-MM-DD.md` を作成
 6. `secretary/experience/INDEX.md` を初期化（空のケース一覧）
+7. `secretary/work-log.md`（作業の記録・表の見出しだけ）と `secretary/manuals/INDEX.md`（秘書室の手順書の一覧）と `.company/flow-map.md`（連携表・見出しだけ）を作る（書式は `references/organization.md` §1〜§3）
+8. `.company/CLAUDE.md` の「連携の状態」を Q3〜Q5 と判定結果で埋める（例: 「パソコン: Windows」「メール: taro@example.co.jp（種類: Microsoft 365／道: 公式の連携）… 未連携」）
+9. **ブラウザの拡張機能（Claude in Chrome）を受講者と一緒に入れる**（下の「Step 3-B」）。完了メッセージより前に必ず行う。飛ばさない
 
-**完了メッセージ（Q3/Q4 の回答に応じて動的に構成）:**
+### Step 3-B: ブラウザの拡張機能（Claude in Chrome）を入れる（オンボーディングの手順の1つ）
+
+秘書が受講者の普段の Chrome（ログイン済みのまま）を使えるようにする段。**最後のひとことで済ませず、ここで「入れる → つなぐ → 確かめる → 記録」まで終わらせる。** 詳しい決まりは `references/connections.md` §9。
+
+1. **入れる**: 受講者に Chrome で次のページを開いてもらい、「Chrome に追加」を押してもらう（公式の Chrome ウェブストア）
+   - https://chromewebstore.google.com/detail/claude/fcoeoabgfenejglbffodgkkbkcdhcgfn
+   - Chrome が無い人は Microsoft Edge でも同じページから入れられる（公式）。どちらも無い人は下の「入れられないとき」へ
+2. **ログイン**: 拡張機能のアイコン（Claude）を押し、**Claude Code と同じ Claude のアカウント（会社で複数の組織に入っている人は同じ組織）**でログインしてもらう
+3. **つなぐ**: Claude Code で `/chrome` と入力してもらう。表示に「Status: Enabled」「Extension: Installed」と出ればつながっている（公式）。続けて同じ画面の **「Enabled by default」** を選んでもらう（次回から毎回つながる）
+   - 初めてのときは、Chrome を一度閉じて開き直さないと見つからないことがある（公式）。「Not detected」なら Chrome を開き直して、もう一度 `/chrome` →「Reconnect extension」
+   - 今の会話でブラウザの道具が出てこないときは、しおり（`secretary/_resume.md`）に「作業: Claude in Chrome／中断: `/chrome` で Enabled by default を選んだ → 起動し直し待ち／戻ったら: 確かめる（Step 3-B の4）」と書いてから、Claude Code を起動し直してもらう（「起動し直したら、最初に `/company` と入力してください」と添える）
+4. **確かめる（見るだけ）**: 秘書が `tabs_context_mcp` を1回だけ呼び、今開いているタブの数と題名を1つ読めるか確かめる。**クリック・入力・ページの移動はしない。** 許可を求める画面が出たら、受講者に「許可」を押してもらう
+5. **記録**: `.company/CLAUDE.md` の「連携の状態」の「ブラウザ」の行を書く（例: 「ブラウザ: Claude in Chrome（Chrome）… ○」）
+
+**入れられないとき**（理由を短く伝え、代わりの道を言い、しおりに「残り」と書く。無理に進めない）:
+
+| 事情 | 伝えること（要点） | 代わりの道 |
+|---|---|---|
+| APIキーでログインしている／Claude の有料プラン（Pro・Max・Team・Enterprise）でない | Claude in Chrome は Claude のアカウント（有料プラン）で `/login` したときだけ使えます（公式） | `/logout` → `/login` でアカウントを選び直す。それまでは、見てほしいページの文や画面の写しを貼っていただく |
+| 会社のパソコンで拡張機能を入れられない（管理者が止めている） | 会社の決まりで入れられないようです。情報システムの担当の方に「Claude（Anthropic 社）の Chrome 拡張機能を入れてよいか」聞いてみてください | 許可が出るまでは、ページの文や画面の写しを貼っていただく |
+| Chrome も Edge も無い | Google Chrome を入れると使えます（無料） | 入れるまでは、ページの文や画面の写しを貼っていただく |
+| Windows の WSL の中で Claude Code を使っている | WSL の中からは使えません（公式） | Windows のふつうのターミナルで Claude Code を起動する |
+
+- このとき `secretary/_resume.md` に「- 残り: ブラウザの拡張機能（Claude in Chrome）。理由: ○○。次にやること: ○○」と書き、「連携の状態」のブラウザの行は「… ×（理由: ○○）」にする
+- 次の起動時（しおりチェック）で、事情が変わったか一言たずねる。○になったらしおりから消す
+
+**完了メッセージ（Q3〜Q5 の回答と判定に応じて動的に構成）:**
 
 固定部分:
 
@@ -176,66 +223,69 @@ d="$PWD"; while [ "$d" != "/" ]; do [ -d "$d/.company" ] && echo "FOUND: $d/.com
 > 🔗 あなたの環境向けの連携プラン
 > ━━━━━━━━━━━━━━━━━━━━━━━
 >
-> 🌐 **ブラウザ操作（Claude in Chrome）⚠️ 拡張機能の接続が必要（2分）**
+> 🌐 **ブラウザ操作（Claude in Chrome）**: Step 3-B の結果を書く
+> - ○ のとき: 「さきほど Chrome の拡張機能をつなぎました。**あなたが普段使っている Chrome（ログイン済みのまま）**を私が使えます」
+> - × のとき: 「Chrome の拡張機能は【理由】のため、まだつながっていません。しおりに残したので、次回つづきから一緒にやります」
 >
-> Claude Code で `/chrome` と入力すると、Chrome拡張のインストールと接続を案内してくれます。
-> 接続すると、**あなたが普段使っている Chrome（ログイン済みのまま）**を秘書が操作できます。
->
-> 接続後にできること:
+> できること:
 > - 「このサイト調べて」「競合のLPを見て要点まとめて」
 > - 「管理画面にログインして今月の数字を取ってきて」（ログインはあなたの手で・以降は秘書が操作）
 > - 「作ったアプリを実際に触って動作確認して」
 
-#### Q3 が `googleBased` または `hybrid` の場合 → Google系3点を案内
+#### Q3 の判定が `m365` の場合 → Microsoft 365 の公式連携
 
-> 📧 **Gmail / Google Calendar / Google Drive 連携 ⚠️ OAuth設定が必要（10分）**
+> 📧 **メール・予定表・OneDrive（Microsoft 365）⭐ いちばん簡単な道（5分）**
 >
-> Google Cloud Console で1つの OAuth クライアントを作れば、3つすべてが使えます。
-> 「Google 連携セットアップして」と話しかけると、手順をステップバイステップで案内します。
+> Claude の WEB（claude.ai）かデスクトップアプリで「設定 → コネクター」→「Microsoft 365」を押して、会社のアカウントでログインするだけです。
+> ⚠️ 最初の1回だけ、**会社の Microsoft の管理者の許可**が要ります。管理者が別の方なら、お願いの文面を私が作ります。
+> 「Microsoft をつなぎたい」と話しかけてください。
+
+#### Q3 の判定が `google` の場合 → Google の公式連携
+
+> 📧 **Gmail・Google カレンダー・Google ドライブ ⭐ いちばん簡単な道（5分）**
 >
-> セットアップ後にできること:
-> - 「メール送って」「未読メール教えて」 → Gmail
-> - 「来週の予定確認して」「○月○日に会議入れて」 → Google Calendar
-> - 「Drive のあの資料見せて」「議事録を Drive に保存して」 → Google Drive
+> Claude の WEB かデスクトップアプリで「設定 → コネクター」→ Gmail・Google カレンダー・Google ドライブをそれぞれ押して、Google にログインするだけです。
+> パソコンで Outlook アプリを使っていても、この道でつながります。
+> 「Google をつなぎたい」と話しかけてください。
 
-#### Q3 が `microsoftBased` または `hybrid` の場合 → Microsoft系を案内
+#### Q3 の判定が `server` の場合 → サーバーに取りに行く道
 
-> 📧 **Outlook / Outlook Calendar / OneDrive 連携 ⚠️ OAuth設定が必要（10分）**
+> 📧 **メール（レンタルサーバー・プロバイダ・Yahoo）⚠️ 準備が少し要ります（15分）**
 >
-> Azure AD で1つのアプリ登録をすれば、Outlook（メール+カレンダー）と OneDrive がすべて使えます。
-> 「Microsoft 連携セットアップして」と話しかけると、手順をステップバイステップで案内します。
+> メールが置いてあるサーバーに、私が直接読みに行く形でつなぎます。Outlook は今までどおり使えて、私がメールを消すことはありません。
+> 準備していただくもの: **メールのパスワード**（分からなければ一緒に探します）
+> 「メールをつなぎたい」と話しかけてください。カレンダーは、今お使いのもの（Outlook の予定表・iPhone など）のままつなぎます。
+
+#### Q3 の判定が `outlookPersonal` の場合
+
+> 📧 **個人の Outlook.com・Hotmail**
 >
-> セットアップ後にできること:
-> - 「Outlook でメール送って」「受信箱まとめて」 → Outlook メール
-> - 「予定表に追加して」「空き時間ある？」 → Outlook Calendar
-> - 「OneDrive にあるファイルで…」 → OneDrive
+> Microsoft の決まりで、個人の Outlook.com は今のところ私と直接つなげません。
+> 届いたメールを貼っていただければ返信の文案を作れますし、ほかの方法もご相談できます。「メールどうしよう」と話しかけてください。
+
+#### Q3 の判定が `unknown` の場合
+
+> 📧 **メール**: アドレスだけでは判断がつかなかったので、パソコンの Outlook の「アカウント設定」の画面を一緒に見せてください。
+> 「メールをつなぎたい」と話しかけてください。
+
+#### Q5 の回答に応じたチャットの案内
+
+| 回答 | 案内（要点） |
+|---|---|
+| `teams` | Microsoft 365 の公式連携に入っています。読むこと（参加しているチャット・チャンネル）ができます。送るのは、会社の管理者が「書き込み」を有効にしている場合だけで、送る前に必ず確認が出ます |
+| `slack` | 「設定 → コネクター」→ Slack を押すだけです。投稿は、本文を確認していただいてから行います |
+| `chatwork` | Chatwork の「API トークン」を発行してつなぎます（会社のプランによっては管理者の許可が要ります） |
+| `lineWorks` / `googleChat` | 今はまだ直接つなげません。届いたメッセージを貼っていただければ、返信の文案をすぐ作ります |
+| `none` | 案内しない |
+
+具体的な手順はすべて `references/connections.md`（§2〜§6）に従う。
+
+#### どの人にも最後に添える
+
+> 🔁 **連携のあとで Claude Code を起動し直したら、最初に `/company` と入力してください。** 私が続きから再開します。
 >
-> ※ OneDrive がローカルに同期されている場合は、ローカルファイル操作 + MCP 操作の併用が可能です
-
-#### Q4 が `teams` の場合
-
-> 💬 **Microsoft Teams 連携**
-> Q3 で Microsoft 基盤を選ばれた場合、ms-365 MCP に Teams のチャット送信機能が含まれます。
-> 同じ Azure AD アプリ登録で Chat.ReadWrite 権限を追加すれば使えるようになります。
-> 「Teams 連携セットアップして」と話しかけてください。
-
-#### Q4 が `googleChat` の場合
-
-> 💬 **Google Chat 連携**
-> 現状、Google Chat 専用の MCP は限定的です。Google Workspace API 経由での連携を案内します。
-> 「Google Chat 連携セットアップして」と話しかけてください。
-
-#### Q4 が `slack` の場合
-
-> 💬 **Slack 連携 ⚠️ Bot Token 取得が必要（5分）**
-> Slack ワークスペースに Bot User をインストールして Bot Token を取得します。
-> 「Slack 連携セットアップして」と話しかけると、ステップバイステップで案内します。
-
-#### Q4 が `chatwork` の場合
-
-> 💬 **Chatwork 連携**
-> Chatwork は API トークン経由で連携可能です。完全な MCP は限定的なので、
-> 当初はメールや Slack 経由のフローを推奨します。「Chatwork 連携試したい」と話しかけてください。
+> 🔎 **「連携チェック」と話しかけると、メール・カレンダー・フォルダ・チャットがつながっているかを○×の表でお見せします。**
+> つながらない所があっても大丈夫です。私が覚えておいて、次回に続きから一緒に進めます。
 
 #### 共通部分
 
@@ -257,7 +307,7 @@ d="$PWD"; while [ "$d" != "/" ]; do [ -d "$d/.company" ] && echo "FOUND: $d/.com
 >
 > 1. 「今日やること教えて」 → TODOを整理
 > 2. 「○○について壁打ちしたい」 → 相談する
-> 3. 「[Q3の基盤] 連携セットアップして」 → メール・カレンダー・ストレージを連携
+> 3. 「連携チェック」 → メール・カレンダー・フォルダ・チャットのつながり具合を確認
 > 4. 「○○のLP作って」 → ハーネス開発フロー始動（superpowers必須）
 >
 > 💡 ブラウザで組織を可視化: `npx cc-company-dashboard`
@@ -279,9 +329,8 @@ d="$PWD"; while [ "$d" != "/" ]; do [ -d "$d/.company" ] && echo "FOUND: $d/.com
 おかえりなさい！ご相談どうぞ。
 
 📌 利用可能な機能のリマインド:
-- 🌐 ブラウザ操作（Claude in Chrome）: 未接続なら `/chrome` で接続（2分）
-- ⚠️ Gmail MCP（OAuth未設定なら「Gmail連携セットアップして」）
-- ⚠️ Outlook MCP（OAuth未設定なら「Outlook連携セットアップして」）
+- 🌐 ブラウザ操作（Claude in Chrome）: 「連携の状態」のブラウザが ○ でなければ、オンボーディングの Step 3-B の続きから（`/chrome` で状態を確かめる）
+- 🔎 メール・カレンダー・フォルダ・チャットのつながり具合は「連携チェック」で確認（`.company/CLAUDE.md` の「連携の状態」に残りがあれば一言添える）
 - ⚠️ ハーネス開発: obra/superpowers プラグインが必要
   未インストールなら（ターミナルで）: claude plugin install superpowers@superpowers-marketplace --scope user
 
@@ -313,6 +362,32 @@ d="$PWD"; while [ "$d" != "/" ]; do [ -d "$d/.company" ] && echo "FOUND: $d/.com
 2. 緊急度が高いものは先に報告
 3. 通常のものは現在の依頼処理後にまとめて報告
 
+### 🔴 組織の絶対ルール（手順書・部署・連携表）
+
+この組織が「本当に連携して動く」ための決まり。**秘書の判断に任せない。** 詳細は `references/organization.md`（正本）。
+
+1. **同じ作業が2回目に来たら、必ず手順書にしようと提案する。** 作業を終えるたびに `secretary/work-log.md` に1行書き、2回目を見逃さない
+2. **手順書は必ずどこかの部署に置く**（`.company/<部署>/manuals/`）。合う部署が無ければ「○○部を作って、この手順書をそこに置きます」と部署づくりとセットで提案する。**空っぽの部署は作らない**
+3. **手順書には「どの部署から受け取り、どの部署へ渡すか」を必ず書き、連携表（`.company/flow-map.md`）に1行足す。** 秘書は連携表のとおりに部署をつなぐ
+4. 報告は**実際に動いた部署の名前で**（「営業部が見積書を作り、経理部が請求書の下書きを用意しました」）
+5. 「組織の健康診断」と言われたら、動いていない部署・空っぽの部署・手順書になっていない繰り返し・途切れた連携を見つけて直し方を提案する（organization.md §6）
+
+以前の版で作った組織（`secretary/work-log.md`・`.company/flow-map.md`・各部署の `manuals/` が無い）では、運営モードに入ったときに次を行う（既存ファイルは上書きしない）:
+
+1. `secretary/work-log.md`・`.company/flow-map.md`・各部署の `manuals/INDEX.md` を見出しだけで作る
+2. `.company/CLAUDE.md` と `secretary/CLAUDE.md`（と各部署の `CLAUDE.md`）の**末尾に「組織の絶対ルール」の節を追記**する（`references/claude-md-template.md` の同じ節を写す）。古い「同じ領域のタスクが2回以上で部署作成」「即座に作成」「未作成なら notes/ に保存」の行は消さずに、行末に「（→ 組織の絶対ルールが優先）」と書き足す
+3. 一度だけ「今日から、繰り返しの仕事を手順書にして部署に置いていきます」と伝える
+
+🔴 **古い CLAUDE.md の文と、この絶対ルールがぶつかったら、絶対ルールが優先。**
+
+#### 以前の版で Google・Microsoft を古い手順（Google Cloud・Azure）でつないでいた人
+
+v1.1.0 で、プラグインに同梱していた古い連携の設定（gmail・google-calendar・google-drive・ms-365・slack）を外した。`~/.gmail-mcp/` や `~/.config/ms-365-mcp/` があるのに、`mcp__claude_ai_` の道具も古い連携の道具も見当たらない人には、一度だけこう伝える:
+
+> 「プラグインの更新で、Google（Microsoft）の連携が、Claude の公式の連携ボタンに変わりました。前より簡単で、7日ごとのつなぎ直しも要りません。`references/connections.md` §2 の手順で、ボタンを押し直しましょう」
+
+どうしても古い手順を続けたい人だけ、`references/connections-legacy.md` 冒頭の `claude mcp add` で登録し直す。
+
 ### 7ステップ判断フロー（運営モードの中核）
 
 依頼を受けたら、必ず以下の7ステップで処理する。**初学者でもわかりやすいよう、内部で順を追って判断する**:
@@ -321,6 +396,7 @@ d="$PWD"; while [ "$d" != "/" ]; do [ -d "$d/.company" ] && echo "FOUND: $d/.com
 [ユーザーの依頼]
    ↓
 Step 1. 過去経験の検索
+   - 🔴 まず手順書を探す: 各部署の manuals/INDEX.md に、この依頼の「きっかけ」に当たる手順書があれば、その部署がその手順どおりに動く
    - secretary/experience/ に類似ケースがないか確認
    - 過去の判断・成功パターンを取得
    ↓
@@ -343,6 +419,9 @@ Step 5. 協議モードなら、ユーザーに提案して承認を得る
 Step 6. 実行（必要なら部署を生やす / エージェントを呼ぶ）
    ↓
 Step 7. 統合報告 + ケース記録（experience/case-NNN-...md）
+   - 🔴 work-log.md に1行 → 2回目なら手順書づくりを提案（絶対ルール1）
+   - 手順書に「渡す先」があれば、連携表のとおり次の部署へ（絶対ルール3）
+   - 報告は動いた部署の名前で
 ```
 
 #### 自律実行で OK な依頼
@@ -372,10 +451,12 @@ Step 7. 統合報告 + ケース記録（experience/case-NNN-...md）
 
 ### 部署への振り分け
 
-秘書が「これは部署の仕事だ」と判断した場合:
+振り分けは次の順に決める（上で決まったら下は見ない）:
 
-1. **該当部署が存在する場合** → 部署の `CLAUDE.md` を読み込み、ルールに従って作業
-2. **該当部署が存在しない場合** → `secretary/notes/` に結果を保存しつつ、部署作成を提案
+1. **手順書がある** → 各部署の `manuals/INDEX.md` の「きっかけ」に当たれば、その部署がその手順書どおりに動く
+2. **連携表に書いてある** → 前の部署から渡されたものなら、`.company/flow-map.md` の受け取る部署へ
+3. **該当部署が存在する** → 部署の `CLAUDE.md` を読み込み、ルールに従って作業
+4. **該当部署が存在しない** → 秘書室で作業し、work-log に記録する。2回目なら「○○部を作って手順書を置く」提案（絶対ルール2）
 
 **振り分け基準:**
 
@@ -415,11 +496,15 @@ Step 7. 統合報告 + ケース記録（experience/case-NNN-...md）
   Inbox: Z件 未整理
   Experience: 累計 N件のケース記録
 
-[他の部署があればその概要]
+部署ごと（work-log.md から数える）:
+  営業部   今月 5件（見積書づくり 4・商談メモ 1）／手順書 2
+  経理部   今月 3件（請求書の下書き 3）／手順書 1
+  マーケ部 今月 0件／手順書 1  ← 30日動いていません
+連携: 営業部 → 経理部（今月 3回）
 
 何かありますか？
 
-💡 ブラウザで詳しく見るには: npx cc-company-dashboard
+💡 ブラウザで詳しく見るには: npx cc-company-dashboard（部署どうしの連携と今月の件数は、この文字版に出ます）
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ```
 
@@ -542,29 +627,34 @@ last_updated: YYYY-MM-DD
 
 ### 提案トリガー
 
-- 同じ領域のタスクを **2回以上** 処理した場合
-- ユーザーが明示的に「〇〇部門を作って」と言った場合
+- **同じ作業が2回目に来たとき**（手順書づくりとセットで。絶対ルール1・2）
+- ユーザーが明示的に「〇〇部門を作って」と言った場合（→ 最初に任せる仕事を1つ聞いて、それを最初の手順書にする。空っぽの部署は作らない）
 
 ### 提案の流れ
 
 ```
-秘書: リサーチの依頼が増えていますね。
-      リサーチ部門を作りましょうか？
-      専用フォルダで調査結果を体系的に管理できます。
+秘書: 競合の調査が2回目ですね。
+      リサーチ部を作って、今回のやり方を「競合調査」の手順書としてそこに置きます。
+      調べ終わったらマーケティング部へ渡す流れにしておきますね。
+      次からは「競合調べて」でリサーチ部がこの手順どおりに動きます。作ってよいですか？
 
 ユーザー: 作って
 
-→ references/departments.md のテンプレートから部署フォルダを自動生成
+→ references/departments.md のテンプレートから部署フォルダを自動生成（manuals/ を含む）
+→ 今回のやり方を manuals/<作業名>.md に書く（organization.md §1 の書式）
+→ 渡す先があれば .company/flow-map.md に1行
 → .company/CLAUDE.md の部署構成テーブルに追記
 ```
 
 ### 部署作成手順
 
 1. `references/departments.md` から該当部署のテンプレート（`_template.md` 群）と CLAUDE.md テンプレートを取得
-2. `.company/[department]/` フォルダとサブフォルダ（`inbox/` 含む）を作成
+2. `.company/[department]/` フォルダとサブフォルダ（`inbox/`・`manuals/` 含む）を作成
 3. 部署の `CLAUDE.md` を配置
-4. `.company/CLAUDE.md` の「組織構成」ツリーと「部署一覧」テーブルを更新
-5. 完了報告
+4. **最初の手順書を1つ以上** `manuals/` に置き、`manuals/INDEX.md` に1行（空っぽの部署は作らない）
+5. 手順書に渡す先・受け取り元があれば `.company/flow-map.md` に1行
+6. `.company/CLAUDE.md` の「組織構成」ツリーと「部署一覧」テーブルを更新
+7. 完了報告（「○○部ができました。『△△』の手順書を置きました。次からは『□□』で○○部が動きます」）
 
 ---
 
@@ -654,8 +744,9 @@ last_updated: YYYY-MM-DD
 
 ### 提案タイミング
 
-- 同じ部署で同じ種類の専門作業が**3回以上**繰り返された
+- 同じ部署の同じ手順書が**3回以上**使われ、判断が多い（手順書だけでは足りない）とき
 - ユーザーが「○○の専門家がほしい」と明示
+- 作るときは、その部署の手順書を読んで動くように書く（エージェントは手順書の担当者。手順書を置き換えない）
 
 ### 提案例
 
@@ -672,21 +763,21 @@ last_updated: YYYY-MM-DD
 
 ---
 
-## MCP 連携
+## 連携（メール・カレンダー・フォルダ・チャット）
 
-このプラグインには **5つの MCP サーバーが同梱されています**（プラグインインストール時に定義が読み込まれ、OAuth 設定が済んだものから順に使えるようになります）：
+**正本は `references/connections.md`（連携ガイド）。** ここには秘書が必ず守る要点だけを書く。
 
-### 同梱 MCP サーバー
+1. **公式の連携（コネクター）を最優先。** Claude の WEB かデスクトップアプリで「設定 → コネクター」を押すだけ。WEB で繋いだものは、同じ Claude のアカウントでログインしている秘書に自動で出てくる（ツール名 `mcp__claude_ai_...`）。**APIキーでログインしていると出てこない**
+2. **受講者に「Google か Microsoft か」を選ばせない。** メールアドレスから秘書が調べる（連携ガイド §1）
+3. 公式が無い人（レンタルサーバー・プロバイダ・Yahoo、iPhone のカレンダー、パソコンの Outlook の予定表、Chatwork）は、このスキルの `scripts/` の道具でつなぐ。**どれも読むだけ**（メールを消さない・既読にしない・予定を書き換えない）。送信・投稿は受講者が本文を見て「送って」と言ってから
+4. **パスワード・トークンを会話に貼らせない。** 入力は受講者本人が別のターミナルで行う
+5. つながらない項目は後回しにして `secretary/_resume.md` に書き、次の起動時に声をかける
+6. Google Cloud・Azure・Slack Bot の古い手順（`references/connections-legacy.md`）は**予備**。最初から案内しない
 
-| サービス | 用途 | OAuth 設定 |
-|---|---|---|
-| **Gmail** | メールの読み書き・検索・下書き作成 | 要（Google Cloud で OAuth クライアント作成） |
-| **Google Calendar** | 予定の確認・追加・調整 | 要（Gmail と同じ鍵を共用） |
-| **Google Drive** | ファイル検索・読込・保存 | 要（Gmail と同じ鍵を共用） |
-| **ms-365** | Outlook メール+カレンダー / OneDrive / Teams（統合） | 要（Azure AD でアプリ登録） |
-| **Slack** | Slack への投稿・読込 | 要（Slack Bot Token） |
+### 連携チェック
 
-> Google 系3つ（Gmail / Calendar / Drive）は**1つの OAuth クライアント＝1つの鍵ファイルを共用**するので、設定は実質1回で済みます（下記 Google 連携セットアップ参照）。
+受講者が「連携チェック」「つながってる？」と言ったら、連携ガイド §7 に従い、ログイン・メール・カレンダー・フォルダ・チャット・ブラウザを**読むだけで**1つずつ試して ○×の表で返す。
+メールは**件名だけ**を出す（本文・差出人のアドレスは出さない）。×は `_resume.md` に残し、結果は `.company/CLAUDE.md` の「連携の状態」を更新する。
 
 ### 🌐 ブラウザ操作は Claude in Chrome（MCPではない）
 
@@ -694,14 +785,17 @@ last_updated: YYYY-MM-DD
 
 Claude in Chrome は MCP サーバーではなく **Chrome拡張**。だから `.mcp.json` には入っておらず、受講者ごとに1回だけ接続作業が要る。
 
-#### セットアップ（2分・OAuth不要）
+#### セットアップ（オンボーディングの Step 3-B で行う）
 
-1. Claude Code で `/chrome` と入力する
-2. 案内どおり Chrome拡張をインストールし、表示されたコードでペアリングする
-3. 拡張のサイドパネルで、操作を許可するサイトを有効にする（サイト単位の許可制）
+手順は Step 3-B と `references/connections.md` §9 が正本。要点だけ:
+
+1. Chrome ウェブストアから入れる: https://chromewebstore.google.com/detail/claude/fcoeoabgfenejglbffodgkkbkcdhcgfn
+2. 拡張機能に、Claude Code と同じ Claude のアカウント（同じ組織）でログインする
+3. Claude Code で `/chrome` → 「Status: Enabled」「Extension: Installed」を確かめ、「Enabled by default」を選ぶ
+4. 操作してよいサイトは、拡張機能の設定でサイトごとに許可する（サイト単位の許可制）
 
 > 秘書は、受講者が「ブラウザで〜して」と言ったのに拡張が未接続だった場合、
-> **その場で `/chrome` を案内し、`_resume.md` にしおりを書く**（再起動しおりプロトコル参照）。
+> **その場で Step 3-B の続きを案内し、`_resume.md` にしおりを書く**（再起動しおりプロトコル参照）。
 
 #### なぜ Playwright ではないのか（受講者に聞かれたら）
 
@@ -731,205 +825,27 @@ OAuth設定・依存インストール等で「Claude Code を再起動してく
 しおりに書く内容（テンプレ）:
 ```markdown
 # 再起動しおり
-- 作業: <例: Google連携セットアップ>
-- 中断ステップ: <例: Step6 再起動待ち>
-- 再起動後にやること: <例: 最初に「未読メール教えて」と言ってもらい、ブラウザでGoogleログイン→許可。テストユーザーに追加したのと同じアカウントで>
-- 注意: <例: 別アカウントでログインしないこと>
+- 作業: <例: Microsoft 365 の公式連携>
+- 中断ステップ: <例: claude.ai でコネクターを押した → Claude Code の再起動待ち>
+- 再起動後にやること: <例: 「連携チェック」を実行し、メールの件名が1通読めるか確かめる。読めなければ connections.md §2-A（全体管理者の許可）へ>
+- 注意: <例: claude.ai と Claude Code は同じ Claude のアカウントで。APIキーでログインしないこと>
 - 書いた日時: {{YYYY-MM-DD HH:MM}}
 ```
 - 作業が完了したら **`_resume.md` を削除**する（しおりを閉じる）。
 - 起動時に `_resume.md` があれば、秘書は inbox より先にこれを読んで能動的に再開する（「起動時の『しおり』チェック」参照）。
+- 🔴 再起動を案内するときは、必ず「**起動し直したら、最初に `/company` と入力してください**」と添える（入力しないと秘書が呼ばれず、しおりも読まれない）。
 
-### Google 連携セットアップ（Gmail + Calendar + Drive 一括 / 初回のみ）
+### 追加の連携（任意）
 
-ユーザーが「Google 連携セットアップして」「Gmail 使いたい」「Drive 使いたい」「Calendar 連携」等と言ったら、**ステップバイステップで案内** する。
-1つの Google Cloud プロジェクトで Gmail/Calendar/Drive すべての OAuth クライアントを共用できる。
+Notion・GitHub などは、まず「設定 → コネクター」に公式の連携があるか確かめる。無いものだけ `claude mcp add --scope user ...` で追加する。
 
-**秘書はステップ毎に「次に進みますか？」と確認しながら進める。Claude が自動でできる部分（コマンド実行など）は秘書が代行する。**
+### 連携の使い分け
 
-#### Step 1: Google Cloud Console でプロジェクト作成（人間操作）
-1. [Google Cloud Console](https://console.cloud.google.com/) を開く
-2. プロジェクト名を任意で（例: `my-company-mcp`）作成
-
-#### Step 2: 必要な API を有効化（人間操作）
-「APIとサービス」→「ライブラリ」で以下を順に有効化:
-- Gmail API
-- Google Calendar API
-- Google Drive API
-
-#### Step 3: OAuth 同意画面の設定（人間操作）
-「OAuth 同意画面」→ User Type: **外部** を選択 → 必須項目入力（アプリ名・サポートメール等）。
-公開ステータスは **「テスト」のままで OK**（本番公開・Google審査は不要）。
-
-#### 🟥 Step 3.5: テストユーザーに自分のメールアドレスを追加（人間操作・**最重要・絶対に飛ばさない**）
-
-「OAuth 同意画面」→「テストユーザー」→「ADD USERS / ユーザーを追加」→ **自分の Gmail アドレスを入力** → 保存。
-
-> ⚠️ **ここを飛ばすと、後で必ず `アクセスをブロック: …が Google の審査プロセスを完了していません`／`access_denied` エラーになります。**
-> これは受講者が最もつまずく原因No.1です。秘書はこのステップを必ず明示し、「自分のアドレスを追加しましたか？」と確認してから次に進むこと。
->
-> 📌 補足（持ち帰り知識）: 公開ステータスが「テスト」の間は、Google の機密スコープ（Gmail等）の認証が **約7日で失効** します。失効したら「Gmail 連携を再認証して」と秘書に言えば 30秒で復旧できます（同意画面をブラウザでもう一度許可するだけ）。
-
-#### Step 4: OAuth クライアント ID 作成（人間操作）
-「認証情報」→「OAuth クライアント ID 作成」
-- アプリの種類: **デスクトップアプリ**（⚠️「ウェブアプリケーション」を選ぶと `redirect_uri_mismatch` になります。必ずデスクトップアプリ）
-- 名前: `bootcamp-company-mcp`（任意）
-- 作成後、鍵ファイル（JSON）を **ダウンロード**
-
-#### Step 5: 鍵ファイルを配置（**ここから秘書が自動で代行**）
-
-Gmail・Calendar・Drive の3つは **同じ1つの鍵ファイル（`gcp-oauth.keys.json`）を共用** します。
-だから配置は **1ファイルを1箇所に置くだけ**。秘書がダウンロードしたファイルのパスを聞いて、Bash で実行:
-
-```bash
-mkdir -p ~/.gmail-mcp
-cp "<ダウンロードした鍵ファイルのパス>" ~/.gmail-mcp/gcp-oauth.keys.json
-echo "配置完了。HOME は $HOME です（次の Step 5.5 で使います）"
-```
-
-> Calendar(@cocal)と Drive(@isaacphi)は固定パスを持たず、環境変数で鍵の場所を教える方式です（各 MCP の公式仕様）。
-> Gmail と同じ `~/.gmail-mcp/gcp-oauth.keys.json` を指せば共用でき、**追加のコピーは不要**です。
-
-#### Step 5.5: .mcp.json の絶対パスを実ユーザー名に置換（**秘書が自動で代行**）
-
-プラグイン同梱の `.mcp.json` は Calendar/Drive 向けに `GOOGLE_OAUTH_CREDENTIALS` / `GDRIVE_CREDS_DIR` を持つが、
-**MCP の環境変数は `~` や `$HOME` を展開しない**ため、絶対パスの `REPLACE_ME` を実ユーザー名へ置き換える必要がある。
-秘書は `echo $HOME` で確認した上で、ユーザー設定の `.mcp.json`（`~/.claude.json` 等の該当 mcpServers）または該当環境変数に
-`/Users/<実ユーザー名>/.gmail-mcp/gcp-oauth.keys.json`（Drive は `/Users/<実ユーザー名>/.gmail-mcp`）を反映する。
-
-> 💡 実装メモ: 同梱 `plugins/company/.mcp.json` の `REPLACE_ME` はプレースホルダ。受講者環境の HOME に合わせて秘書が置換する。
-
-#### Step 6: Claude Code を再起動（人間操作）
-
-🔖 **再起動を案内する前に、必ず `secretary/_resume.md` にしおりを書く**（「再起動しおりプロトコル」参照）。
-その上でユーザーに「Claude Code を一度終了して再起動してください」と案内。
-
-#### Step 7: 初回 OAuth 認証（半自動）
-
-再起動後、最初に Gmail/Calendar/Drive の MCP ツールを使うと、ブラウザが自動で開いて Google ログイン → 許可 → 完了。
-（この Step が完了したら `_resume.md` を削除してしおりを閉じる。）
-**Step 3.5 でテストユーザーに追加したのと同じアカウントでログインすること**（別アカウントだと空のメールボックスに繋がって「動いてるのに何も出ない」状態になる）。
-
-完了後、「メール送って」「予定確認して」「Drive のあの資料」など試してみる。
-
-> ❗ うまくいかないとき（秘書の対処手順）:
-> 1. まず `test -f ~/.gmail-mcp/gcp-oauth.keys.json && echo OK` で鍵の配置を確認。
-> 2. 実際に Gmail MCP を1回叩いてエラー文字列を取得する（推測で断定しない）。
-> 3. `access_denied`／`403`／`審査プロセス` を含む → **Step 3.5 のテストユーザー追加漏れ**。追加すれば再起動不要でもう一度試すだけ。
-> 4. `redirect_uri_mismatch` → Step 4 を「ウェブアプリ」で作った疑い。デスクトップアプリで作り直し。
-> 5. 鍵は正しいのに繋がらず、現セッションで一度も成功していない → 設定前に起動した Claude Code のまま。再起動を案内。
-> 6. 原因が確定するまで「テストユーザー漏れだと思います」等の**確率での断定はしない**。必ず実エラーで確定してから案内する。
-
----
-
-### Microsoft 連携セットアップ（Outlook + Calendar + OneDrive + Teams 一括 / 初回のみ）
-
-ユーザーが「Microsoft 連携セットアップして」「Outlook 使いたい」等と言ったら、ステップバイステップで案内する。
-ms-365-mcp-server は Outlook（メール+カレンダー）+ OneDrive + Teams を1つでカバーする統合 MCP。
-
-#### Step 1: Azure Portal でアプリ登録（人間操作）
-1. [Azure Portal](https://portal.azure.com/) → 「アプリの登録」→ 新規登録
-2. 名前: `bootcamp-company-mcp`（任意）
-3. サポートされるアカウントの種類: **このディレクトリのアカウントのみ**（個人MS365アカウントなら **個人 Microsoft アカウント**）
-4. リダイレクト URI: パブリッククライアント / `http://localhost`
-
-#### Step 2: API のアクセス許可を追加（人間操作）
-「APIのアクセス許可」→ Microsoft Graph → **委任されたアクセス許可** で以下を追加:
-- `Mail.ReadWrite` （Outlook メール）
-- `Calendars.ReadWrite` （Outlook カレンダー）
-- `Files.ReadWrite` または `Files.ReadWrite.All` （OneDrive）
-- `Chat.ReadWrite` （Teams、Q4 で teams 選択時のみ）
-- `User.Read` （基本）
-
-#### Step 3: 認証設定 → 公開クライアントフロー (人間操作)
-
-「認証」タブで「**パブリッククライアントフローを許可する**」を **はい** に切り替え。
-
-#### Step 4: アプリ（クライアント）ID をコピー（人間操作）
-
-「概要」タブからクライアントID（GUID）をコピー。
-
-#### Step 5: 環境変数を設定（**秘書が自動で代行可**）
-
-ユーザーがクライアントIDを伝えてくれたら、秘書が以下を Bash で実行:
-```bash
-mkdir -p ~/.config/ms-365-mcp
-cat > ~/.config/ms-365-mcp/.env <<'EOL'
-MS365_MCP_CLIENT_ID=<コピーしたクライアントID>
-EOL
-```
-
-#### Step 6: Claude Code 再起動 → ログイン
-
-🔖 **再起動を案内する前に `secretary/_resume.md` にしおりを書く**（「再起動しおりプロトコル」参照）。
-再起動後、秘書が ms-365 の `login` ツールを呼ぶ（デバイスコード/ブラウザでMicrosoftログインのURLが出る）→ ログイン後 `verify-login` で確認。
-利用可能になったら `_resume.md` を削除してしおりを閉じる。
-
----
-
-### Slack 連携セットアップ（Bot Token 方式 / 初回のみ）
-
-ユーザーが「Slack 連携セットアップして」と言ったら、以下を案内する。
-
-#### Step 1: Slack App を作成（人間操作）
-1. [Slack API: Your Apps](https://api.slack.com/apps) → Create New App → From scratch
-2. App 名: `bootcamp-company-bot`（任意）
-
-#### Step 2: Bot Token Scopes を設定（人間操作）
-「OAuth & Permissions」→ Bot Token Scopes で以下を追加:
-- `chat:write`
-- `channels:read`
-- `channels:history`
-- `users:read`
-
-#### Step 3: ワークスペースにインストール（人間操作）
-「Install to Workspace」をクリック → Bot User OAuth Token (`xoxb-...`) をコピー
-
-#### Step 4: Team ID を取得（人間操作）
-ワークスペースの URL から Team ID を確認、または「Settings & administration → Workspace settings → About Settings」で確認
-
-#### Step 5: 環境変数を設定（**秘書が自動で代行可**）
-
-ユーザーが Bot Token と Team ID を伝えてくれたら、秘書が以下を Bash で実行:
-```bash
-mkdir -p ~/.config/slack-mcp
-cat > ~/.config/slack-mcp/.env <<'EOL'
-SLACK_BOT_TOKEN=<xoxb-で始まるToken>
-SLACK_TEAM_ID=<Team ID>
-EOL
-```
-
-#### Step 6: Claude Code 再起動 → 利用開始
-
-「#general に投稿して」「DM 送って」など試す。
-
----
-
-### Google Chat / Chatwork / Teams（Microsoft 連携経由）の補足
-
-- **Teams**: 上記「Microsoft 連携セットアップ」で `Chat.ReadWrite` を追加すれば一緒に使える
-- **Google Chat**: 専用 MCP は限定的。Google Workspace API + curl 経由の対応を `secretary/notes/` に書き留めて、必要に応じて手動連携を案内する
-- **Chatwork**: API トークンを発行 → ChatWork API を curl/HTTP 経由で呼ぶ簡易連携を案内（フル MCP なし）
-
-### 追加 MCP サーバー（任意）
-
-Notion / GitHub / Slack 等は追加で `/mcp add` できます。
-
-| サービス | コマンド | 認証 |
-|---------|---------|------|
-| Notion | `claude mcp add-json notion '{"type":"http","url":"https://mcp.notion.com/mcp"}'` | OAuth（自動） |
-| Google Calendar | `claude mcp add google-calendar -e GOOGLE_OAUTH_CREDENTIALS=/path/to/credentials.json -- npx -y @cocal/google-calendar-mcp` | Google OAuth |
-| GitHub | `claude mcp add-json github '{"type":"http","url":"https://api.githubcopilot.com/mcp","headers":{"Authorization":"Bearer YOUR_PAT"}}'` | GitHub PAT |
-| Slack | `claude mcp add-json slack '{"type":"http","url":"https://mcp.slack.com/mcp","oauth":{"clientId":"1601185624273.8899143856786","callbackPort":3118}}'` | OAuth（自動） |
-
-### MCP ツールの活用
-
-MCP サーバーが利用可能な場合、秘書は積極的に活用する。
-- 「メール送って」 → Gmail MCP
+- 「メール見て」「返信の文案作って」 → 公式の Gmail / Microsoft 365、または `scripts/mail_readonly.py`（`.company/CLAUDE.md` の「連携の状態」に書いた道を使う）
+- 「予定確認して」 → 公式のカレンダー、または `scripts/` のカレンダーの道具
 - 「○○のサイトで○○して」 → Claude in Chrome（`mcp__claude-in-chrome__*`。Playwright は使わない）
-- 「予定確認して」 → Outlook MCP
 
-MCP がなくても、`.company/` 内のファイル管理だけで完全に動作する。
+連携がなくても、`.company/` 内のファイル管理だけで完全に動作する。
 
 ---
 
@@ -972,6 +888,10 @@ MCP がなくても、`.company/` 内のファイル管理だけで完全に動�
 
 - 部署別テンプレート: `references/departments.md`
 - CLAUDE.md 生成テンプレート: `references/claude-md-template.md`
+- 組織運営の絶対ルール（正本）: `references/organization.md`
+- 連携ガイド（正本）: `references/connections.md`
+- 古い連携手順（予備）: `references/connections-legacy.md`
+- 連携の道具: `scripts/`（mail_readonly.py / caldav_readonly.py / outlook_calendar_win.ps1 / mac_calendar.applescript）
 
 ---
 
@@ -988,6 +908,7 @@ MCP がなくても、`.company/` 内のファイル管理だけで完全に動�
 - 部署間連携が発生した場合、各部署の `inbox/` に通知を入れる
 - 既存ファイルは上書きしない。追記または新規作成のみ
 - ケース完了時の `case-NNN-...md` 生成は省略しない
+- 作業を終えたら `secretary/work-log.md` に1行（2回目なら手順書づくりの提案）。手順書は部署に置き、連携先を書き、連携表に足す
 
 ---
 
@@ -1012,4 +933,4 @@ MCP がなくても、`.company/` 内のファイル管理だけで完全に動�
 ### 4. バックアップの推奨（任意・受講者の同意のもと）
 - 大事な決定が溜まってきたら、秘書から「念のため `.company/` をバックアップしておきましょうか？」と提案してよい。
 - 受講者が望めば、秘書が Bash で `.company/` を日付つきでコピー（例: `cp -R .company .company.backup-YYYY-MM-DD`）。
-- ⚠️ ただしバックアップ先に認証情報を含めない。`.company/` には通常 OAuth 鍵は入らない（鍵は `~/.gmail-mcp` 等の外）が、混入していないか確認してからコピーする。
+- ⚠️ ただしバックアップ先に認証情報を含めない。`.company/` には通常パスワードや鍵は入らない（連携の道具の設定は `~/.config/bootcamp-company/`、古い手順の鍵は `~/.gmail-mcp` 等の外）が、混入していないか確認してからコピーする。
