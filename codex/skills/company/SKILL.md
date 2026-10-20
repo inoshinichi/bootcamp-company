@@ -103,7 +103,7 @@ if (Test-Path -LiteralPath (Join-Path $HOME '.company') -PathType Container) { "
 pwd
 d="$PWD"; while [ "$d" != "/" ]; do [ -d "$d/.company" ] && echo "FOUND: $d/.company"; d=$(dirname "$d"); done
 [ -d "$HOME/.company" ] && echo "FOUND: $HOME/.company"
-for c in "$HOME"/*/.company; do [ -d "$c" ] && echo "FOUND: $c"; done
+for c in "$HOME"/*/; do [ -d "${c}.company" ] && echo "FOUND: ${c}.company"; done
 ```
 
 Windows で上の書き方がエラーになったとき（Git for Windows が無いと、Claude Code は PowerShell で命令を動かす）は、次の PowerShell を使う:
@@ -449,6 +449,8 @@ Q1〜Q3 は自由に答えてもらう質問なので**通常の会話で**聞�
 1. `secretary/work-log.md`・`.company/flow-map.md`・各部署の `manuals/INDEX.md` を見出しだけで作る
 2. `.company/CLAUDE.md` と `secretary/CLAUDE.md`（と各部署の `CLAUDE.md`）の**末尾に「組織の絶対ルール」の節を追記**する（`references/claude-md-template.md` の同じ節を写す）。古い「同じ領域のタスクが2回以上で部署作成」「即座に作成」「未作成なら notes/ に保存」の行は消さずに、行末に「（→ 組織の絶対ルールが優先）」と書き足す
 3. 一度だけ「今日から、繰り返しの仕事を手順書にして部署に置いていきます」と伝える
+
+`.company/CLAUDE.md` の「連携の状態」に**ブラウザの行が無い**組織（v1.2.0 より前に作った組織）では、運営モードに入ったときに一度だけ Step 3-B（ブラウザの拡張機能）を案内し、結果を「連携の状態」にブラウザの行として足す（断られたら「ブラウザ: … ×（理由: あとで）」と書き、二度目は案内しない）
 
 🔴 **古い CLAUDE.md の文と、この絶対ルールがぶつかったら、絶対ルールが優先。**
 
@@ -842,7 +844,7 @@ last_updated: YYYY-MM-DD
 
 1. **公式の連携（コネクター）を最優先。** Claude の WEB かデスクトップアプリで「カスタマイズ（Customize）→ コネクタ（Connectors）」（直接開くなら https://claude.ai/customize/connectors ）を押すだけ。WEB で繋いだものは、同じ Claude のアカウントでログインしている秘書に自動で出てくる（ツール名 `mcp__claude_ai_...`）。**APIキーでログインしていると出てこない**
 2. **受講者に「Google か Microsoft か」を選ばせない。** メールアドレスから秘書が調べる（連携ガイド §1）
-3. 公式が無い人（レンタルサーバー・プロバイダ・Yahoo、iPhone のカレンダー、パソコンの Outlook の予定表、Chatwork）は、このスキルの `scripts/` の道具でつなぐ。**どれも読むだけ**（メールを消さない・既読にしない・予定を書き換えない）。送信・投稿は受講者が本文を見て「送って」と言ってから
+3. 公式が無い人（レンタルサーバー・プロバイダ・Yahoo、iPhone のカレンダー、パソコンの Outlook の予定表、Chatwork）は、このスキルの `scripts/` の道具でつなぐ。**メール・予定は読むだけ**（メールを消さない・既読にしない・予定を書き換えない）。メールの送信だけは別の命令（`mail_readonly.py send`）で、受講者が本文を見て「送って」と言ったあとの別の返答でだけ行う（確認番号は中身が変わっていない確かめで、錠ではない）。Chatwork への投稿も同じ
 4. **パスワード・トークンを会話に貼らせない。** 入力は受講者本人が別のターミナルで行う
 5. つながらない項目は後回しにして `secretary/_resume.md` に書き、次の起動時に声をかける
 6. Google Cloud・Azure・Slack Bot の古い手順（`references/connections-legacy.md`）は**予備**。最初から案内しない

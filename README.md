@@ -32,7 +32,11 @@ irm https://claude.ai/install.ps1 | iex
 はじめて `claude` と打つとログインの画面が出ます。**Claude のアカウント（Pro・Max・Team・Enterprise のプラン）**を選んでください（API・Console は選びません。無料プランでは Claude Code は使えません）。
 
 - 動く環境: macOS 13 以降／Windows 10（1809 以降）・Windows 11
-- Windows で要るもの: 上の PowerShell だけで入ります。「Git for Windows」は公式では必須ではありません（入れなくても動きます）
+- Windows で要るもの: Claude Code 本体は上の PowerShell だけで入ります
+- **このプラグインを入れる（手順4）には「Git」が要ります**（Claude Code 本体には不要ですが、プラグインを GitHub から取ってくるときに使います）
+  - Windows: PowerShell で `winget install --id Git.Git -e --source winget` と打ち、入ったら PowerShell を閉じて開き直します
+  - Mac: ターミナルで `xcode-select --install` と打ち、画面の案内に従います（10〜30分。すでに入っていれば「already installed」と出ます）
+  - `git --version` と打って番号が出れば準備できています。会社のパソコンで入れられないときは、下の「うまくいかないとき」の「Git が入れられない」の行を見てください
 - 会社のパソコンで入れられないときは、情報システムの担当の方に相談してください（公式のトラブル対応: https://code.claude.com/docs/en/troubleshoot-install ）
 
 ### 3. 会社フォルダを作る（最初の1回だけ）
@@ -112,17 +116,22 @@ claude plugin marketplace update bootcamp-company
 claude plugin update company@bootcamp-company
 ```
 
+`/company` と打ったあと、「連携チェック」と話しかけてください（新しく増えたブラウザの拡張機能の案内が出ます）。
+
 ### AI に入れてもらう方法
 
 Claude Code を起動して、次の文をそのまま貼り付けて送ってください。Claude Code がこのページを読んで、上の命令を打ちます（命令を打つ前に確認が出たら、内容を見て許可してください）。
 
 ```
 https://github.com/inoshinichi/bootcamp-company のプラグインを入れてください。
+先に、このパソコンが Windows か Mac かを確かめ、Windows なら PowerShell、Mac ならターミナルの書き方で打ってください。
+git --version で Git が入っているかを確かめ、無ければ README の「2. Claude Code 本体を入れる」の Git の入れ方を私に案内してください。
 このページの README の「受講者の方へ：入れ方」の「4. プラグインを入れる」の書き方B
 （claude plugin marketplace add inoshinichi/bootcamp-company --scope user と
 claude plugin install company@bootcamp-company --scope user）を打ち、
 入ったら claude plugin list で company@bootcamp-company が入っていることを確かめてください。
-終わったら、Claude Code を一度終了して起動し直し、/company と打つように私に伝えてください。
+終わったら、README の「3. 会社フォルダを作る」の会社フォルダ（Mac は ~/my-company、Windows は $HOME\my-company）を作り、
+Claude Code を一度終了して、そのフォルダで起動し直してから /company と打つように私に伝えてください（毎回そのフォルダで起動することも伝えてください）。
 ```
 
 ### うまくいかないとき
@@ -132,6 +141,8 @@ claude plugin install company@bootcamp-company --scope user）を打ち、
 | `claude` が見つからない・認識されない | 入れたあと画面を開き直していない | ターミナル・PowerShell を閉じて開き直し、`claude --version` を打つ |
 | ログインで「API」や「Console」を選んでしまった | ログインの選び間違い | Claude Code の中で `/logout` → `/login` で、Claude のアカウント（Pro などのプラン）を選び直す |
 | Windows で赤い文字が出て命令が通らない | 「コマンドプロンプト」で打っている | スタートから「PowerShell」を開き直す（行の頭が `PS C:\`） |
+| `Executable not found in $PATH: "git"`・`Fetching the marketplace from GitHub failed` と出る | Git が入っていない | 手順2の「Git」を入れ、画面を開き直してから手順4をやり直す |
+| 会社のパソコンで Git が入れられない | ソフトの導入が止められている | GitHub のこのページの「Code」→「Download ZIP」で取って解凍し、`claude plugin marketplace add "<解凍したフォルダ>" --scope user` → `claude plugin install company@bootcamp-company --scope user` と打つ（新しい版が出たら ZIP を取り直して同じことをします） |
 | `/company` が出てこない・消えた | プラグインがフォルダ限定で入っている | `claude plugin list` で `company@bootcamp-company` の「Scope」を見る → `user` でなければ書き方B で入れ直す |
 | 秘書が初対面のように振る舞う／今までの記録が無い | 前回と違うフォルダで起動している | 「毎回の始め方」のとおり会社フォルダで起動し直す。分からなければ `/company` と言えば、秘書が親フォルダとホームを探します |
 | Cursor を再起動したら上の2つが起きた | Cursor が別のフォルダで開き直した | Cursor で「フォルダを開く」→ 会社フォルダ（`my-company`）を選び直す。Cursor は使わなくても大丈夫です（ターミナルだけで使えます） |
@@ -297,7 +308,7 @@ URL や手順を覚える必要はありません。秘書に話しかけて進�
 | レンタルサーバー・プロバイダ・Yahoo のメール | プラグイン内蔵の**読むだけの道具**で、秘書がサーバーに読みに行きます（メールを消さない・既読にしない） |
 | iPhone のカレンダー／パソコンの Outlook の予定表／Mac のカレンダー | プラグイン内蔵の読むだけの道具でつなぎます |
 | フォルダ | パソコンに見えているフォルダ（OneDrive・Google ドライブ・Dropbox・社内の共有フォルダ）をそのまま秘書に見せます |
-| Slack／Chatwork | Slack は公式の連携、Chatwork は API トークン |
+| Slack／Chatwork | Slack は公式の連携（Claude の Team / Enterprise プランで、Slack の管理者が承認しているときだけ・公式に書かれているのは検索まで。それ以外の方は届いた文を貼っていただきます）、Chatwork は API トークン |
 | LINE WORKS／Google Chat | 今は直接つなげません（返信の文案づくりで使えます） |
 
 ### 連携の考え方（2026-10 改訂）
@@ -315,7 +326,7 @@ URL や手順を覚える必要はありません。秘書に話しかけて進�
 
 最初のセットアップの手順の1つです：**入れる → つなぐ → 確かめる → 「連携の状態」に記録**。
 
-1. Google Chrome（入れられない会社のパソコンでは Microsoft Edge）で Chrome ウェブストアの [Claude](https://chromewebstore.google.com/detail/claude/fcoeoabgfenejglbffodgkkbkcdhcgfn) を開き「Chrome に追加」
+1. Google Chrome（入れられない会社のパソコンでは Microsoft Edge。Edge で動くかは未確認です。うまくいかないときは秘書に伝えてください）で Chrome ウェブストアの [Claude](https://chromewebstore.google.com/detail/claude/fcoeoabgfenejglbffodgkkbkcdhcgfn) を開き「Chrome に追加」
 2. 拡張機能に、秘書と同じ Claude のアカウントでログイン
 3. Claude Code で **`/chrome`** と入力し、つながりを確かめる
 

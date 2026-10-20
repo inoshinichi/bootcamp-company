@@ -62,6 +62,12 @@ Outlook が「受け取ったら、サーバーからメールを消す」設定
 
 入れ方は [README の「受講者の方へ：入れ方」](https://github.com/inoshinichi/bootcamp-company#受講者の方へ入れ方) の「2. Claude Code 本体を入れる」です。入れられなかったら、そのまま当日お越しください。一緒に入れます。
 
+あわせて、プラグインを入れるのに使う「Git」も入れておきます（README の同じ所に書いてあります）。
+
+- Windows: PowerShell で `winget install --id Git.Git -e --source winget`（入ったら PowerShell を開き直す）
+- Mac（全員）: ターミナルで `xcode-select --install`（10〜30分。⑧と同じものです。すでに入っていれば「already installed」と出ます）
+- `git --version` で番号が出れば準備できています
+
 ## ⑧ Mac で「サーバーのメール」か「iPhone のカレンダー」をつなぐ方だけ
 
 Mac の「ターミナル」アプリを開いて `xcode-select --install` と入力し、画面の案内に従ってください（10〜30分かかります）。すでに入っていれば「already installed」と出ます。

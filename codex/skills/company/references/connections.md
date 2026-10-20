@@ -6,7 +6,7 @@
 
 1. **受講者に「Google か Microsoft か」を選ばせない。** メールアドレスから秘書が自分で調べる（§1）。受講者の自己申告は間違っていることが多い
 2. **公式の連携（コネクター）を最優先。** Claude の WEB かデスクトップアプリで「カスタマイズ（Customize）→ コネクタ（Connectors）」（直接開くなら https://claude.ai/customize/connectors 。日本語の画面での名前は未確認なので、見つからないときはこのアドレスを開く）のボタンを押すだけ。Google Cloud や Azure の管理画面は使わない
-3. **公式が無い人は「サーバーに取りに行く」道具を使う**（`scripts/`）。どの道具も**読むだけ**。メールを消さない・既読にしない・予定を書き換えない
+3. **公式が無い人は「サーバーに取りに行く」道具を使う**（`scripts/`）。メール・予定は**読むだけ**。メールを消さない・既読にしない・予定を書き換えない。メールの送信だけは別の命令（`mail_readonly.py send`）で、本文を見せて「送って」をもらったあとに行う（§3）
 4. **パスワードを会話に貼らせない。** 入力は受講者本人が別のターミナルで行う（§3-1）
 5. **つながらない人を置いていかない。** 当日つながらない項目は後回しにして `secretary/_resume.md` に書き、次の起動時に声をかける
 6. **連携の結果は `.company/CLAUDE.md` の「連携の状態」に記録する**（§8）
@@ -307,8 +307,15 @@ python3 "$S/mail_readonly.py" send --to 相手 --subject 件名 --body-file 本�
 powershell -NoProfile -ExecutionPolicy Bypass -File "$(cygpath -w "$S/outlook_calendar_win.ps1")" -Days 2
 ```
 
+Git for Windows が無い（秘書が PowerShell で命令を動かしている）ときは、`cygpath` が無いので次の書き方にする（`$S` は §0-3 の場所の探し方で入れた道具のフォルダ。Windows 実機では未確認）:
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File (Join-Path $S 'outlook_calendar_win.ps1') -Days 2
+```
+
 - **止まったとき**（会社のパソコンでは、グループポリシーで決められた実行の決まりが優先され、`-ExecutionPolicy Bypass` が効かないことがある）: 代わりに、ファイルを実行せず中身を読んで動かす書き方を1回だけ試す（Windows 実機では未確認）:
   `powershell -NoProfile -Command "& ([ScriptBlock]::Create((Get-Content -Raw -Encoding UTF8 '$(cygpath -w "$S/outlook_calendar_win.ps1")'))) -Days 2"`
+  （PowerShell で動かしているときは: `& ([ScriptBlock]::Create((Get-Content -Raw -Encoding UTF8 (Join-Path $S 'outlook_calendar_win.ps1')))) -Days 2`）
   これも「スクリプトの実行が無効」などで止まったら、ここで止める。会社のパソコンなら情報システムの担当の方に聞いてもらい、それまでは今日の予定を貼ってもらう（Outlook・Google の公式の連携に切り替えられるなら相談する）。`_resume.md` の残りに「予定表: 会社の設定で自動では読めない」と書く
 
 - **従来の Outlook だけ**。「新しい Outlook」は外から読む仕組み（COM）に対応していない（Microsoft 公式: https://learn.microsoft.com/en-us/microsoft-365-apps/outlook/get-started/state-of-com-add-ins）→ `new_outlook_or_not_installed` が返る。その場合は「従来の Outlook に戻す」か「Google カレンダー」を相談する
@@ -368,6 +375,12 @@ osascript "$S/mac_calendar.applescript" 2
    T=$(cat ~/.config/bootcamp-company/chatwork.token)
    curl -s -H "x-chatworktoken: $T" https://api.chatwork.com/v2/rooms                         # 部屋の一覧
    curl -s -H "x-chatworktoken: $T" "https://api.chatwork.com/v2/rooms/<room_id>/messages?force=1"  # 最新メッセージ
+   ```
+   Windows で秘書が PowerShell で命令を動かしているとき（Git for Windows が無いとき）は、`curl` が別の命令の別名になることがあるので `curl.exe` と書く（Windows 実機では未確認）:
+   ```powershell
+   $T = (Get-Content -Raw "$HOME\.config\bootcamp-company\chatwork.token").Trim()
+   curl.exe -s -H "x-chatworktoken: $T" https://api.chatwork.com/v2/rooms
+   curl.exe -s -H "x-chatworktoken: $T" "https://api.chatwork.com/v2/rooms/<room_id>/messages?force=1"
    ```
    投稿（`POST /v2/rooms/<room_id>/messages`）は、**受講者が本文を見て「送って」と言ってから**。
 
