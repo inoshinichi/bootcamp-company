@@ -1,12 +1,12 @@
 import { defineConfig } from "vitepress";
 
 export default defineConfig({
-  title: "cc-company",
-  base: "/cc-company/",
+  title: "bootcamp-company",
+  base: "/bootcamp-company/",
   cleanUrls: true,
   ignoreDeadLinks: [/^http:\/\/localhost/],
 
-  head: [["link", { rel: "icon", href: "/favicon.ico" }]],
+  head: [["link", { rel: "icon", type: "image/png", href: "/bootcamp-company/hero-image.png" }]],
 
   locales: {
     root: {
@@ -19,11 +19,7 @@ export default defineConfig({
           { text: "リファレンス", link: "/reference/departments" },
           {
             text: "GitHub",
-            link: "https://github.com/Shin-sibainu/cc-company",
-          },
-          {
-            text: "Claude Code Academy",
-            link: "https://claude-code-academy.dev/",
+            link: "https://github.com/inoshinichi/bootcamp-company",
           },
         ],
         sidebar: {
@@ -53,15 +49,6 @@ export default defineConfig({
               text: "事例",
               items: [{ text: "活用事例", link: "/guide/use-cases" }],
             },
-            {
-              text: "リンク",
-              items: [
-                {
-                  text: "Claude Code Academy",
-                  link: "/guide/claude-code-academy",
-                },
-              ],
-            },
           ],
           "/reference/": [
             {
@@ -69,15 +56,6 @@ export default defineConfig({
               items: [
                 { text: "部署一覧", link: "/reference/departments" },
                 { text: "ファイル構成", link: "/reference/file-structure" },
-              ],
-            },
-            {
-              text: "リンク",
-              items: [
-                {
-                  text: "Claude Code Academy",
-                  link: "/guide/claude-code-academy",
-                },
               ],
             },
           ],
@@ -102,11 +80,7 @@ export default defineConfig({
           { text: "Reference", link: "/en/reference/departments" },
           {
             text: "GitHub",
-            link: "https://github.com/Shin-sibainu/cc-company",
-          },
-          {
-            text: "Claude Code Academy",
-            link: "https://claude-code-academy.dev/",
+            link: "https://github.com/inoshinichi/bootcamp-company",
           },
         ],
         sidebar: {
@@ -155,15 +129,6 @@ export default defineConfig({
                 { text: "Use Cases", link: "/en/guide/use-cases" },
               ],
             },
-            {
-              text: "Links",
-              items: [
-                {
-                  text: "Claude Code Academy",
-                  link: "/en/guide/claude-code-academy",
-                },
-              ],
-            },
           ],
           "/en/reference/": [
             {
@@ -176,15 +141,6 @@ export default defineConfig({
                 {
                   text: "File Structure",
                   link: "/en/reference/file-structure",
-                },
-              ],
-            },
-            {
-              text: "Links",
-              items: [
-                {
-                  text: "Claude Code Academy",
-                  link: "/en/guide/claude-code-academy",
                 },
               ],
             },
@@ -203,13 +159,13 @@ export default defineConfig({
 
   themeConfig: {
     socialLinks: [
-      { icon: "github", link: "https://github.com/Shin-sibainu/cc-company" },
+      { icon: "github", link: "https://github.com/inoshinichi/bootcamp-company" },
     ],
 
     footer: {
       message:
-        'MIT License | <a href="https://claude-code-academy.dev/" target="_blank">Claude Code Academy</a>',
-      copyright: "© 2026 Shin-sibainu",
+        'MIT License | Forked from <a href="https://github.com/Shin-sibainu/cc-company" target="_blank">Shin-sibainu/cc-company</a>',
+      copyright: "© 2026 inoshinichi（元: Shin-sibainu/cc-company）",
     },
 
     search: {
